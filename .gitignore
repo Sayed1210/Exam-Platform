@@ -1,0 +1,42 @@
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS / VS Code
+.vs/
+.vscode/
+
+# Rider
+.idea/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment / secrets
+appsettings.Development.json
+appsettings.Local.json
+
+# EF Core
+# Migrations/
+
+# Node (if you add frontend later)
+node_modules/
+
+# Publish output
+publish/
+
+# Dotnet tools
+.dotnet/
+
+# Docker
+docker-compose.override.yml
