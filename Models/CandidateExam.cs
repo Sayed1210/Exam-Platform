@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+// using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore; 
+
 public enum ExamStatus
     {
         PENDING,
@@ -7,6 +9,7 @@ public enum ExamStatus
         DONE
     }
 
+[Index(nameof(InvitationToken), IsUnique = true)]
 public class CandidateExam
     {
         public int CandidateId { get; set; }
@@ -18,6 +21,11 @@ public class CandidateExam
         public DateTime InvitedAt { get; set; }
         public DateTime? JoinedAt { get; set; }
         public ExamStatus Status { get; set; } = ExamStatus.PENDING;
+        
+        [Required]
+        public required String InvitationToken { get; set; } 
+
+        public DateTime ExpiryDate { get; set; }
 
         // Navigation
         public Candidate? Candidate { get; set; }

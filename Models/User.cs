@@ -1,6 +1,9 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-public class Admin
+// using System.ComponentModel.DataAnnotations.Schema;
+
+public enum UserRole { Admin }
+
+public class User
 
 {
     [Key]
@@ -22,4 +25,5 @@ public class Admin
     [Required]
     [MaxLength(50, ErrorMessage = "Last name cannot exceed 50 characters")]
     public string LastName { get; set; } = string.Empty;
+    public UserRole Role { get; set; } = UserRole.Admin;
 }

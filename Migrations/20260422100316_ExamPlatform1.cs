@@ -7,29 +7,12 @@ using MySql.EntityFrameworkCore.Metadata;
 namespace ExamApi.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class ExamPlatform1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterDatabase()
-                .Annotation("MySQL:Charset", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "Admins",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    Email = table.Column<string>(type: "longtext", nullable: false),
-                    Password = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false),
-                    FirstName = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
-                    LastName = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Admins", x => x.Id);
-                })
                 .Annotation("MySQL:Charset", "utf8mb4");
 
             migrationBuilder.CreateTable(
@@ -81,6 +64,24 @@ namespace ExamApi.Migrations
                 .Annotation("MySQL:Charset", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "User",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
+                    Email = table.Column<string>(type: "longtext", nullable: false),
+                    Password = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false),
+                    FirstName = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    LastName = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    Role = table.Column<string>(type: "longtext", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_User", x => x.Id);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "CandidateExams",
                 columns: table => new
                 {
@@ -89,7 +90,9 @@ namespace ExamApi.Migrations
                     Score = table.Column<float>(type: "float", nullable: true),
                     InvitedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     JoinedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    Status = table.Column<string>(type: "longtext", nullable: false)
+                    Status = table.Column<string>(type: "longtext", nullable: false),
+                    InvitationToken = table.Column<string>(type: "varchar(255)", nullable: false),
+                    ExpiryDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -239,6 +242,12 @@ namespace ExamApi.Migrations
                 column: "ExamId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CandidateExams_InvitationToken",
+                table: "CandidateExams",
+                column: "InvitationToken",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Choices_QuestionId",
                 table: "Choices",
                 column: "QuestionId");
@@ -258,9 +267,6 @@ namespace ExamApi.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Admins");
-
-            migrationBuilder.DropTable(
                 name: "CandidateAnswers");
 
             migrationBuilder.DropTable(
@@ -268,6 +274,9 @@ namespace ExamApi.Migrations
 
             migrationBuilder.DropTable(
                 name: "ExamQuestions");
+
+            migrationBuilder.DropTable(
+                name: "User");
 
             migrationBuilder.DropTable(
                 name: "Choices");
