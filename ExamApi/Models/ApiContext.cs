@@ -1,3 +1,5 @@
+using ExamApi.Models;
+
 using Microsoft.EntityFrameworkCore;
 
     public class ApiContext : DbContext

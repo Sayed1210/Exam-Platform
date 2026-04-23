@@ -1,8 +1,12 @@
+namespace ExamApi.Models;
+
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 // using System.ComponentModel.DataAnnotations.Schema;
 
 public enum UserRole { Admin }
 
+[Index(nameof(Email), IsUnique = true)]
 public class User
 
 {
@@ -13,8 +17,7 @@ public class User
     public string Email { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Password is required")]
-    [MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
-    [MaxLength(20, ErrorMessage = "Password cannot exceed 20 characters")]
+    [MaxLength(255)]
      public string Password { get; set; } = string.Empty;
 
     [Required]
