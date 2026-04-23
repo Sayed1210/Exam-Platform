@@ -1,0 +1,21 @@
+﻿using ExamApi.DTOs.Requests;
+using ExamApi.DTOs.Responses;
+
+namespace ExamApi.Services
+{
+    public interface IExamService
+    {
+        // Create
+        Task<ExamResponseDto> CreateExamAsync(CreateExamDto dto);
+
+        // Read
+        Task<IEnumerable<ExamResponseDto>> GetAllExamsAsync();
+        Task<ExamResponseDto?> GetExamByIdAsync(int id);
+
+        // Update
+        Task<ExamResponseDto?> UpdateExamAsync(int id, CreateExamDto dto);
+
+        // Delete
+        Task<bool> DeleteExamAsync(int id);
+    }
+}
