@@ -21,12 +21,14 @@ namespace ExamApi.Repositories
         // READ - Get All
         public async Task<IEnumerable<Exam>> GetAllAsync()
         {
-            return await _context.Exams.ToListAsync();
+            return await _context.Exams
+                  .Include(e => e.ExamQuestions) 
+                  .ToListAsync();
         }
 
         // READ - Get By Id
         public async Task<Exam?> GetByIdAsync(int id) =>
-      await _context.Exams
+           await _context.Exams
           .Include(e => e.ExamQuestions)
           .FirstOrDefaultAsync(e => e.Id == id);
 

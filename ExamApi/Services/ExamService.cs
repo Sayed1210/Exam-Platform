@@ -41,7 +41,7 @@ namespace ExamApi.Services
             return MapToResponseDto(exam);
         }
 
-        // ── GET ALL ───────────────────────────────────────────────────
+        // ── GET ALL ──────────────────────────────────
         public async Task<IEnumerable<ExamResponseDto>> GetAllExamsAsync()
         {
             var exams = await _repo.GetAllAsync();
