@@ -4,8 +4,10 @@ public interface ICandidateRepository
 {
     Task<List<Candidate>> GetAllAsync();
     Task<Candidate?> GetByIdAsync(int id);
-
+    // to help check if candidate already exists
     Task<Candidate?> GetByEmailAsync(string email);
+
+    Task<Candidate?> GetCandidateByExamIdAsync(int examId);
 
     Task AddAsync(Candidate candidate);
     Task DeleteAsync(int id);

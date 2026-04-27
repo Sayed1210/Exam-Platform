@@ -26,6 +26,15 @@ public class CandidateRepository(ApiContext context) : ICandidateRepository
         return await _context.Candidates
             .FirstOrDefaultAsync(c => c.Email == email);
     }
+
+    public async Task<Candidate?> GetCandidateByExamIdAsync(int examId)
+    {
+        // Candidates WHERE EXISTS (CandidateExams.ExamId == examId)
+        return await _context.Candidates
+            .Include(c => c.CandidateExams)
+            .FirstOrDefaultAsync(c => c.CandidateExams
+                .Any(ce => ce.ExamId == examId));
+    }
     
     public async Task AddAsync(Candidate candidate)
     {

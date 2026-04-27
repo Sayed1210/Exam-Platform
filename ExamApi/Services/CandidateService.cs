@@ -43,6 +43,23 @@ public class CandidateService(ICandidateRepository candidateRepository) : ICandi
         };
     }
 
+    public async Task<CandidateResponse?> GetCandidateByExamId(int examId)
+    {
+        var candidate = await _candidateRepository.GetCandidateByExamIdAsync(examId);
+
+        if (candidate == null)
+            throw new Exception($"Candidate with exam id {examId} not found");
+
+        return new CandidateResponse
+        {
+            Id = candidate.Id,
+            Email = candidate.Email,
+            FirstName = candidate.FirstName,
+            LastName = candidate.LastName,
+            Phone = candidate.Phone
+        };
+    }
+
     public async Task AddCandidate(CreateCandidate dto)
     {
         // Check if candidate already exists

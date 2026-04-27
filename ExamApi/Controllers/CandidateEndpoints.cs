@@ -25,6 +25,16 @@ public static class CandidateEndpoints
             return Results.Ok(candidate);
         });
 
+        candidates.MapGet("/exam/{examId}", async (int examId, ICandidateService service) =>
+        {
+            var candidate = await service.GetCandidateByExamId(examId);
+
+            if (candidate is null)
+                return Results.NotFound();
+
+            return Results.Ok(candidate);
+        });
+
         candidates.MapPost("/", async (CreateCandidate dto, ICandidateService service) =>
         {
             await service.AddCandidate(dto);
