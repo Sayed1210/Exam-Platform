@@ -25,10 +25,19 @@ namespace ExamApi.Repositories
         }
 
         // READ - Get By Id
-        public async Task<Exam?> GetByIdAsync(int id)
-        {
-            return await _context.Exams.FindAsync(id);
-        }
+        public async Task<Exam?> GetByIdAsync(int id) =>
+      await _context.Exams
+          .Include(e => e.ExamQuestions)
+          .FirstOrDefaultAsync(e => e.Id == id);
+
+
+        // READ - Get with Questions and Choices
+        public async Task<Exam?> GetWithQuestionsAndChoicesAsync(int id) =>
+            await _context.Exams
+                .Include(e => e.ExamQuestions)
+                    .ThenInclude(eq => eq.Question)
+                        .ThenInclude(q => q!.Choices)
+                .FirstOrDefaultAsync(e => e.Id == id);
 
         // UPDATE
         public async Task UpdateAsync(Exam exam)
@@ -43,9 +52,26 @@ namespace ExamApi.Repositories
             _context.Exams.Remove(exam);
             await _context.SaveChangesAsync();
         }
-      
+        public async Task AssignQuestionsAsync(List<ExamQuestion> examQuestions)
+        {
+            _context.ExamQuestions.AddRange(examQuestions);
+            await _context.SaveChangesAsync();
+        }
 
-      
+        public async Task RemoveQuestionAsync(int examId, int questionId)
+        {
+            var eq = await _context.ExamQuestions
+                .FirstOrDefaultAsync(eq => eq.ExamId == examId && eq.QuestionId == questionId);
+
+            if (eq is null) return;
+
+            _context.ExamQuestions.Remove(eq);
+            await _context.SaveChangesAsync();
+        }
+
+
+
+
 
         // HELPER - Check if exists
         public async Task<bool> ExistsAsync(int id)

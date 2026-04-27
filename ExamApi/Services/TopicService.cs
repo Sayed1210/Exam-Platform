@@ -8,113 +8,111 @@ namespace ExamApi.Services
     {
         private readonly ITopicRepository _repo;
 
-        public TopicService(ITopicRepository repo)
-        {
-            _repo = repo;
-        }
+        public TopicService(ITopicRepository repo) => _repo = repo;
 
-      
-        // CREATE
-      
+        // ── CREATE ────────────────────────────────────────────────────
         public async Task<TopicResponse> CreateTopicAsync(TopicRequest dto)
         {
-            // 1. Check if title already exists
-            if (await _repo.TitleExistsAsync(dto.Title))
-                throw new ArgumentException(
-                    $"Topic with title '{dto.Title}' already exists");
+            // Validate: request must not be null
+            ArgumentNullException.ThrowIfNull(dto);
 
-            // 2. Create entity from DTO
+            // Validate: title must not be empty
+            if (string.IsNullOrWhiteSpace(dto.Title))
+                throw new ArgumentException("Topic title cannot be empty.", nameof(dto.Title));
+
+            // Validate: title max length
+            if (dto.Title.Length > 100)
+                throw new ArgumentException("Topic title cannot exceed 100 characters.", nameof(dto.Title));
+
+            // Validate: no duplicate title (case-insensitive)
+            if (await _repo.TitleExistsAsync(dto.Title))
+                throw new InvalidOperationException(
+                    $"Topic with title '{dto.Title}' already exists.");
+
             var topic = new Topic
             {
-                Title = dto.Title
+                Title = dto.Title.Trim()
             };
 
-            // 3. Save to database
             await _repo.AddAsync(topic);
-
-            // 4. Return response DTO
             return MapToResponseDto(topic);
         }
 
-        // READ - Get All
-    
+        // ── GET ALL ───────────────────────────────────────────────────
         public async Task<IEnumerable<TopicResponse>> GetAllTopicsAsync()
         {
             var topics = await _repo.GetAllAsync();
             return topics.Select(MapToResponseDto);
         }
 
-       
-        // READ - Get By Id
-    
+        // ── GET BY ID ─────────────────────────────────────────────────
         public async Task<TopicResponse?> GetTopicByIdAsync(int id)
         {
+            // Validate: id must be positive
+            if (id <= 0)
+                throw new ArgumentException("Id must be a positive number.", nameof(id));
+
             var topic = await _repo.GetByIdAsync(id);
-
-            if (topic == null)
-                return null;
-
-            return MapToResponseDto(topic);
+            return topic is null ? null : MapToResponseDto(topic);
         }
 
-        // UPDATE
-        
+        // ── UPDATE ────────────────────────────────────────────────────
         public async Task<TopicResponse?> UpdateTopicAsync(int id, TopicRequest dto)
         {
-            // 1. Find existing topic
+            // Validate: id must be positive
+            if (id <= 0)
+                throw new ArgumentException("Id must be a positive number.", nameof(id));
+
+            // Validate: request must not be null
+            ArgumentNullException.ThrowIfNull(dto);
+
+            // Validate: title must not be empty
+            if (string.IsNullOrWhiteSpace(dto.Title))
+                throw new ArgumentException("Topic title cannot be empty.", nameof(dto.Title));
+
+            // Validate: title max length
+            if (dto.Title.Length > 100)
+                throw new ArgumentException("Topic title cannot exceed 100 characters.", nameof(dto.Title));
+
             var topic = await _repo.GetByIdAsync(id);
+            if (topic is null) return null;
 
-            // 2. If not found, return null
-            if (topic == null)
-                return null;
-
-            // 3. Check title uniqueness (exclude current topic)
+            // Validate: no duplicate title (exclude current topic)
             if (await _repo.TitleExistsAsync(dto.Title, id))
-                throw new ArgumentException(
-                    $"Topic with title '{dto.Title}' already exists");
+                throw new InvalidOperationException(
+                    $"Topic with title '{dto.Title}' already exists.");
 
-            // 4. Update entity properties
-            topic.Title = dto.Title;
+            topic.Title = dto.Title.Trim();
 
-            // 5. Save changes
             await _repo.UpdateAsync(topic);
-
-            // 6. Return updated DTO
             return MapToResponseDto(topic);
         }
 
-        
-        // DELETE
-        
+        // ── DELETE ────────────────────────────────────────────────────
         public async Task<bool> DeleteTopicAsync(int id)
         {
-            // 1. Find topic
+            // Validate: id must be positive
+            if (id <= 0)
+                throw new ArgumentException("Id must be a positive number.", nameof(id));
+
             var topic = await _repo.GetByIdAsync(id);
+            if (topic is null) return false;
 
-            // 2. If not found, return false
-            if (topic == null)
-                return false;
+            // Validate: cannot delete a topic that has questions
+            if (topic.Questions != null && topic.Questions.Count > 0)
+                throw new InvalidOperationException(
+                    $"Cannot delete topic '{topic.Title}' because it has {topic.Questions.Count} question(s) linked to it. Remove the questions first.");
 
-           
-
-            // 3. Delete topic
             await _repo.DeleteAsync(topic);
-
-            // 4. Return success
             return true;
         }
 
-        //
-        // HELPER - Map Entity to DTO
-        // 
-        private TopicResponse MapToResponseDto(Topic topic)
+        // ── HELPER — Map Entity to DTO ────────────────────────────────
+        private static TopicResponse MapToResponseDto(Topic topic) => new()
         {
-            return new TopicResponse
-            {
-                Id = topic.Id,
-                Title = topic.Title,
-                QuestionsCount = topic.Questions?.Count ?? 0
-            };
-        }
+            Id = topic.Id,
+            Title = topic.Title,
+            QuestionsCount = topic.Questions?.Count ?? 0
+        };
     }
 }

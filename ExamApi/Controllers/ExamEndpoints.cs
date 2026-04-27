@@ -66,6 +66,52 @@ namespace ExamApi.Controllers
                     : Results.NotFound(new { message = $"Exam with Id {id} not found" });
             })
             .WithName("DeleteExam");
+
+            // POST /api/exams/{examId}/questions
+            // Body: { "questionIds": [1, 2, 3] }
+            group.MapPost("/{examId:int}/questions", async (
+                int examId,
+                AssignQuestionsRequest request,
+                IExamService svc) =>
+            {
+                await svc.AssignQuestionsAsync(examId, request.QuestionIds);
+                return Results.Ok(new { message = "Questions assigned successfully." });
+            })
+            .WithName("AssignQuestionsToExam")
+            .WithSummary("Assign one or more questions to an exam")
+            .Produces(200)
+            .Produces(400)
+            .Produces(404);
+
+
+            // GET /api/exams/{id}/questions
+            group.MapGet("/{id:int}/questions", async (int id, IExamService svc) =>
+            {
+                var result = await svc.GetExamWithQuestionsAsync(id);
+                return result is null
+                    ? Results.NotFound(new { message = $"Exam {id} not found." })
+                    : Results.Ok(result);
+            })
+            .WithName("GetExamWithQuestions")
+            .WithSummary("Get an exam with all its questions and choices")
+            .Produces<ExamResponseDto>(200)
+            .Produces(404);
+
+            // DELETE /api/exams/{examId}/questions/{questionId}
+            group.MapDelete("/{examId:int}/questions/{questionId:int}", async (
+                int examId,
+                int questionId,
+                IExamService svc) =>
+            {
+                await svc.RemoveQuestionAsync(examId, questionId);
+                return Results.NoContent();
+            })
+            .WithName("RemoveQuestionFromExam")
+            .WithSummary("Remove a question from an exam")
+            .Produces(204)
+            .Produces(400)
+            .Produces(404);
         }
+
     }
 }

@@ -5,262 +5,267 @@ using ExamApi.DTOs.Requests;
 using ExamApi.DTOs.Responses;
 using ExamApi.Repositories;
 using ExamApi.Services;
-public class TopicServiceTests
-{
-	private readonly Mock<ITopicRepository> _repoMock;
-	private readonly TopicService _service;
 
-	public TopicServiceTests()
-	{
-		_repoMock = new Mock<ITopicRepository>();
-		_service = new TopicService(_repoMock.Object);
-	}
+    public class TopicServiceTests
+    {
+        private readonly Mock<ITopicRepository> _repoMock;
+        private readonly TopicService _service;
 
-	
-	// CREATE
+        public TopicServiceTests()
+        {
+            _repoMock = new Mock<ITopicRepository>();
+            _service = new TopicService(_repoMock.Object);
+        }
 
-	[Fact]
-	public async Task CreateTopicAsync_Should_Create_Topic()
-	{
-		// Arrange
-		var dto = new TopicRequest { Title = "OOP" };
+        // ───────────────────────────────────────────
+        // CREATE
+        // ───────────────────────────────────────────
 
-		_repoMock
-			.Setup(r => r.TitleExistsAsync(dto.Title))
-			.ReturnsAsync(false); // title does NOT exist
+        [Fact]
+        public async Task CreateTopicAsync_Should_Create_Topic()
+        {
+            // Arrange
+            var dto = new TopicRequest { Title = "OOP" };
 
-		_repoMock
-			.Setup(r => r.AddAsync(It.IsAny<Topic>()))
-			.Returns(Task.CompletedTask);
+            _repoMock
+                .Setup(r => r.TitleExistsAsync(dto.Title))
+                .ReturnsAsync(false);
 
-		// Act
-		var result = await _service.CreateTopicAsync(dto);
+            _repoMock
+                .Setup(r => r.AddAsync(It.IsAny<Topic>()))
+                .Returns(Task.CompletedTask);
 
-		// Assert
-		result.Should().NotBeNull();
-		result.Title.Should().Be("OOP");
+            // Act
+            var result = await _service.CreateTopicAsync(dto);
 
-		_repoMock.Verify(r => r.AddAsync(It.IsAny<Topic>()), Times.Once);
-	}
+            // Assert
+            result.Should().NotBeNull();
+            result.Title.Should().Be("OOP");
 
-	[Fact]
-	public async Task CreateTopicAsync_Should_Throw_When_Title_Already_Exists()
-	{
-		// Arrange
-		var dto = new TopicRequest { Title = "Mathematics" };
+            _repoMock.Verify(r => r.AddAsync(It.IsAny<Topic>()), Times.Once);
+        }
 
-		_repoMock
-			.Setup(r => r.TitleExistsAsync(dto.Title))
-			.ReturnsAsync(true); // title ALREADY exists
+        [Fact]
+        public async Task CreateTopicAsync_Should_Throw_When_Title_Already_Exists()
+        {
+            // Arrange
+            var dto = new TopicRequest { Title = "Mathematics" };
 
-		// Act
-		Func<Task> act = async () => await _service.CreateTopicAsync(dto);
+            _repoMock
+                .Setup(r => r.TitleExistsAsync(dto.Title))
+                .ReturnsAsync(true);
 
-		// Assert
-		await act.Should()
-			.ThrowAsync<ArgumentException>()
-			.WithMessage("*Mathematics*"); // message contains the title
+            // Act
+            Func<Task> act = async () => await _service.CreateTopicAsync(dto);
 
-		_repoMock.Verify(r => r.AddAsync(It.IsAny<Topic>()), Times.Never);
-	}
+            // Assert
+            await act.Should()
+                .ThrowAsync<InvalidOperationException>() // ✅ FIXED
+                .WithMessage("*Mathematics*");
 
-	// ───────────────────────────────────────────
-	// READ - GET ALL
-	// ───────────────────────────────────────────
+            _repoMock.Verify(r => r.AddAsync(It.IsAny<Topic>()), Times.Never);
+        }
 
-	[Fact]
-	public async Task GetAllTopicsAsync_Should_Return_All_Topics()
-	{
-		// Arrange
-		var topics = new List<Topic>
-			{
-				new Topic { Id = 1, Title = "Math" },
-				new Topic { Id = 2, Title = "Science" },
-				new Topic { Id = 3, Title = "History" }
-			};
+        // ───────────────────────────────────────────
+        // READ - GET ALL
+        // ───────────────────────────────────────────
 
-		_repoMock
-			.Setup(r => r.GetAllAsync())
-			.ReturnsAsync(topics);
+        [Fact]
+        public async Task GetAllTopicsAsync_Should_Return_All_Topics()
+        {
+            // Arrange
+            var topics = new List<Topic>
+            {
+                new Topic { Id = 1, Title = "Math" },
+                new Topic { Id = 2, Title = "Science" },
+                new Topic { Id = 3, Title = "History" }
+            };
 
-		// Act
-		var result = await _service.GetAllTopicsAsync();
+            _repoMock
+                .Setup(r => r.GetAllAsync())
+                .ReturnsAsync(topics);
 
-		// Assert
-		result.Should().HaveCount(3);
-		result.Select(t => t.Title).Should().Contain(["Math", "Science", "History"]);
-	}
+            // Act
+            var result = await _service.GetAllTopicsAsync();
 
-	[Fact]
-	public async Task GetAllTopicsAsync_Should_Return_Empty_When_No_Topics()
-	{
-		// Arrange
-		_repoMock
-			.Setup(r => r.GetAllAsync())
-			.ReturnsAsync(new List<Topic>());
+            // Assert
+            result.Should().HaveCount(3);
+            result.Select(t => t.Title).Should()
+                .Contain(new[] { "Math", "Science", "History" });
+        }
 
-		// Act
-		var result = await _service.GetAllTopicsAsync();
+        [Fact]
+        public async Task GetAllTopicsAsync_Should_Return_Empty_When_No_Topics()
+        {
+            // Arrange
+            _repoMock
+                .Setup(r => r.GetAllAsync())
+                .ReturnsAsync(new List<Topic>());
 
-		// Assert
-		result.Should().BeEmpty();
-	}
+            // Act
+            var result = await _service.GetAllTopicsAsync();
 
-	// ───────────────────────────────────────────
-	// READ - GET BY ID
-	// ───────────────────────────────────────────
+            // Assert
+            result.Should().BeEmpty();
+        }
 
-	[Fact]
-	public async Task GetTopicByIdAsync_Should_Return_Topic_When_Found()
-	{
-		// Arrange
-		var topic = new Topic { Id = 1, Title = "Math" };
+        // ───────────────────────────────────────────
+        // READ - GET BY ID
+        // ───────────────────────────────────────────
 
-		_repoMock
-			.Setup(r => r.GetByIdAsync(1))
-			.ReturnsAsync(topic);
+        [Fact]
+        public async Task GetTopicByIdAsync_Should_Return_Topic_When_Found()
+        {
+            // Arrange
+            var topic = new Topic { Id = 1, Title = "Math" };
 
-		// Act
-		var result = await _service.GetTopicByIdAsync(1);
+            _repoMock
+                .Setup(r => r.GetByIdAsync(1))
+                .ReturnsAsync(topic);
 
-		// Assert
-		result.Should().NotBeNull();
-		result!.Id.Should().Be(1);
-		result.Title.Should().Be("Math");
-	}
+            // Act
+            var result = await _service.GetTopicByIdAsync(1);
 
-	[Fact]
-	public async Task GetTopicByIdAsync_Should_Return_Null_When_Not_Found()
-	{
-		// Arrange
-		_repoMock
-			.Setup(r => r.GetByIdAsync(99))
-			.ReturnsAsync((Topic?)null);
+            // Assert
+            result.Should().NotBeNull();
+            result!.Id.Should().Be(1);
+            result.Title.Should().Be("Math");
+        }
 
-		// Act
-		var result = await _service.GetTopicByIdAsync(99);
+        [Fact]
+        public async Task GetTopicByIdAsync_Should_Return_Null_When_Not_Found()
+        {
+            // Arrange
+            _repoMock
+                .Setup(r => r.GetByIdAsync(99))
+                .ReturnsAsync((Topic?)null);
 
-		// Assert
-		result.Should().BeNull();
-	}
+            // Act
+            var result = await _service.GetTopicByIdAsync(99);
 
-	// UPDATE
+            // Assert
+            result.Should().BeNull();
+        }
 
-	[Fact]
-	public async Task UpdateTopicAsync_Should_Update_Topic()
-	{
-		// Arrange
-		var topic = new Topic { Id = 1, Title = "Old Title" };
-		var dto = new TopicRequest { Title = "New Title" };
+        // ───────────────────────────────────────────
+        // UPDATE
+        // ───────────────────────────────────────────
 
-		_repoMock
-			.Setup(r => r.GetByIdAsync(1))
-			.ReturnsAsync(topic);
+        [Fact]
+        public async Task UpdateTopicAsync_Should_Update_Topic()
+        {
+            // Arrange
+            var topic = new Topic { Id = 1, Title = "Old Title" };
+            var dto = new TopicRequest { Title = "New Title" };
 
-		_repoMock
-			.Setup(r => r.TitleExistsAsync(dto.Title, 1))
-			.ReturnsAsync(false); // new title does NOT exist
+            _repoMock
+                .Setup(r => r.GetByIdAsync(1))
+                .ReturnsAsync(topic);
 
-		_repoMock
-			.Setup(r => r.UpdateAsync(topic))
-			.Returns(Task.CompletedTask);
+            _repoMock
+                .Setup(r => r.TitleExistsAsync(dto.Title, 1))
+                .ReturnsAsync(false);
 
-		// Act
-		var result = await _service.UpdateTopicAsync(1, dto);
+            _repoMock
+                .Setup(r => r.UpdateAsync(topic))
+                .Returns(Task.CompletedTask);
 
-		// Assert
-		result.Should().NotBeNull();
-		result!.Title.Should().Be("New Title");
+            // Act
+            var result = await _service.UpdateTopicAsync(1, dto);
 
-		_repoMock.Verify(r => r.UpdateAsync(topic), Times.Once);
-	}
+            // Assert
+            result.Should().NotBeNull();
+            result!.Title.Should().Be("New Title");
 
-	[Fact]
-	public async Task UpdateTopicAsync_Should_Return_Null_When_Not_Found()
-	{
-		// Arrange
-		_repoMock
-			.Setup(r => r.GetByIdAsync(99))
-			.ReturnsAsync((Topic?)null);
+            _repoMock.Verify(r => r.UpdateAsync(topic), Times.Once);
+        }
 
-		var dto = new TopicRequest { Title = "New Title" };
+        [Fact]
+        public async Task UpdateTopicAsync_Should_Return_Null_When_Not_Found()
+        {
+            // Arrange
+            _repoMock
+                .Setup(r => r.GetByIdAsync(99))
+                .ReturnsAsync((Topic?)null);
 
-		// Act
-		var result = await _service.UpdateTopicAsync(99, dto);
+            var dto = new TopicRequest { Title = "New Title" };
 
-		// Assert
-		result.Should().BeNull();
+            // Act
+            var result = await _service.UpdateTopicAsync(99, dto);
 
-		_repoMock.Verify(r => r.UpdateAsync(It.IsAny<Topic>()), Times.Never);
-	}
+            // Assert
+            result.Should().BeNull();
 
-	[Fact]
-	public async Task UpdateTopicAsync_Should_Throw_When_Title_Already_Exists()
-	{
-		// Arrange
-		var topic = new Topic { Id = 1, Title = "Old Title" };
-		var dto = new TopicRequest { Title = "Duplicate Title" };
+            _repoMock.Verify(r => r.UpdateAsync(It.IsAny<Topic>()), Times.Never);
+        }
 
-		_repoMock
-			.Setup(r => r.GetByIdAsync(1))
-			.ReturnsAsync(topic);
+        [Fact]
+        public async Task UpdateTopicAsync_Should_Throw_When_Title_Already_Exists()
+        {
+            // Arrange
+            var topic = new Topic { Id = 1, Title = "Old Title" };
+            var dto = new TopicRequest { Title = "Duplicate Title" };
 
-		_repoMock
-			.Setup(r => r.TitleExistsAsync(dto.Title, 1))
-			.ReturnsAsync(true); // title ALREADY exists for another topic
+            _repoMock
+                .Setup(r => r.GetByIdAsync(1))
+                .ReturnsAsync(topic);
 
-		// Act
-		Func<Task> act = async () => await _service.UpdateTopicAsync(1, dto);
+            _repoMock
+                .Setup(r => r.TitleExistsAsync(dto.Title, 1))
+                .ReturnsAsync(true);
 
-		// Assert
-		await act.Should()
-			.ThrowAsync<ArgumentException>()
-			.WithMessage("*Duplicate Title*");
+            // Act
+            Func<Task> act = async () => await _service.UpdateTopicAsync(1, dto);
 
-		_repoMock.Verify(r => r.UpdateAsync(It.IsAny<Topic>()), Times.Never);
-	}
+            // Assert
+            await act.Should()
+                .ThrowAsync<InvalidOperationException>() // ✅ FIXED
+                .WithMessage("*Duplicate Title*");
 
-	// ───────────────────────────────────────────
-	// DELETE
-	// ───────────────────────────────────────────
+            _repoMock.Verify(r => r.UpdateAsync(It.IsAny<Topic>()), Times.Never);
+        }
 
-	[Fact]
-	public async Task DeleteTopicAsync_Should_Delete_And_Return_True()
-	{
-		// Arrange
-		var topic = new Topic { Id = 1, Title = "Math" };
+        // ───────────────────────────────────────────
+        // DELETE
+        // ───────────────────────────────────────────
 
-		_repoMock
-			.Setup(r => r.GetByIdAsync(1))
-			.ReturnsAsync(topic);
+        [Fact]
+        public async Task DeleteTopicAsync_Should_Delete_And_Return_True()
+        {
+            // Arrange
+            var topic = new Topic { Id = 1, Title = "Math" };
 
-		_repoMock
-			.Setup(r => r.DeleteAsync(topic))
-			.Returns(Task.CompletedTask);
+            _repoMock
+                .Setup(r => r.GetByIdAsync(1))
+                .ReturnsAsync(topic);
 
-		// Act
-		var result = await _service.DeleteTopicAsync(1);
+            _repoMock
+                .Setup(r => r.DeleteAsync(topic))
+                .Returns(Task.CompletedTask);
 
-		// Assert
-		result.Should().BeTrue();
+            // Act
+            var result = await _service.DeleteTopicAsync(1);
 
-		_repoMock.Verify(r => r.DeleteAsync(topic), Times.Once);
-	}
+            // Assert
+            result.Should().BeTrue();
 
-	[Fact]
-	public async Task DeleteTopicAsync_Should_Return_False_When_Not_Found()
-	{
-		// Arrange
-		_repoMock
-			.Setup(r => r.GetByIdAsync(99))
-			.ReturnsAsync((Topic?)null);
+            _repoMock.Verify(r => r.DeleteAsync(topic), Times.Once);
+        }
 
-		// Act
-		var result = await _service.DeleteTopicAsync(99);
+        [Fact]
+        public async Task DeleteTopicAsync_Should_Return_False_When_Not_Found()
+        {
+            // Arrange
+            _repoMock
+                .Setup(r => r.GetByIdAsync(99))
+                .ReturnsAsync((Topic?)null);
 
-		// Assert
-		result.Should().BeFalse();
+            // Act
+            var result = await _service.DeleteTopicAsync(99);
 
-		_repoMock.Verify(r => r.DeleteAsync(It.IsAny<Topic>()), Times.Never);
-	}
-}
+            // Assert
+            result.Should().BeFalse();
+
+            _repoMock.Verify(r => r.DeleteAsync(It.IsAny<Topic>()), Times.Never);
+        }
+    }

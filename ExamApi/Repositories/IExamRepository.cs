@@ -14,7 +14,11 @@
 
         // Delete
         Task DeleteAsync(Exam exam);
-    
+        Task AssignQuestionsAsync(List<ExamQuestion> examQuestions);
+        Task RemoveQuestionAsync(int examId, int questionId);
+
+        Task<Exam?> GetWithQuestionsAndChoicesAsync(int id);
+
         // Helper
         Task<bool> ExistsAsync(int id);
     }
