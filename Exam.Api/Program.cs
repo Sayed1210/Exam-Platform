@@ -1,15 +1,47 @@
 using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Exam.Data;
+using Exam.Api.Endpoints;
+using Exam.Service;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Exam.Service.Auth;
+using Exam.Repo;
 
 
 var builder = WebApplication.CreateBuilder(args);
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
+
 builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<ApiContext>(options =>
     options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection")!));
+
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(nameof(JwtSettings)));
+builder.Services.AddRepositoryLayer(); //Dependency injection for repository layer, exists in Exam.Repo/DependencyInjection.cs 
+builder.Services.AddServiceLayer(); //Dependency injection for service layer, exists in Exam.Service/DependencyInjection.cs 
+
+var jwtSettings = builder.Configuration.GetSection(nameof(JwtSettings)).Get<JwtSettings>()
+    ?? throw new InvalidOperationException("JwtSettings section is missing.");
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings.Issuer,
+            ValidAudience = jwtSettings.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey))
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -22,6 +54,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapAuthEndpoints();
+
 app.Run();
 
-
+public partial class Program { }
