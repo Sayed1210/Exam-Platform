@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Exam.Data\data.csproj" />
+    <ProjectReference Include="..\Exam.Service\services.csproj" />
   </ItemGroup>
 
 </Project>
