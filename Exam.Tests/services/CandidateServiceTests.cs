@@ -1,8 +1,9 @@
 using Moq;
 using Xunit;
 using Xunit.Abstractions;
-using ExamApi.Services;
-using ExamApi.Repositories;
+using Exam.Services;
+using Exam.Repositories;
+using Exam.Models;
 
 public class CandidateServiceTests
 {

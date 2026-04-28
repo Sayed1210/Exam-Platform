@@ -1,7 +1,8 @@
 using Moq;
 using Xunit;
-using ExamApi.Services;
-using ExamApi.Repositories;
+using Exam.Services;
+using Exam.Repositories;
+using Exam.Models;
 
 public class ExamSubmissionServiceTests
 {
