@@ -6,4 +6,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MailKit" Version="4.16.0" />
+    <ProjectReference Include="..\Exam.Repo\repositories.csproj" />
+  <ProjectReference Include="..\Exam.Models\models.csproj" />
+  </ItemGroup>
+
 </Project>

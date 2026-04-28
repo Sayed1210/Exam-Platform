@@ -23,6 +23,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Exam.Data\data.csproj" />
+    <ProjectReference Include="..\Exam.Service\services.csproj" />
+  <ProjectReference Include="..\Exam.Repo\repositories.csproj" />
+  <ProjectReference Include="..\Exam.Models\models.csproj" />
   </ItemGroup>
 
 </Project>

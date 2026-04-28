@@ -5,5 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
+<ItemGroup>
+  <ProjectReference Include="..\Exam.Data\data.csproj" />
+  <ProjectReference Include="..\Exam.Models\models.csproj" />
+</ItemGroup>
 </Project>
