@@ -1,6 +1,7 @@
 using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Exam.Data;
+using Exam.Api;
 using Exam.Repo;
 using Exam.Service;
 using Exam.Api.endpoints;
@@ -27,6 +28,8 @@ builder.Services.AddScoped<ITopicService, TopicService>();
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -42,3 +45,5 @@ app.MapQuestionEndpoints();
 app.MapTopicEndpoints();
 
 app.Run();
+
+public partial class Program;
