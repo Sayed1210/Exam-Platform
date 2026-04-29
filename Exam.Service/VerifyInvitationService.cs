@@ -26,8 +26,8 @@ public class VerifyInvitationService : IVerifyInvitationService
         {
             CandidateId = candidateExam.CandidateId,
             ExamId = candidateExam.ExamId,
-            CandidateName = candidateExam.Candidate.FirstName + " " + candidateExam.Candidate.LastName,
-            Email = candidateExam.Candidate.Email
+            CandidateName = candidateExam.Candidate!.FirstName + " " + candidateExam.Candidate!.LastName,
+            Email = candidateExam.Candidate!.Email
         };
     }
 }
