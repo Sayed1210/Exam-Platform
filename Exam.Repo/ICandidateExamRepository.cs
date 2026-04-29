@@ -6,4 +6,6 @@ public interface ICandidateExamRepository
 {
     Task<CandidateExam?> GetAsync(int candidateId, int examId);
     Task SaveAsync(CandidateExam candidateExam);
+
+    Task<CandidateExam?> GetByInvitationTokenAsync(string token);
 }

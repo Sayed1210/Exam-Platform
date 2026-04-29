@@ -16,6 +16,8 @@ builder.Services.AddScoped<ICandidateService, CandidateService>();
 builder.Services.AddScoped<ICandidateAnswerRepository, CandidateAnswerRepository>();
 builder.Services.AddScoped<ICandidateExamRepository, CandidateExamRepository>();
 builder.Services.AddScoped<IExamSubmissionService, ExamSubmissionService>();
+// DI Verify Link
+builder.Services.AddScoped<IVerifyInvitationService, VerifyInvitationService>();
 
 builder.Services.AddDbContext<ApiContext>(options =>
     options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection")!));
@@ -35,6 +37,8 @@ app.UseHttpsRedirection();
 app.MapCandidateEndpoints();
 // Submit Exam
 app.MapExamEndpoints();
+// Link Verification
+app.MapVerifyLinkEndpoints();
 
 app.Run();
 

@@ -23,4 +23,11 @@ public class CandidateExamRepository(ApiContext context) : ICandidateExamReposit
         _context.CandidateExams.Update(candidateExam);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<CandidateExam?> GetByInvitationTokenAsync(string token)
+    {
+        return await _context.CandidateExams
+            .Include(ce => ce.Candidate)
+            .FirstOrDefaultAsync(ce => ce.InvitationToken == token);
+    }
 }
