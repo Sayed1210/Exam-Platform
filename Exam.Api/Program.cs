@@ -1,13 +1,17 @@
 using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
+using Exam.Api;
 using Exam.Data;
 using Exam.Repo;
 using Exam.Service;
+
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddRepositories();
+builder.Services.AddServices();
 
 // DI Candidate
 builder.Services.AddScoped<ICandidateRepository, CandidateRepository>();
@@ -39,7 +43,7 @@ app.MapCandidateEndpoints();
 app.MapSubmitExamEndpoints();
 // Link Verification
 app.MapVerifyLinkEndpoints();
+app.MapAuthEndpoints();
 
 app.Run();
-
 
