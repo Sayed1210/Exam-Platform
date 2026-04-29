@@ -15,6 +15,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 
+// DI Candidate
+builder.Services.AddScoped<ICandidateRepository, CandidateRepository>();
+builder.Services.AddScoped<ICandidateService, CandidateService>();
+// DI ExamSubmit
+builder.Services.AddScoped<ICandidateAnswerRepository, CandidateAnswerRepository>();
+builder.Services.AddScoped<ICandidateExamRepository, CandidateExamRepository>();
+builder.Services.AddScoped<IExamSubmissionService, ExamSubmissionService>();
+// DI Verify Link
+builder.Services.AddScoped<IVerifyInvitationService, VerifyInvitationService>();
+
 builder.Services.AddDbContext<ApiContext>(options =>
     options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection")!));
 
