@@ -32,7 +32,7 @@ public static class AuthEndpoints
 
         await authService.ForgetPasswordAsync(request, cancellationToken);
         
-
+        
         return Results.Ok(new MessageResponse("If this email exists, a message has been sent with reset password link."));
     }
 
