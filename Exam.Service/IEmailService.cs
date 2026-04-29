@@ -3,5 +3,5 @@
 public interface IEmailService
 {
    
-    Task SendInvitationEmail(string email, string token);
+    Task SendEmailAsync(string to, string subject,string htmlBody);
 }

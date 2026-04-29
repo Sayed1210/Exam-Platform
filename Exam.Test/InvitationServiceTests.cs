@@ -35,7 +35,7 @@ public class InvitationServiceTests
     Assert.Equal("Candidate with this email not found", result.Message);
     
     
-    _emailMock.Verify(e => e.SendInvitationEmail(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    _emailMock.Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(),It.IsAny<string>()), Times.Never);
     }
     [Fact]
     public async Task SendInvitationAsync_EmailFails_RollsBackDatabase()
@@ -48,7 +48,7 @@ public class InvitationServiceTests
     _repoMock.Setup(r => r.BeginTransactionAsync()).ReturnsAsync(transactionMock.Object);
 
     
-    _emailMock.Setup(e => e.SendInvitationEmail(It.IsAny<string>(), It.IsAny<string>()))
+    _emailMock.Setup(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(),It.IsAny<string>()))
               .ThrowsAsync(new Exception("SMTP Server Down"));
 
 
@@ -71,12 +71,12 @@ public class InvitationServiceTests
     "Last Name"         
       );
         var candidate = new Candidate { Id = 101, Email = "test@enozom.com" };
-        
+        var transactionMock = new Mock<IDbContextTransaction>();
         _repoMock.Setup(r => r.GetCandidateByEmailAsync(request.Email))
                  .ReturnsAsync(candidate);
         
         _repoMock.Setup(r => r.BeginTransactionAsync())
-                 .ReturnsAsync(new Mock<IDbContextTransaction>().Object);
+                 .ReturnsAsync(transactionMock.Object);
 
         var result = await _service.SendInvitationAsync(request);
 
@@ -84,6 +84,7 @@ public class InvitationServiceTests
         Assert.Equal("Invitation sent successfully.", result.Message);
         
 
-        _emailMock.Verify(e => e.SendInvitationEmail(request.Email, It.IsAny<string>()), Times.Once);
+        _emailMock.Verify(e => e.SendEmailAsync(request.Email, It.IsAny<string>(),It.IsAny<string>()), Times.Once);
+        transactionMock.Verify(t => t.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }
