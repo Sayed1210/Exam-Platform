@@ -10,4 +10,8 @@
     <ProjectReference Include="..\Exam.Repo\repositories.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.9" />
+  </ItemGroup>
+
 </Project>
