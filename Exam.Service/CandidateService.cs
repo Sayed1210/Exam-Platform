@@ -1,5 +1,5 @@
-namespace Exam.Services;
-using Exam.Repositories;
+namespace Exam.Service;
+using Exam.Repo;
 using Exam.Models;
 
 // Constructor injection (Primary Constructor)

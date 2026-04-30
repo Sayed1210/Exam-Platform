@@ -1,4 +1,4 @@
-namespace Exam.Repositories;
+namespace Exam.Repo;
 using Microsoft.EntityFrameworkCore;
 using Exam.Models;
 using Exam.Data;

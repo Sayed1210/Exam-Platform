@@ -1,5 +1,5 @@
 // CandidateExam table -> update 'score' & 'status' values in db
-namespace Exam.Repositories;
+namespace Exam.Repo;
 using Exam.Models;
 
 public interface ICandidateExamRepository

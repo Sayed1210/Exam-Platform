@@ -1,8 +1,8 @@
 using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Exam.Data;
-using Exam.Repositories;
-using Exam.Services;
+using Exam.Repo;
+using Exam.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
@@ -36,7 +36,7 @@ app.UseHttpsRedirection();
 // Candidate
 app.MapCandidateEndpoints();
 // Submit Exam
-app.MapExamEndpoints();
+app.MapSubmitExamEndpoints();
 // Link Verification
 app.MapVerifyLinkEndpoints();
 

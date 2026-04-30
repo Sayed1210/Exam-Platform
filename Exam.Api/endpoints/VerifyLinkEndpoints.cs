@@ -1,4 +1,4 @@
-using Exam.Services;
+using Exam.Service;
 
 public static class VerifyLinkEndpoints
 {

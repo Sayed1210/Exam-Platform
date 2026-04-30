@@ -1,4 +1,4 @@
-namespace Exam.Services;
+namespace Exam.Service;
 
 
 public interface ICandidateService

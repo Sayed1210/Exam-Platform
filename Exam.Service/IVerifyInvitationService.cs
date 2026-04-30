@@ -1,5 +1,5 @@
 using Exam.Models;
-namespace Exam.Services;
+namespace Exam.Service;
 
 public interface IVerifyInvitationService
 {
