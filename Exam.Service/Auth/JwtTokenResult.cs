@@ -1,4 +1,4 @@
-namespace Exam.Service.Auth;
+namespace Exam.Service;
 
 public class JwtTokenResult
 {

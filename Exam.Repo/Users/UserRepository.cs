@@ -2,7 +2,7 @@ using Exam.Data;
 using Exam.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Exam.Repo.Users;
+namespace Exam.Repo;
 
 public class UserRepository : IUserRepository
 {
@@ -13,7 +13,7 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+    public Task<User?> GetUserByEmailAsync(string email, CancellationToken cancellationToken)
     {
         return _context.User
             .AsNoTracking()
@@ -28,5 +28,16 @@ public class UserRepository : IUserRepository
                 LastName = user.LastName
             })
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public Task<User?> GetUserByIdAsync(int userId, CancellationToken cancellationToken)
+    {
+        return _context.User.FirstOrDefaultAsync(user => user.Id == userId, cancellationToken);
+    }
+
+    public async Task UpdateUserPasswordAsync(User user, string passwordHash, CancellationToken cancellationToken)
+    {
+        user.Password = passwordHash;
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }

@@ -1,8 +1,10 @@
 using Exam.Models;
 
-namespace Exam.Repo.Users;
+namespace Exam.Repo;
 
 public interface IUserRepository
 {
-    Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
+    Task<User?> GetUserByEmailAsync(string email, CancellationToken cancellationToken);
+    Task<User?> GetUserByIdAsync(int userId, CancellationToken cancellationToken);
+    Task UpdateUserPasswordAsync(User user, string passwordHash, CancellationToken cancellationToken);
 }

@@ -5,7 +5,7 @@ using Exam.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Exam.Service.Auth;
+namespace Exam.Service;
 
 public class JwtTokenGenerator : IJwtTokenGenerator
 {

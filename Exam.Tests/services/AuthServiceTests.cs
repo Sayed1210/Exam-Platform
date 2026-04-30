@@ -1,10 +1,11 @@
 using Exam.Models;
-using Exam.Models.Dtos.Requests;
-using Exam.Repo.Users;
-using Exam.Service.Auth;
+using Exam.Repo;
+using Exam.Service;
 using Microsoft.AspNetCore.Identity;
 using Moq;
 using Xunit;
+using Microsoft.Extensions.Configuration;
+
 
 namespace Exam.Tests.Services;
 
@@ -16,15 +17,28 @@ public class AuthServiceTests
         var userRepository = new Mock<IUserRepository>();
         var passwordHasher = new Mock<IPasswordHasher<User>>();
         var jwtTokenGenerator = new Mock<IJwtTokenGenerator>();
+        var passwordResetTokenRepository = new Mock<IPasswordResetTokenRepository>();
+        var emailService = new Mock<IEmailService>();
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+    {
+        { "Jwt:Key", "test-key" },
+        { "Jwt:Issuer", "test-issuer" },
+        { "Jwt:Audience", "test-audience" }
+    })
+    .Build();
 
         userRepository
-            .Setup(repository => repository.GetByEmailAsync("test@test.com", It.IsAny<CancellationToken>()))
+            .Setup(repository => repository.GetUserByEmailAsync("test@test.com", It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         var authService = new AuthService(
             userRepository.Object,
+            passwordResetTokenRepository.Object,
+            emailService.Object,
+            config,
             passwordHasher.Object,
-            jwtTokenGenerator.Object);
+            jwtTokenGenerator.Object
+);
 
         var result = await authService.LoginAsync(new LoginRequest
         {
@@ -46,9 +60,19 @@ public class AuthServiceTests
         var userRepository = new Mock<IUserRepository>();
         var passwordHasher = new Mock<IPasswordHasher<User>>();
         var jwtTokenGenerator = new Mock<IJwtTokenGenerator>();
+        var passwordResetTokenRepository = new Mock<IPasswordResetTokenRepository>();
+        var emailService = new Mock<IEmailService>();
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+    {
+        { "Jwt:Key", "test-key" },
+        { "Jwt:Issuer", "test-issuer" },
+        { "Jwt:Audience", "test-audience" }
+    })
+    .Build();
+        
 
         userRepository
-            .Setup(repository => repository.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
+            .Setup(repository => repository.GetUserByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         passwordHasher
@@ -57,8 +81,12 @@ public class AuthServiceTests
 
         var authService = new AuthService(
             userRepository.Object,
+            passwordResetTokenRepository.Object,
+            emailService.Object,
+            config,
             passwordHasher.Object,
-            jwtTokenGenerator.Object);
+            jwtTokenGenerator.Object
+);
 
         var result = await authService.LoginAsync(new LoginRequest
         {
@@ -77,10 +105,18 @@ public class AuthServiceTests
         var userRepository = new Mock<IUserRepository>();
         var passwordHasher = new Mock<IPasswordHasher<User>>();
         var jwtTokenGenerator = new Mock<IJwtTokenGenerator>();
-        var expiresAt = DateTime.UtcNow.AddMinutes(60);
+        var passwordResetTokenRepository = new Mock<IPasswordResetTokenRepository>();
+        var emailService = new Mock<IEmailService>();
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+    {
+        { "Jwt:Key", "test-key" },
+        { "Jwt:Issuer", "test-issuer" },
+        { "Jwt:Audience", "test-audience" }
+    })
+    .Build();
 
         userRepository
-            .Setup(repository => repository.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
+            .Setup(repository => repository.GetUserByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         passwordHasher
@@ -92,13 +128,17 @@ public class AuthServiceTests
             .Returns(new JwtTokenResult
             {
                 Token = "mock-jwt-token",
-                ExpiresAt = expiresAt
+                ExpiresAt = DateTime.UtcNow.AddHours(1)
             });
 
         var authService = new AuthService(
             userRepository.Object,
+            passwordResetTokenRepository.Object,
+            emailService.Object,
+            config,
             passwordHasher.Object,
-            jwtTokenGenerator.Object);
+            jwtTokenGenerator.Object
+);
 
         var result = await authService.LoginAsync(new LoginRequest
         {
@@ -108,12 +148,12 @@ public class AuthServiceTests
 
         Assert.NotNull(result);
         Assert.Equal("mock-jwt-token", result.Token);
-        Assert.Equal(expiresAt, result.ExpiresAt);
+        Assert.Equal(DateTime.UtcNow.AddHours(1), result.ExpiresAt);
         Assert.Equal("Admin", result.FirstName);
         Assert.Equal("User", result.LastName);
 
         userRepository.Verify(
-            repository => repository.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>()),
+            repository => repository.GetUserByEmailAsync(user.Email, It.IsAny<CancellationToken>()),
             Times.Once);
         passwordHasher.Verify(
             hasher => hasher.VerifyHashedPassword(user, user.Password, "Password123!"),

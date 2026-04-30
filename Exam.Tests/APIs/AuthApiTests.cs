@@ -1,8 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
-using Exam.Models.Dtos.Requests;
-using Exam.Models.Dtos.Responses;
-using Exam.Service.Auth;
+using Exam.Models;
+using Exam.Service;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;

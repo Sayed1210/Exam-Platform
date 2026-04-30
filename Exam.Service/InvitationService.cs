@@ -1,6 +1,4 @@
 using Exam.Models;
-using Exam.Models.Dtos.Requests;
-using Exam.Models.Dtos.Responses;
 using Exam.Repo;
 namespace Exam.Service;
 public class InvitationService(ICandidateExamRepository repository, IEmailService emailService) : IInvitationService

@@ -1,4 +1,4 @@
-namespace Exam.Models.Dtos.Responses;
+namespace Exam.Models;
 public record InvitationStatusResponse(
     bool IsSuccess,
     string Message,

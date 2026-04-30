@@ -1,6 +1,6 @@
 using Exam.Models;
 
-namespace Exam.Service.Auth;
+namespace Exam.Service;
 
 public interface IJwtTokenGenerator
 {

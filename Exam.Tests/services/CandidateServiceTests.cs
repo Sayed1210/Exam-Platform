@@ -83,7 +83,7 @@ public class CandidateServiceTests
     public async Task AddCandidate_ShouldAddCandidate_WhenNotExists()
     {
         // Arrange
-        var dto = new CreateCandidate
+        var dto = new CreateCandidateRequest
         {
             Email = "new@test.com",
             FirstName = "A",
@@ -111,7 +111,7 @@ public class CandidateServiceTests
     public async Task AddCandidate_ShouldThrow_WhenEmailExists()
     {
         // Arrange
-        var dto = new CreateCandidate
+        var dto = new CreateCandidateRequest
         {
             Email = "exist@test.com"
         };

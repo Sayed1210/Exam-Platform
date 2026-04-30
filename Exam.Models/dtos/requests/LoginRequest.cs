@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Exam.Models.Dtos.Requests;
+namespace Exam.Models;
 
 public class LoginRequest
 {

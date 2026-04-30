@@ -1,6 +1,6 @@
 using Exam.Data;
 using Exam.Models;
-using Exam.Repo.Users;
+using Exam.Repo;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.MySql;
 using Xunit;
@@ -43,7 +43,7 @@ public class UserRepositoryTests : IAsyncLifetime
 
         var repository = new UserRepository(context);
 
-        var result = await repository.GetByEmailAsync("admin@example.com");
+        var result = await repository.GetUserByEmailAsync("admin@example.com", CancellationToken.None);
 
         Assert.NotNull(result);
         Assert.Equal("admin@example.com", result.Email);
@@ -59,7 +59,7 @@ public class UserRepositoryTests : IAsyncLifetime
 
         var repository = new UserRepository(context);
 
-        var result = await repository.GetByEmailAsync("missing@example.com");
+        var result = await repository.GetUserByEmailAsync("missing@example.com", CancellationToken.None);
 
         Assert.Null(result);
     }

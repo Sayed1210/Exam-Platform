@@ -88,7 +88,7 @@ public class ExamSubmissionServiceTests
             .ReturnsAsync(candidateExam);
 
         _answerRepoMock
-            .Setup(r => r.GetCorrectChoiceIdsAsync(1))
+            .Setup(r => r.GetCorrectChoiceIdsAsync(new List<int> { 1 }))
             .ReturnsAsync(new List<int> { 5 });
 
         await _service.SubmitExam(10, request);
@@ -124,11 +124,11 @@ public class ExamSubmissionServiceTests
             .ReturnsAsync(candidateExam);
 
         _answerRepoMock
-            .Setup(r => r.GetCorrectChoiceIdsAsync(1))
+            .Setup(r => r.GetCorrectChoiceIdsAsync(new List<int> { 1 }))
             .ReturnsAsync(new List<int> { 5 });
 
         _answerRepoMock
-            .Setup(r => r.GetCorrectChoiceIdsAsync(2))
+            .Setup(r => r.GetCorrectChoiceIdsAsync(new List<int> { 2 }))
             .ReturnsAsync(new List<int> { 9 });
 
         await _service.SubmitExam(10, request);
@@ -162,7 +162,7 @@ public class ExamSubmissionServiceTests
             .ReturnsAsync(candidateExam);
 
         _answerRepoMock
-            .Setup(r => r.GetCorrectChoiceIdsAsync(1))
+            .Setup(r => r.GetCorrectChoiceIdsAsync(new List<int> { 1 }))
             .ReturnsAsync(new List<int> { 5 });
 
         await _service.SubmitExam(10, request);

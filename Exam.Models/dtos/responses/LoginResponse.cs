@@ -1,4 +1,4 @@
-namespace Exam.Models.Dtos.Responses;
+namespace Exam.Models;
 
 public class LoginResponse
 {

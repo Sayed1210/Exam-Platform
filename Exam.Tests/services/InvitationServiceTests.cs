@@ -3,7 +3,6 @@ using Xunit;
 using Exam.Service;
 using Exam.Repo;
 using Exam.Models;
-using Exam.Models.Dtos.Requests;
 using Microsoft.EntityFrameworkCore.Storage;
 namespace Exam.Test;
 
@@ -11,7 +10,7 @@ public class InvitationServiceTests
 {
     private readonly Mock<ICandidateExamRepository> _repoMock;
     private readonly Mock<IEmailService> _emailMock;
-    private readonly InvitationService _service;
+    private readonly IInvitationService _service;
 
     public InvitationServiceTests()
     {

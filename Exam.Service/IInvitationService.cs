@@ -1,5 +1,4 @@
-using Exam.Models.Dtos.Requests;
-using Exam.Models.Dtos.Responses;
+using Exam.Models;
 namespace Exam.Service;
 public interface IInvitationService
 {
