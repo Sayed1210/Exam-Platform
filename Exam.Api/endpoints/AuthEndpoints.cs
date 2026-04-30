@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Exam.Models;
 using Exam.Service;
 
-namespace Exam.Api;
 
 public static class AuthEndpoints
 {
