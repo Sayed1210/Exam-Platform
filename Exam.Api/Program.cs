@@ -1,6 +1,5 @@
 using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
-using Exam.Api;
 using Exam.Data;
 using Exam.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
