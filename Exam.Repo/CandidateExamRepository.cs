@@ -23,7 +23,7 @@ public class CandidateExamRepository(ApiContext context) : ICandidateExamReposit
 
     public async Task SaveChangesAsync()
     {
-        await context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
     }
 
     public async Task<CandidateExam?> GetAsync(int candidateId, int examId)
