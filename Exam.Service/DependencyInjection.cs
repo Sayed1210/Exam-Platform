@@ -1,9 +1,9 @@
-using Exam.Service.Auth;
+namespace Exam.Service;
+using Exam.Service;
 using Exam.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Exam.Service;
 
 public static class DependencyInjection
 {
@@ -11,8 +11,11 @@ public static class DependencyInjection
     {
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
         return services;
     }
+    
 }

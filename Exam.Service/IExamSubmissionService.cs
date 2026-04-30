@@ -1,6 +1,7 @@
 using Exam.Models;
+namespace Exam.Service;
 
 public interface IExamSubmissionService
 {
-    Task SubmitExam(int examId, SubmitExamRequest request);
+    Task<(bool Success, string? Error)> SubmitExam(int examId, SubmitExamRequest request);
 }

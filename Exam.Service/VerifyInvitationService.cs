@@ -3,7 +3,7 @@ using Exam.Repo;
 
 namespace Exam.Service;
 
-public class VerifyInvitationService : IVerifyInvitationService
+public class VerifyInvitationService :  IVerifyInvitationService
 {
     private readonly ICandidateExamRepository _repo;
     public VerifyInvitationService(ICandidateExamRepository repo)

@@ -15,6 +15,8 @@ namespace Exam.Data;
         public DbSet<ExamQuestion> ExamQuestions { get; set; }
         public DbSet<CandidateAnswer> CandidateAnswers { get; set; }
         public DbSet<CandidateExam> CandidateExams { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
