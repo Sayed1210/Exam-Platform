@@ -1,4 +1,4 @@
-using Exam.Services;
+using Exam.Service;
 
 // Static class used to group endpoint definitions
 // This is a common pattern in Minimal APIs to keep Program.cs clean
@@ -35,7 +35,7 @@ public static class CandidateEndpoints
             return Results.Ok(candidate);
         });
 
-        candidates.MapPost("/", async (CreateCandidate dto, ICandidateService service) =>
+        candidates.MapPost("/", async (CreateCandidateRequest dto, ICandidateService service) =>
         {
             await service.AddCandidate(dto);
 

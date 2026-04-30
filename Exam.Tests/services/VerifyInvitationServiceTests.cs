@@ -1,7 +1,7 @@
 using Xunit;
 using Moq;
-using Exam.Services;
-using Exam.Repositories;
+using Exam.Service;
+using Exam.Repo;
 using Exam.Models;
 
 namespace Exam.Tests;

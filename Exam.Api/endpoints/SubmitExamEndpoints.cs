@@ -1,7 +1,7 @@
 using Exam.Models;
-public static class ExamEndpoints
+public static class SubmitExamEndpoints
 {
-    public static void MapExamEndpoints(this IEndpointRouteBuilder app)
+    public static void MapSubmitExamEndpoints(this IEndpointRouteBuilder app)
     {
         var exams = app.MapGroup("/exams");
 

@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-namespace Exam.Repositories;
+namespace Exam.Repo;
 using Exam.Models;
 using Exam.Data;   
 

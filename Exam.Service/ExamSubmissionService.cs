@@ -1,6 +1,6 @@
 // Service responsible for handling exam submission logic
 // (saving answers, calculating score & updating status to done)
-using Exam.Repositories;
+using Exam.Repo;
 using Exam.Models;
 
 public class ExamSubmissionService(
