@@ -61,7 +61,7 @@ public class CandidateService(ICandidateRepository candidateRepository) : ICandi
         };
     }
 
-    public async Task AddCandidate(CreateCandidate dto)
+    public async Task AddCandidate(CreateCandidateRequest dto)
     {
         // Check if candidate already exists
         var existingCandidate = await _candidateRepository.GetByEmailAsync(dto.Email);

@@ -8,6 +8,6 @@ public interface ICandidateService
 
     Task<CandidateResponse?> GetCandidateByExamId(int examId);
     
-    Task AddCandidate(CreateCandidate candidate);
+    Task AddCandidate(CreateCandidateRequest candidate);
     Task DeleteCandidate(int id);
 }

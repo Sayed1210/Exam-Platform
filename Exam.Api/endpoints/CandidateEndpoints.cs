@@ -35,7 +35,7 @@ public static class CandidateEndpoints
             return Results.Ok(candidate);
         });
 
-        candidates.MapPost("/", async (CreateCandidate dto, ICandidateService service) =>
+        candidates.MapPost("/", async (CreateCandidateRequest dto, ICandidateService service) =>
         {
             await service.AddCandidate(dto);
 
