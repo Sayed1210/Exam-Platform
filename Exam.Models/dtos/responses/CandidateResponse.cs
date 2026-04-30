@@ -1,3 +1,5 @@
+namespace Exam.Models;
+
 public class CandidateResponse
 {
     public int Id { get; set; }

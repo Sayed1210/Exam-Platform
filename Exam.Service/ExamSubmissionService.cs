@@ -2,6 +2,8 @@
 // (saving answers, calculating score & updating status to done)
 using Exam.Repo;
 using Exam.Models;
+namespace Exam.Service;
+
 
 public class ExamSubmissionService(
     ICandidateAnswerRepository answerRepo,

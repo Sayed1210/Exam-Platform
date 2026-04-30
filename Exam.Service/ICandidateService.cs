@@ -1,4 +1,5 @@
 namespace Exam.Service;
+using Exam.Models;
 
 
 public interface ICandidateService

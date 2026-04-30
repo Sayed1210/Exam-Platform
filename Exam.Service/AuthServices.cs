@@ -3,7 +3,7 @@ namespace Exam.Service;
 using System.Security.Cryptography;
 using System.Text;
 using Exam.Models;
-using Exam.Models.Dtos.Requests;
+using Exam.Models;
 using Exam.Repo;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
