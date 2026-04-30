@@ -7,4 +7,9 @@ public interface ICandidateExamRepository
     Task AddInvitationAsync(CandidateExam invitation);
     Task<IDbContextTransaction> BeginTransactionAsync();
     Task SaveChangesAsync();
+    Task<CandidateExam?> GetAsync(int candidateId, int examId);
+    Task SaveAsync(CandidateExam candidateExam);
+
+    Task<CandidateExam?> GetByInvitationTokenAsync(string token);
+
 }

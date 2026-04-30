@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Exam.Data;
 using Exam.Repo;
 using Exam.Service;
-using Exam.Api.endpoints;
+//using Exam.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
