@@ -21,7 +21,9 @@ builder.Services.AddScoped<IVerifyInvitationService, VerifyInvitationService>();
 
 builder.Services.AddDbContext<ApiContext>(options =>
     options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection")!));
-
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IInvitationService, InvitationService>();
+builder.Services.AddScoped<ICandidateExamRepository, CandidateExamRepository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -30,7 +32,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
-
+app.MapInvitationsEndpoints();
 app.UseHttpsRedirection();
 
 // Candidate
