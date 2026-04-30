@@ -2,12 +2,10 @@ using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Exam.Api;
 using Exam.Data;
-using Exam.Api.Endpoints;
 using Exam.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Exam.Service.Auth;
 using Exam.Repo;
 
 
@@ -17,8 +15,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddOpenApi();
-builder.Services.AddRepositories();
-builder.Services.AddServices();
 
 // DI Candidate
 builder.Services.AddScoped<ICandidateRepository, CandidateRepository>();
@@ -32,7 +28,6 @@ builder.Services.AddScoped<IVerifyInvitationService, VerifyInvitationService>();
 
 builder.Services.AddDbContext<ApiContext>(options =>
     options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection")!));
-<<<<<<< Exam.Api/Program.cs
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(nameof(JwtSettings)));
 builder.Services.AddRepositoryLayer(); //Dependency injection for repository layer, exists in Exam.Repo/DependencyInjection.cs 
@@ -59,11 +54,8 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-=======
-builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IInvitationService, InvitationService>();
 builder.Services.AddScoped<ICandidateExamRepository, CandidateExamRepository>();
->>>>>>> Exam.Api/Program.cs
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -75,7 +67,6 @@ if (app.Environment.IsDevelopment())
 app.MapInvitationsEndpoints();
 app.UseHttpsRedirection();
 
-<<<<<<< Exam.Api/Program.cs
 app.UseAuthentication();
 app.UseAuthorization();
 

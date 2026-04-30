@@ -1,4 +1,4 @@
-using Exam.Models.Dtos.Requests;
+using Exam.Models;
 using Exam.Service;             
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

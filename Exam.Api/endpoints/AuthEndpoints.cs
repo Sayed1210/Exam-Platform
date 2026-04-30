@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
-using Exam.Models.Dtos.Requests;
-using Exam.Service.Auth;
+using Exam.Models;
+using Exam.Service;
 
-namespace Exam.Api.Endpoints;
+namespace Exam.Api;
 
 public static class AuthEndpoints
 {
