@@ -2,5 +2,5 @@ using Exam.Models;
 
 public interface IExamSubmissionService
 {
-    Task SubmitExam(int examId, SubmitExamRequest request);
+    Task<(bool Success, string? Error)> SubmitExam(int examId, SubmitExamRequest request);
 }

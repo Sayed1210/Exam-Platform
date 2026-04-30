@@ -11,13 +11,11 @@ public static class SubmitExamEndpoints
             IExamSubmissionService service) =>
         {
             // Delegates all business logic to the service layer
-            await service.SubmitExam(examId, request);
+            var (success, error) = await service.SubmitExam(examId, request);
 
-            // Returns a simple success response (HTTP 200 OK)
-            return Results.Ok(new
-            {
-                message = "Exam submitted successfully"
-            });
+            return success
+            ? Results.Ok(new { message = "Exam submitted successfully" })
+            : Results.BadRequest(new { message = error });
         });
     }
 }

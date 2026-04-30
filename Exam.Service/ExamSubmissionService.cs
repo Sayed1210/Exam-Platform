@@ -11,16 +11,16 @@ public class ExamSubmissionService(
     private readonly ICandidateExamRepository _examRepo = examRepo;
 
     // Main workflow: candidate submits exam
-    public async Task SubmitExam(int examId, SubmitExamRequest request)
+    public async Task<(bool Success, string? Error)> SubmitExam(int examId, SubmitExamRequest request)
     {
         // Retrieve CandidateExam (ensures candidate is assigned to this exam)
-        var candidateExam = await _examRepo.GetAsync(
-            request.CandidateId, examId)
-            ?? throw new Exception("Candidate is not assigned to this exam");
+        var candidateExam = await _examRepo.GetAsync(request.CandidateId, examId);
+        if (candidateExam is null)
+            return (false, "Candidate is not assigned to this exam");
 
         // Prevent double submission
         if (candidateExam.Status == ExamStatus.DONE)
-            throw new Exception("Exam already submitted");
+            return (false, "Exam already submitted");
 
         // Map request answers → CandidateAnswer entities
         var answers = request.Answers.Select(a => new CandidateAnswer
@@ -34,15 +34,12 @@ public class ExamSubmissionService(
         // Save answers via repository to EF change tracker
         await _answerRepo.AddRangeAsync(answers);
 
-        // Calculate score
-        int score = 0;
-        foreach (var answer in request.Answers)
-        {
-            var correctChoiceIds = await _answerRepo.GetCorrectChoiceIdsAsync(answer.QuestionId);
+        // Fetch all correct choices in ONE query instead of N queries
+        var questionIds = request.Answers.Select(a => a.QuestionId).ToList();
+        var correctChoiceIds = await _answerRepo.GetCorrectChoiceIdsAsync(questionIds);
 
-            if (correctChoiceIds.Contains(answer.ChoiceId))
-                score++;
-        }
+        // Calculate score against the in-memory lookup
+        int score = request.Answers.Count(a => correctChoiceIds.Contains(a.ChoiceId));
 
         // Update CandidateExam result
         candidateExam.Score = score;
@@ -50,5 +47,6 @@ public class ExamSubmissionService(
 
         // Save all changes in one transaction
         await _examRepo.SaveAsync(candidateExam);
+        return (true, null);
     }
 }

@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Exam.Service;
 
 // Static class used to group endpoint definitions
@@ -37,14 +38,19 @@ public static class CandidateEndpoints
 
         candidates.MapPost("/", async (CreateCandidateRequest dto, ICandidateService service) =>
         {
-            await service.AddCandidate(dto);
+            bool added = await service.AddCandidate(dto);
+            if (!added)
+                return Results.BadRequest(new { message = "Candidate already exists" });
 
             return Results.Ok(new { message = "Candidate added successfully" });
         });
 
         candidates.MapDelete("/{id}", async (int id, ICandidateService service) =>
         {
-            await service.DeleteCandidate(id);
+            bool exists = await service.DeleteCandidate(id);
+            if (!exists)
+                return Results.BadRequest(new { message = "Candidate doesn't exist" });
+
             return Results.Ok(new { message = "Candidate deleted successfully" });
         });
     }
