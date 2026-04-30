@@ -47,5 +47,4 @@ public class CandidateExamRepository(ApiContext context) : ICandidateExamReposit
             .Include(ce => ce.Candidate)
             .FirstOrDefaultAsync(ce => ce.InvitationToken == token);
     }
-
 }

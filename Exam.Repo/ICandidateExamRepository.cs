@@ -11,5 +11,4 @@ public interface ICandidateExamRepository
     Task SaveAsync(CandidateExam candidateExam);
 
     Task<CandidateExam?> GetByInvitationTokenAsync(string token);
-
 }
