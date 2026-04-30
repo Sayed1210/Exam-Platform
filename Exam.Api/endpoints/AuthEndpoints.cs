@@ -1,8 +1,7 @@
 namespace Exam.Api;
 
 using System.ComponentModel.DataAnnotations;
-using Exam.Models.Dtos.Requests;
-using Exam.Models.Dtos.Responses;
+using Exam.Models;
 using Exam.Service;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,9 +12,21 @@ public static class AuthEndpoints
         var group = app.MapGroup("/api/auth")
             .WithTags("Auth");
 
-        group.MapPost("/forget-password", ForgetPassword);
-        group.MapPost("/reset-password", ResetPassword);
+        group.MapPost("/forget-password", ForgetPassword)
+            .WithName("ForgetPassword")
+            .WithSummary("Request password reset")
+            .WithDescription("Sends a password reset link to the user's email if it exists.")
+            .Produces<MessageResponse>(StatusCodes.Status200OK)
+            .ProducesValidationProblem(StatusCodes.Status400BadRequest);
 
+        group.MapPost("/reset-password", ResetPassword)
+            .WithName("ResetPassword")
+            .WithSummary("Reset user password")
+            .WithDescription("Resets the user's password using a valid reset token.")
+            .Produces<MessageResponse>(StatusCodes.Status200OK)
+            .Produces<MessageResponse>(StatusCodes.Status400BadRequest)
+            .ProducesValidationProblem(StatusCodes.Status400BadRequest);
+        
         return app;
     }
 

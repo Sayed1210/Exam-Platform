@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using Exam.Service;
-
+using Exam.Models;
 // Static class used to group endpoint definitions
 // This is a common pattern in Minimal APIs to keep Program.cs clean
 public static class CandidateEndpoints

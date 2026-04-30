@@ -6,6 +6,7 @@ using Exam.Repo;
 using Exam.Service;
 
 
+
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -37,13 +38,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+
+app.MapAuthEndpoints();
+
 // Candidate
 app.MapCandidateEndpoints();
 // Submit Exam
 app.MapSubmitExamEndpoints();
 // Link Verification
 app.MapVerifyLinkEndpoints();
-app.MapAuthEndpoints();
 
 app.Run();
 
