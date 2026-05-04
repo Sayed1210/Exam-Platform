@@ -20,7 +20,10 @@ public class CandidateExamRepository(ApiContext context) : ICandidateExamReposit
     {
         return await _context.Database.BeginTransactionAsync();
     }
-
+    public async Task<bool> ExamExistsAsync(int examId)
+{
+    return await _context.Exams.AnyAsync(e => e.Id == examId);
+}
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();
