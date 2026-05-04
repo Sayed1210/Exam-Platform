@@ -9,115 +9,78 @@ namespace Exam.Service
     public class ExamService : IExamService
     {
         private readonly IExamRepository _repo;
-        private readonly IQuestionRepository _questionRepo;
 
         public ExamService(IExamRepository repo, IQuestionRepository questionRepo)
         {
             _repo = repo;
-            _questionRepo = questionRepo;
         }
 
-        public async Task<ExamResponseDto> CreateExamAsync(CreateExamDto dto)
+        public async Task<ExamResponse> CreateExamAsync(CreateExamRequest dto)
         {
-            ArgumentNullException.ThrowIfNull(dto);
-
-            if (string.IsNullOrWhiteSpace(dto.Title))
-                throw new ArgumentException("Exam title cannot be empty.", nameof(dto.Title));
-
-            if (dto.Title.Length > 200)
-                throw new ArgumentException("Exam title cannot exceed 200 characters.", nameof(dto.Title));
-
-            if (dto.DurationMins <= 0)
-                throw new ArgumentException("Duration must be greater than 0 minutes.", nameof(dto.DurationMins));
+           
 
             var exam = new ExamEntity
             {
                 Title = dto.Title.Trim(),
-                DurationMins = dto.DurationMins
+                DurationMins = dto.DurationMins,
+                CreatedAt = DateTime.UtcNow,
+                ExamQuestions = dto.QuestionIds.Select(qId => new ExamQuestion
+                {
+                    QuestionId = qId
+                }).ToList()
             };
 
             await _repo.AddAsync(exam);
-            return MapToResponseDto(exam);
+            var created = await _repo.GetWithQuestionsAndChoicesAsync(exam.Id);
+            return MapToFullResponseDto(created!);
         }
 
-        public async Task<IEnumerable<ExamResponseDto>> GetAllExamsAsync()
+        public async Task<IEnumerable<ExamResponse>> GetAllExamsAsync()
         {
             var exams = await _repo.GetAllAsync();
             return exams.Select(MapToResponseDto);
         }
 
-        public async Task<ExamResponseDto?> GetExamByIdAsync(int id)
+        public async Task<ExamResponse?> GetExamByIdAsync(int id)
         {
-            if (id <= 0)
-                throw new ArgumentException("Id must be a positive number.", nameof(id));
-
             var exam = await _repo.GetByIdAsync(id);
             return exam is null ? null : MapToResponseDto(exam);
         }
 
-        public async Task<ExamResponseDto?> GetExamWithQuestionsAsync(int id)
+        public async Task<ExamResponse?> GetExamWithQuestionsAsync(int id)
         {
-            if (id <= 0)
-                throw new ArgumentException("Id must be a positive number.", nameof(id));
-
             var exam = await _repo.GetWithQuestionsAndChoicesAsync(id);
             if (exam is null) return null;
-
-            return new ExamResponseDto
-            {
-                Id = exam.Id,
-                Title = exam.Title,
-                DurationMins = exam.DurationMins,
-                TotalQuestions = exam.ExamQuestions?.Count ?? 0,
-                Questions = exam.ExamQuestions?
-                    .Select(eq => new QuestionInExamDto
-                    {
-                        Id = eq.Question!.Id,
-                        Text = eq.Question.Text,
-                        ImageUrl = eq.Question.ImageUrl,
-                        Choices = eq.Question.Choices
-                            .Select(c => new ChoiceInExamDto
-                            {
-                                Id = c.Id,
-                                Text = c.Text,
-                                IsCorrect = c.IsCorrect,
-                                ImageUrl = c.ImageUrl
-                            }).ToList()
-                    }).ToList() ?? []
-            };
+            return MapToFullResponseDto(exam);
+        }
+        public async Task<IEnumerable<ExamResponse>> GetAllExamsWithQuestionsAsync()
+        {
+            var exams = await _repo.GetAllWithQuestionsAndChoicesAsync();
+            return exams.Select(MapToFullResponseDto);
         }
 
-        public async Task<ExamResponseDto?> UpdateExamAsync(int id, CreateExamDto dto)
+        public async Task<ExamResponse?> UpdateExamAsync(int id, UpdateExamRequest request)
         {
-            if (id <= 0)
-                throw new ArgumentException("Id must be a positive number.", nameof(id));
-
-            ArgumentNullException.ThrowIfNull(dto);
-
-            if (string.IsNullOrWhiteSpace(dto.Title))
-                throw new ArgumentException("Exam title cannot be empty.", nameof(dto.Title));
-
-            if (dto.Title.Length > 200)
-                throw new ArgumentException("Exam title cannot exceed 200 characters.", nameof(dto.Title));
-
-            if (dto.DurationMins <= 0)
-                throw new ArgumentException("Duration must be greater than 0 minutes.", nameof(dto.DurationMins));
-
             var exam = await _repo.GetByIdAsync(id);
             if (exam is null) return null;
 
-            exam.Title = dto.Title.Trim();
-            exam.DurationMins = dto.DurationMins;
+            // Only update fields that were explicitly provided
+            if (request.Title is not null)
+                exam.Title = request.Title.Trim();
 
-            await _repo.UpdateAsync(exam);
-            return MapToResponseDto(exam);
+            if (request.DurationMins is not null)
+                exam.DurationMins = request.DurationMins.Value;
+           
+            exam.CreatedAt = DateTime.UtcNow;
+
+            await _repo.UpdateAsync(exam, request.QuestionIds);  
+
+            var updated = await _repo.GetWithQuestionsAndChoicesAsync(id);
+            return MapToFullResponseDto(updated!);
         }
 
         public async Task<bool> DeleteExamAsync(int id)
         {
-            if (id <= 0)
-                throw new ArgumentException("Id must be a positive number.", nameof(id));
-
             var exam = await _repo.GetByIdAsync(id);
             if (exam is null) return false;
 
@@ -125,39 +88,12 @@ namespace Exam.Service
             return true;
         }
 
-        public async Task<ExamResponseDto> AssignQuestionsAsync(int examId, List<int> questionIds)
+        public async Task<ExamResponse> AssignQuestionsAsync(int examId, List<int> questionIds)
         {
-            if (examId <= 0)
-                throw new ArgumentException("ExamId must be a positive number.", nameof(examId));
-
-            if (questionIds is null || questionIds.Count == 0)
-                throw new ArgumentException("Question list cannot be empty.", nameof(questionIds));
-
-            var duplicates = questionIds
-                .GroupBy(id => id)
-                .Where(g => g.Count() > 1)
-                .Select(g => g.Key)
-                .ToList();
-
-            if (duplicates.Count > 0)
-                throw new ArgumentException(
-                    $"Duplicate question ids in request: {string.Join(", ", duplicates)}.",
-                    nameof(questionIds));
+          
 
             var exam = await _repo.GetByIdAsync(examId);
-            if (exam is null)
-                throw new KeyNotFoundException($"Exam {examId} not found.");
-
-            var notFound = new List<int>();
-            foreach (var qId in questionIds)
-            {
-                var exists = await _questionRepo.ExistsAsync(qId);
-                if (!exists) notFound.Add(qId);
-            }
-
-            if (notFound.Count > 0)
-                throw new KeyNotFoundException(
-                    $"Questions not found: {string.Join(", ", notFound)}.");
+           
 
             var alreadyAssigned = exam.ExamQuestions?
                 .Select(eq => eq.QuestionId)
@@ -167,9 +103,7 @@ namespace Exam.Service
                 .Where(qId => !alreadyAssigned.Contains(qId))
                 .ToList();
 
-            if (toAssign.Count == 0)
-                throw new InvalidOperationException(
-                    "All provided questions are already assigned to this exam.");
+            
 
             var examQuestions = toAssign.Select(qId => new ExamQuestion
             {
@@ -179,40 +113,52 @@ namespace Exam.Service
 
             await _repo.AssignQuestionsAsync(examQuestions);
 
-            var updated = await _repo.GetByIdAsync(examId);
-            return MapToResponseDto(updated!);
+            var updated = await _repo.GetWithQuestionsAndChoicesAsync(examId);
+            return MapToFullResponseDto(updated!);
         }
 
-        public async Task<ExamResponseDto> RemoveQuestionAsync(int examId, int questionId)
+        public async Task<ExamResponse?> RemoveQuestionAsync(int examId, int questionId)
         {
-            if (examId <= 0)
-                throw new ArgumentException("ExamId must be a positive number.", nameof(examId));
-            if (questionId <= 0)
-                throw new ArgumentException("QuestionId must be a positive number.", nameof(questionId));
-
             var exam = await _repo.GetByIdAsync(examId);
-            if (exam is null)
-                throw new KeyNotFoundException($"Exam {examId} not found.");
-
-            var assigned = exam.ExamQuestions?
-                .Any(eq => eq.QuestionId == questionId) ?? false;
-
-            if (!assigned)
-                throw new KeyNotFoundException(
-                    $"Question {questionId} is not assigned to exam {examId}.");
+            if (exam is null) return null;  
 
             await _repo.RemoveQuestionAsync(examId, questionId);
 
-            var updated = await _repo.GetByIdAsync(examId);
-            return MapToResponseDto(updated!);
+            var updated = await _repo.GetWithQuestionsAndChoicesAsync(examId);
+            return MapToFullResponseDto(updated!);
         }
 
-        private static ExamResponseDto MapToResponseDto(ExamEntity exam) => new()
+        private static ExamResponse MapToResponseDto(ExamEntity exam) => new()
         {
             Id = exam.Id,
             Title = exam.Title,
             DurationMins = exam.DurationMins,
+            CreatedAt = exam.CreatedAt,
             TotalQuestions = exam.ExamQuestions?.Count ?? 0
+        };
+
+        private static ExamResponse MapToFullResponseDto(ExamEntity exam) => new()
+        {
+            Id = exam.Id,
+            Title = exam.Title,
+            DurationMins = exam.DurationMins,
+            CreatedAt = exam.CreatedAt,
+            TotalQuestions = exam.ExamQuestions?.Count ?? 0,
+            Questions = exam.ExamQuestions?
+                .Select(eq => new QuestionInExamResponse
+                {
+                    Id = eq.Question!.Id,
+                    Text = eq.Question.Text,
+                    ImageUrl = eq.Question.ImageUrl,
+                    Choices = eq.Question.Choices
+                        .Select(c => new ChoiceInExamResponse
+                        {
+                            Id = c.Id,
+                            Text = c.Text,
+                            IsCorrect = c.IsCorrect,
+                            ImageUrl = c.ImageUrl
+                        }).ToList()
+                }).ToList() ?? []
         };
     }
 }

@@ -24,21 +24,56 @@ namespace Exam.UnitTests
         }
 
         // ════════════════════════════════════════════════════════════════════
+        // HELPERS
+        // ════════════════════════════════════════════════════════════════════
+
+        private static ExamEntity MakeExamWithQuestions(int id = 1) => new()
+        {
+            Id = id,
+            Title = $"Exam {id}",
+            DurationMins = 60,
+            ExamQuestions =
+            [
+                new() { ExamId = id, QuestionId = 1, Question = new() { Id = 1, Text = "Q1", Choices = [] } },
+                new() { ExamId = id, QuestionId = 2, Question = new() { Id = 2, Text = "Q2", Choices = [] } }
+            ]
+        };
+
+        private static ExamEntity MakeEmptyExam(int id = 1) => new()
+        {
+            Id = id,
+            Title = $"Exam {id}",
+            DurationMins = 60,
+            ExamQuestions = []
+        };
+
+        // ════════════════════════════════════════════════════════════════════
         // CREATE
         // ════════════════════════════════════════════════════════════════════
 
         [Fact]
         public async Task CreateExamAsync_Should_Create_Exam()
         {
-            var dto = new CreateExamDto
+            var dto = new CreateExamRequest
             {
                 Title = "Algo",
-                DurationMins = 50
+                DurationMins = 50,
+                QuestionIds = []
             };
 
             _repoMock
                 .Setup(r => r.AddAsync(It.IsAny<ExamEntity>()))
                 .Returns(Task.CompletedTask);
+
+            _repoMock
+                .Setup(r => r.GetWithQuestionsAndChoicesAsync(It.IsAny<int>()))
+                .ReturnsAsync(new ExamEntity
+                {
+                    Id = 1,
+                    Title = "Algo",
+                    DurationMins = 50,
+                    ExamQuestions = []
+                });
 
             var result = await _service.CreateExamAsync(dto);
 
@@ -48,41 +83,27 @@ namespace Exam.UnitTests
         }
 
         [Fact]
-        public async Task CreateExamAsync_Should_Throw_When_Title_Is_Empty()
+        public async Task CreateExamAsync_Should_Create_Exam_With_Questions()
         {
-            var dto = new CreateExamDto
-            {
-                Title = "   ",
-                DurationMins = 50
-            };
-
-            var act = async () => await _service.CreateExamAsync(dto);
-
-            await act.Should().ThrowAsync<ArgumentException>()
-                .WithMessage("*title*");
-        }
-
-        [Fact]
-        public async Task CreateExamAsync_Should_Throw_When_Duration_Is_Zero()
-        {
-            var dto = new CreateExamDto
+            var dto = new CreateExamRequest
             {
                 Title = "Algo",
-                DurationMins = 0
+                DurationMins = 50,
+                QuestionIds = [1, 2]
             };
 
-            var act = async () => await _service.CreateExamAsync(dto);
+            _repoMock
+                .Setup(r => r.AddAsync(It.IsAny<ExamEntity>()))
+                .Returns(Task.CompletedTask);
 
-            await act.Should().ThrowAsync<ArgumentException>()
-                .WithMessage("*Duration*");
-        }
+            _repoMock
+                .Setup(r => r.GetWithQuestionsAndChoicesAsync(It.IsAny<int>()))
+                .ReturnsAsync(MakeExamWithQuestions());
 
-        [Fact]
-        public async Task CreateExamAsync_Should_Throw_When_Dto_Is_Null()
-        {
-            var act = async () => await _service.CreateExamAsync(null!);
+            var result = await _service.CreateExamAsync(dto);
 
-            await act.Should().ThrowAsync<ArgumentNullException>();
+            result.TotalQuestions.Should().Be(2);
+            _repoMock.Verify(r => r.AddAsync(It.IsAny<ExamEntity>()), Times.Once);
         }
 
         // ════════════════════════════════════════════════════════════════════
@@ -92,13 +113,8 @@ namespace Exam.UnitTests
         [Fact]
         public async Task GetAllExamsAsync_Should_Return_List()
         {
-            var exams = new List<ExamEntity>
-            {
-                new ExamEntity { Title = "A", DurationMins = 30 },
-                new ExamEntity { Title = "B", DurationMins = 60 }
-            };
-
-            _repoMock.Setup(r => r.GetAllAsync()).ReturnsAsync(exams);
+            _repoMock.Setup(r => r.GetAllAsync())
+                     .ReturnsAsync([MakeEmptyExam(1), MakeEmptyExam(2)]);
 
             var result = await _service.GetAllExamsAsync();
 
@@ -108,9 +124,7 @@ namespace Exam.UnitTests
         [Fact]
         public async Task GetAllExamsAsync_Should_Return_Empty_When_No_Exams()
         {
-            _repoMock
-                .Setup(r => r.GetAllAsync())
-                .ReturnsAsync(new List<ExamEntity>());
+            _repoMock.Setup(r => r.GetAllAsync()).ReturnsAsync([]);
 
             var result = await _service.GetAllExamsAsync();
 
@@ -124,44 +138,50 @@ namespace Exam.UnitTests
         [Fact]
         public async Task GetExamByIdAsync_Should_Return_Exam_When_Found()
         {
-            var exam = new ExamEntity { Id = 1, Title = "Algo" };
-
-            _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(exam);
+            _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(MakeEmptyExam(1));
 
             var result = await _service.GetExamByIdAsync(1);
 
             result.Should().NotBeNull();
-            result!.Title.Should().Be("Algo");
+            result!.Title.Should().Be("Exam 1");
         }
 
         [Fact]
         public async Task GetExamByIdAsync_Should_Return_Null_When_NotFound()
         {
-            _repoMock
-                .Setup(r => r.GetByIdAsync(1))
-                .ReturnsAsync((ExamEntity?)null);
+            _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((ExamEntity?)null);
 
             var result = await _service.GetExamByIdAsync(1);
 
             result.Should().BeNull();
         }
 
-        [Fact]
-        public async Task GetExamByIdAsync_Should_Throw_When_Id_Is_Zero()
-        {
-            var act = async () => await _service.GetExamByIdAsync(0);
+        // ════════════════════════════════════════════════════════════════════
+        // GET WITH QUESTIONS
+        // ════════════════════════════════════════════════════════════════════
 
-            await act.Should().ThrowAsync<ArgumentException>()
-                .WithMessage("*positive*");
+        [Fact]
+        public async Task GetExamWithQuestionsAsync_Should_Return_Exam_With_Questions()
+        {
+            _repoMock.Setup(r => r.GetWithQuestionsAndChoicesAsync(1))
+                     .ReturnsAsync(MakeExamWithQuestions(1));
+
+            var result = await _service.GetExamWithQuestionsAsync(1);
+
+            result.Should().NotBeNull();
+            result!.TotalQuestions.Should().Be(2);
+            result.Questions.Should().HaveCount(2);
         }
 
         [Fact]
-        public async Task GetExamByIdAsync_Should_Throw_When_Id_Is_Negative()
+        public async Task GetExamWithQuestionsAsync_Should_Return_Null_When_NotFound()
         {
-            var act = async () => await _service.GetExamByIdAsync(-5);
+            _repoMock.Setup(r => r.GetWithQuestionsAndChoicesAsync(1))
+                     .ReturnsAsync((ExamEntity?)null);
 
-            await act.Should().ThrowAsync<ArgumentException>()
-                .WithMessage("*positive*");
+            var result = await _service.GetExamWithQuestionsAsync(1);
+
+            result.Should().BeNull();
         }
 
         // ════════════════════════════════════════════════════════════════════
@@ -169,71 +189,78 @@ namespace Exam.UnitTests
         // ════════════════════════════════════════════════════════════════════
 
         [Fact]
-        public async Task UpdateExamAsync_Should_Update_Exam()
+        public async Task UpdateExamAsync_Should_Update_Title_Only()
         {
-            var exam = new ExamEntity { Id = 1, Title = "Old" };
+            var exam = MakeEmptyExam(1);
 
             _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(exam);
+            _repoMock.Setup(r => r.UpdateAsync(It.IsAny<ExamEntity>(), It.IsAny<List<int>?>()))
+                     .Returns(Task.CompletedTask);
+            _repoMock.Setup(r => r.GetWithQuestionsAndChoicesAsync(1))
+                     .ReturnsAsync(new ExamEntity
+                     {
+                         Id = 1,
+                         Title = "New Title",
+                         DurationMins = 60,
+                         ExamQuestions = []
+                     });
 
-            var dto = new CreateExamDto
-            {
-                Title = "New",
-                DurationMins = 60
-            };
-
-            var result = await _service.UpdateExamAsync(1, dto);
+            var result = await _service.UpdateExamAsync(1, new UpdateExamRequest { Title = "New Title" });
 
             result.Should().NotBeNull();
-            result!.Title.Should().Be("New");
-            _repoMock.Verify(r => r.UpdateAsync(exam), Times.Once);
+            result!.Title.Should().Be("New Title");
+            result.DurationMins.Should().Be(60);
+        }
+
+        [Fact]
+        public async Task UpdateExamAsync_Should_Update_Duration_Only()
+        {
+            var exam = MakeEmptyExam(1);
+
+            _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(exam);
+            _repoMock.Setup(r => r.UpdateAsync(It.IsAny<ExamEntity>(), It.IsAny<List<int>?>()))
+                     .Returns(Task.CompletedTask);
+            _repoMock.Setup(r => r.GetWithQuestionsAndChoicesAsync(1))
+                     .ReturnsAsync(new ExamEntity
+                     {
+                         Id = 1,
+                         Title = "Exam 1",
+                         DurationMins = 90,
+                         ExamQuestions = []
+                     });
+
+            var result = await _service.UpdateExamAsync(1, new UpdateExamRequest { DurationMins = 90 });
+
+            result.Should().NotBeNull();
+            result!.DurationMins.Should().Be(90);
+            result.Title.Should().Be("Exam 1");
+        }
+
+        [Fact]
+        public async Task UpdateExamAsync_Should_Update_Questions()
+        {
+            var exam = MakeEmptyExam(1);
+
+            _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(exam);
+            _repoMock.Setup(r => r.UpdateAsync(It.IsAny<ExamEntity>(), It.IsAny<List<int>?>()))
+                     .Returns(Task.CompletedTask);
+            _repoMock.Setup(r => r.GetWithQuestionsAndChoicesAsync(1))
+                     .ReturnsAsync(MakeExamWithQuestions(1));
+
+            var result = await _service.UpdateExamAsync(1, new UpdateExamRequest { QuestionIds = [1, 2] });
+
+            result.Should().NotBeNull();
+            result!.TotalQuestions.Should().Be(2);
         }
 
         [Fact]
         public async Task UpdateExamAsync_Should_Return_Null_When_NotFound()
         {
-            _repoMock
-                .Setup(r => r.GetByIdAsync(1))
-                .ReturnsAsync((ExamEntity?)null);
+            _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((ExamEntity?)null);
 
-            var dto = new CreateExamDto
-            {
-                Title = "New",
-                DurationMins = 60
-            };
-
-            var result = await _service.UpdateExamAsync(1, dto);
+            var result = await _service.UpdateExamAsync(1, new UpdateExamRequest { Title = "New" });
 
             result.Should().BeNull();
-        }
-
-        [Fact]
-        public async Task UpdateExamAsync_Should_Throw_When_Title_Is_Empty()
-        {
-            var dto = new CreateExamDto
-            {
-                Title = "",
-                DurationMins = 60
-            };
-
-            var act = async () => await _service.UpdateExamAsync(1, dto);
-
-            await act.Should().ThrowAsync<ArgumentException>()
-                .WithMessage("*title*");
-        }
-
-        [Fact]
-        public async Task UpdateExamAsync_Should_Throw_When_Id_Is_Zero()
-        {
-            var dto = new CreateExamDto
-            {
-                Title = "New",
-                DurationMins = 60
-            };
-
-            var act = async () => await _service.UpdateExamAsync(0, dto);
-
-            await act.Should().ThrowAsync<ArgumentException>()
-                .WithMessage("*positive*");
         }
 
         // ════════════════════════════════════════════════════════════════════
@@ -243,9 +270,10 @@ namespace Exam.UnitTests
         [Fact]
         public async Task DeleteExamAsync_Should_Delete_Exam()
         {
-            var exam = new ExamEntity { Id = 1 };
+            var exam = MakeEmptyExam(1);
 
             _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(exam);
+            _repoMock.Setup(r => r.DeleteAsync(exam)).Returns(Task.CompletedTask);
 
             var result = await _service.DeleteExamAsync(1);
 
@@ -256,22 +284,11 @@ namespace Exam.UnitTests
         [Fact]
         public async Task DeleteExamAsync_Should_Return_False_When_NotFound()
         {
-            _repoMock
-                .Setup(r => r.GetByIdAsync(1))
-                .ReturnsAsync((ExamEntity?)null);
+            _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((ExamEntity?)null);
 
             var result = await _service.DeleteExamAsync(1);
 
             result.Should().BeFalse();
-        }
-
-        [Fact]
-        public async Task DeleteExamAsync_Should_Throw_When_Id_Is_Zero()
-        {
-            var act = async () => await _service.DeleteExamAsync(0);
-
-            await act.Should().ThrowAsync<ArgumentException>()
-                .WithMessage("*positive*");
         }
 
         // ════════════════════════════════════════════════════════════════════
@@ -279,119 +296,66 @@ namespace Exam.UnitTests
         // ════════════════════════════════════════════════════════════════════
 
         [Fact]
-        public async Task AssignQuestionsAsync_Should_Assign_Questions()
+        public async Task AssignQuestionsAsync_Should_Assign_New_Questions()
         {
-            var exam = new ExamEntity
-            {
-                Id = 1,
-                Title = "Algo",
-                ExamQuestions = new List<ExamQuestionEntity>()
-            };
+            var exam = MakeEmptyExam(1);
 
-            _repoMock
-                .SetupSequence(r => r.GetByIdAsync(1))
-                .ReturnsAsync(exam)   // 1st call - fetch exam
-                .ReturnsAsync(exam);  // 2nd call - reload after assign
+            _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(exam);
+            _repoMock.Setup(r => r.AssignQuestionsAsync(It.IsAny<List<ExamQuestionEntity>>()))
+                     .Returns(Task.CompletedTask);
+            _repoMock.Setup(r => r.GetWithQuestionsAndChoicesAsync(1))
+                     .ReturnsAsync(new ExamEntity
+                     {
+                         Id = 1,
+                         ExamQuestions =
+                         [
+                             new() { ExamId = 1, QuestionId = 2, Question = new() { Id = 2, Text = "Q2", Choices = [] } },
+                             new() { ExamId = 1, QuestionId = 3, Question = new() { Id = 3, Text = "Q3", Choices = [] } }
+                         ]
+                     });
 
-            _questionRepoMock
-                .Setup(r => r.ExistsAsync(It.IsAny<int>()))
-                .ReturnsAsync(true);
-
-            _repoMock
-                .Setup(r => r.AssignQuestionsAsync(It.IsAny<List<ExamQuestionEntity>>()))
-                .Returns(Task.CompletedTask);
-
-            var result = await _service.AssignQuestionsAsync(1, new List<int> { 2, 3 });
+            var result = await _service.AssignQuestionsAsync(1, [2, 3]);
 
             result.Should().NotBeNull();
+            result.TotalQuestions.Should().Be(2);
             _repoMock.Verify(
                 r => r.AssignQuestionsAsync(It.IsAny<List<ExamQuestionEntity>>()),
                 Times.Once);
         }
 
         [Fact]
-        public async Task AssignQuestionsAsync_Should_Throw_When_Exam_NotFound()
-        {
-            _repoMock
-                .Setup(r => r.GetByIdAsync(1))
-                .ReturnsAsync((ExamEntity?)null);
-
-            var act = async () =>
-                await _service.AssignQuestionsAsync(1, new List<int> { 2 });
-
-            await act.Should().ThrowAsync<KeyNotFoundException>()
-                .WithMessage("*Exam*");
-        }
-
-        [Fact]
-        public async Task AssignQuestionsAsync_Should_Throw_When_QuestionIds_Empty()
-        {
-            var act = async () =>
-                await _service.AssignQuestionsAsync(1, new List<int>());
-
-            await act.Should().ThrowAsync<ArgumentException>()
-                .WithMessage("*empty*");
-        }
-
-        [Fact]
-        public async Task AssignQuestionsAsync_Should_Throw_When_Duplicate_Ids_In_Request()
-        {
-            var act = async () =>
-                await _service.AssignQuestionsAsync(1, new List<int> { 2, 2 });
-
-            await act.Should().ThrowAsync<ArgumentException>()
-                .WithMessage("*Duplicate*");
-        }
-
-        [Fact]
-        public async Task AssignQuestionsAsync_Should_Throw_When_Question_NotFound()
+        public async Task AssignQuestionsAsync_Should_Skip_Already_Assigned_Questions()
         {
             var exam = new ExamEntity
             {
                 Id = 1,
-                ExamQuestions = new List<ExamQuestionEntity>()
+                ExamQuestions =
+                [
+                    new() { ExamId = 1, QuestionId = 2 }  // already assigned
+                ]
             };
 
-            _repoMock
-                .Setup(r => r.GetByIdAsync(1))
-                .ReturnsAsync(exam);
+            _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(exam);
+            _repoMock.Setup(r => r.AssignQuestionsAsync(It.IsAny<List<ExamQuestionEntity>>()))
+                     .Returns(Task.CompletedTask);
+            _repoMock.Setup(r => r.GetWithQuestionsAndChoicesAsync(1))
+                     .ReturnsAsync(new ExamEntity
+                     {
+                         Id = 1,
+                         ExamQuestions =
+                         [
+                             new() { ExamId = 1, QuestionId = 2, Question = new() { Id = 2, Text = "Q2", Choices = [] } },
+                             new() { ExamId = 1, QuestionId = 3, Question = new() { Id = 3, Text = "Q3", Choices = [] } }
+                         ]
+                     });
 
-            _questionRepoMock
-                .Setup(r => r.ExistsAsync(99))
-                .ReturnsAsync(false);
+            var result = await _service.AssignQuestionsAsync(1, [2, 3]);
 
-            var act = async () =>
-                await _service.AssignQuestionsAsync(1, new List<int> { 99 });
-
-            await act.Should().ThrowAsync<KeyNotFoundException>()
-                .WithMessage("*Questions not found*");
-        }
-
-        [Fact]
-        public async Task AssignQuestionsAsync_Should_Throw_When_All_Already_Assigned()
-        {
-            var exam = new ExamEntity
-            {
-                Id = 1,
-                ExamQuestions = new List<ExamQuestionEntity>
-                {
-                    new ExamQuestionEntity { ExamId = 1, QuestionId = 2 }
-                }
-            };
-
-            _repoMock
-                .Setup(r => r.GetByIdAsync(1))
-                .ReturnsAsync(exam);
-
-            _questionRepoMock
-                .Setup(r => r.ExistsAsync(2))
-                .ReturnsAsync(true);
-
-            var act = async () =>
-                await _service.AssignQuestionsAsync(1, new List<int> { 2 });
-
-            await act.Should().ThrowAsync<InvalidOperationException>()
-                .WithMessage("*already assigned*");
+            result.TotalQuestions.Should().Be(2);
+            _repoMock.Verify(
+                r => r.AssignQuestionsAsync(It.Is<List<ExamQuestionEntity>>(
+                    list => list.Count == 1 && list[0].QuestionId == 3)),
+                Times.Once);
         }
 
         // ════════════════════════════════════════════════════════════════════
@@ -404,66 +368,49 @@ namespace Exam.UnitTests
             var exam = new ExamEntity
             {
                 Id = 1,
-                ExamQuestions = new List<ExamQuestionEntity>
-                {
-                    new ExamQuestionEntity { ExamId = 1, QuestionId = 2 }
-                }
+                ExamQuestions =
+                [
+                    new() { ExamId = 1, QuestionId = 2 }
+                ]
             };
 
-            _repoMock
-                .SetupSequence(r => r.GetByIdAsync(1))
-                .ReturnsAsync(exam)   // 1st call - fetch exam
-                .ReturnsAsync(exam);  // 2nd call - reload after remove
-
-            _repoMock
-                .Setup(r => r.RemoveQuestionAsync(1, 2))
-                .Returns(Task.CompletedTask);
+            _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(exam);
+            _repoMock.Setup(r => r.RemoveQuestionAsync(1, 2)).Returns(Task.CompletedTask);
+            _repoMock.Setup(r => r.GetWithQuestionsAndChoicesAsync(1))
+                     .ReturnsAsync(new ExamEntity
+                     {
+                         Id = 1,
+                         ExamQuestions = []
+                     });
 
             var result = await _service.RemoveQuestionAsync(1, 2);
 
             result.Should().NotBeNull();
+            result.TotalQuestions.Should().Be(0);
             _repoMock.Verify(r => r.RemoveQuestionAsync(1, 2), Times.Once);
         }
 
         [Fact]
-        public async Task RemoveQuestionAsync_Should_Throw_When_Exam_NotFound()
-        {
-            _repoMock
-                .Setup(r => r.GetByIdAsync(1))
-                .ReturnsAsync((ExamEntity?)null);
-
-            var act = async () => await _service.RemoveQuestionAsync(1, 2);
-
-            await act.Should().ThrowAsync<KeyNotFoundException>()
-                .WithMessage("*Exam*");
-        }
-
-        [Fact]
-        public async Task RemoveQuestionAsync_Should_Throw_When_Question_Not_Assigned()
+        public async Task RemoveQuestionAsync_Should_Remove_Even_When_Not_Assigned()
         {
             var exam = new ExamEntity
             {
                 Id = 1,
-                ExamQuestions = new List<ExamQuestionEntity>()
+                ExamQuestions = []
             };
 
-            _repoMock
-                .Setup(r => r.GetByIdAsync(1))
-                .ReturnsAsync(exam);
+            _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(exam);
+            _repoMock.Setup(r => r.RemoveQuestionAsync(1, 99)).Returns(Task.CompletedTask);
+            _repoMock.Setup(r => r.GetWithQuestionsAndChoicesAsync(1))
+                     .ReturnsAsync(new ExamEntity
+                     {
+                         Id = 1,
+                         ExamQuestions = []
+                     });
 
-            var act = async () => await _service.RemoveQuestionAsync(1, 99);
+            var result = await _service.RemoveQuestionAsync(1, 99);
 
-            await act.Should().ThrowAsync<KeyNotFoundException>()
-                .WithMessage("*not assigned*");
-        }
-
-        [Fact]
-        public async Task RemoveQuestionAsync_Should_Throw_When_ExamId_Is_Zero()
-        {
-            var act = async () => await _service.RemoveQuestionAsync(0, 2);
-
-            await act.Should().ThrowAsync<ArgumentException>()
-                .WithMessage("*positive*");
+            result.Should().NotBeNull();
         }
     }
 }

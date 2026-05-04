@@ -15,20 +15,16 @@ builder.Services.AddDbContext<ApiContext>(options =>
     options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection")!));
 
 // Repositories
-builder.Services.AddScoped<IChoiceRepository, ChoiceRepository>();
 builder.Services.AddScoped<IExamRepository, ExamRepository>();
 builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 builder.Services.AddScoped<ITopicRepository, TopicRepository>();
 
 // Services
-builder.Services.AddScoped<IChoiceService, ChoiceService>();
 builder.Services.AddScoped<IExamService, ExamService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<ITopicService, TopicService>();
-
 var app = builder.Build();
 
-app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -39,7 +35,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // Endpoints
-app.MapChoiceEndpoints();
 app.MapExamEndpoints();
 app.MapQuestionEndpoints();
 app.MapTopicEndpoints();

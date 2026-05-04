@@ -2,7 +2,7 @@ namespace Exam.Models;
 
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
-// using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 
 public enum UserRole { Admin }
 

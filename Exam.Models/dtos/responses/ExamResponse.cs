@@ -1,24 +1,25 @@
 ﻿namespace Exam.Models.dtos.responses
 {
-    public class ExamResponseDto
+    public class ExamResponse
     {
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public int DurationMins { get; set; }
         public int TotalQuestions { get; set; }
-        public List<QuestionInExamDto> Questions { get; set; } = [];
+        public DateTime CreatedAt { get; set; }
+        public List<QuestionInExamResponse> Questions { get; set; } = [];
     }
 
 
-    public class QuestionInExamDto
+    public class QuestionInExamResponse
     {
         public int Id { get; set; }
         public string Text { get; set; } = string.Empty;
         public string? ImageUrl { get; set; }
-        public List<ChoiceInExamDto> Choices { get; set; } = [];
+        public List<ChoiceInExamResponse> Choices { get; set; } = [];
     }
 
-    public class ChoiceInExamDto
+    public class ChoiceInExamResponse
     {
         public int Id { get; set; }
         public string Text { get; set; } = string.Empty;

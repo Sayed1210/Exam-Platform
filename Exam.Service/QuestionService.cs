@@ -11,52 +11,37 @@ namespace Exam.Service
 
         public QuestionService(IQuestionRepository repo) => _repo = repo;
 
-        // ── GET ALL ───────────────────────────────────────────────────
         public async Task<IEnumerable<QuestionResponse>> GetAllAsync()
         {
             var questions = await _repo.GetAllAsync();
             return questions.Select(MapToResponse);
         }
 
-        // ── GET BY TOPIC ──────────────────────────────────────────────
         public async Task<IEnumerable<QuestionResponse>> GetByTopicIdAsync(int topicId)
         {
-            if (topicId <= 0)
-                throw new ArgumentException("TopicId must be a positive number.", nameof(topicId));
-
             var questions = await _repo.GetByTopicIdAsync(topicId);
             return questions.Select(MapToResponse);
         }
 
-        // ── GET BY ID ─────────────────────────────────────────────────
         public async Task<QuestionResponse?> GetByIdAsync(int id)
         {
-            if (id <= 0)
-                throw new ArgumentException("Id must be a positive number.", nameof(id));
-
             var question = await _repo.GetByIdAsync(id);
             return question is null ? null : MapToResponse(question);
         }
 
-        // ── CREATE ────────────────────────────────────────────────────
         public async Task<QuestionResponse> CreateAsync(QuestionRequest request)
         {
-            ArgumentNullException.ThrowIfNull(request);
-
-            if (request.TopicId <= 0)
-                throw new ArgumentException("TopicId must be a positive number.", nameof(request.TopicId));
-
-            if (string.IsNullOrWhiteSpace(request.Text))
-                throw new ArgumentException("Question text cannot be empty.", nameof(request.Text));
-
-            if (request.Text.Length > 1000)
-                throw new ArgumentException("Question text cannot exceed 1000 characters.", nameof(request.Text));
-
             var question = new Question
             {
                 TopicId = request.TopicId,
                 Text = request.Text.Trim(),
-                ImageUrl = request.ImageUrl
+                ImageUrl = request.ImageUrl,
+                Choices = request.Choices.Select(c => new Choice
+                {
+                    Text = c.Text.Trim(),
+                    IsCorrect = c.IsCorrect,
+                    ImageUrl = c.ImageUrl
+                }).ToList()
             };
 
             var created = await _repo.CreateAsync(question);
@@ -64,50 +49,70 @@ namespace Exam.Service
             return MapToResponse(result!);
         }
 
-        // ── UPDATE ────────────────────────────────────────────────────
-        public async Task<QuestionResponse?> UpdateAsync(int id, QuestionRequest request)
+        public async Task<QuestionResponse?> UpdateAsync(int id, UpdateQuestionRequest request)
         {
-            if (id <= 0)
-                throw new ArgumentException("Id must be a positive number.", nameof(id));
-
-            ArgumentNullException.ThrowIfNull(request);
-
-            if (request.TopicId <= 0)
-                throw new ArgumentException("TopicId must be a positive number.", nameof(request.TopicId));
-
-            if (string.IsNullOrWhiteSpace(request.Text))
-                throw new ArgumentException("Question text cannot be empty.", nameof(request.Text));
-
-            if (request.Text.Length > 1000)
-                throw new ArgumentException("Question text cannot exceed 1000 characters.", nameof(request.Text));
-
             var question = await _repo.GetByIdAsync(id);
             if (question is null) return null;
 
-            question.TopicId = request.TopicId;
-            question.Text = request.Text.Trim();
-            question.ImageUrl = request.ImageUrl;
+            if (request.Text is not null)
+                question.Text = request.Text.Trim();
 
-            await _repo.UpdateAsync(question);
+            if (request.ImageUrl is not null)
+                question.ImageUrl = request.ImageUrl;
 
-            var result = await _repo.GetByIdAsync(id);
-            return MapToResponse(result!);
+            var updateChoices = request.Choices is not null;
+            if (updateChoices)
+                question.Choices = request.Choices!.Select(c => new Choice
+                {
+                    QuestionId = id,
+                    Text = c.Text.Trim(),
+                    IsCorrect = c.IsCorrect,
+                    ImageUrl = c.ImageUrl
+                }).ToList();
+
+            var result = await _repo.UpdateAsync(question, updateChoices);
+            return MapToResponse(result);
+        }
+        public async Task<QuestionResponse?> UpdateChoiceAsync(int questionId, int choiceId, ChoiceRequest request)
+        {
+            var question = await _repo.GetByIdAsync(questionId);
+            if (question is null) return null;
+
+            var choice = question.Choices.FirstOrDefault(c => c.Id == choiceId);
+            if (choice is null) return null;
+
+            choice.Text = request.Text.Trim();
+            choice.IsCorrect = request.IsCorrect;
+            choice.ImageUrl = request.ImageUrl;
+
+            var result = await _repo.UpdateChoiceAsync(choice);
+            return MapToResponse(result);
         }
 
-        // ── DELETE ────────────────────────────────────────────────────
+
+
         public async Task<bool> DeleteAsync(int id)
         {
-            if (id <= 0)
-                throw new ArgumentException("Id must be a positive number.", nameof(id));
-
             var question = await _repo.GetByIdAsync(id);
             if (question is null) return false;
 
             await _repo.DeleteAsync(question);
             return true;
         }
+        public async Task<PagedResponse<QuestionResponse>> GetPagedAsync(int page, int pageSize)
+        {
+            var (items, totalCount) = await _repo.GetPagedAsync(page, pageSize);
 
-        // ── Mapper ────────────────────────────────────────────────────
+            return new PagedResponse<QuestionResponse>
+            {
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize),
+                Data = items.Select(MapToResponse)
+            };
+        }
+
         private static QuestionResponse MapToResponse(Question q) => new()
         {
             Id = q.Id,
@@ -117,7 +122,7 @@ namespace Exam.Service
             ImageUrl = q.ImageUrl,
             Choices = q.Choices.Select(c => new ChoiceInQuestion
             {
-                Id = c.Id,
+             
                 Text = c.Text,
                 IsCorrect = c.IsCorrect,
                 ImageUrl = c.ImageUrl

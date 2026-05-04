@@ -1,19 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Exam.Models.dtos.requests
 {
     public class ChoiceRequest
     {
-        [Required]
-        public int QuestionId { get; set; }
+     
 
-        [Required]
-        [MinLength(1, ErrorMessage = "Choice text cannot be empty.")]
+        [Required(ErrorMessage = "Choice text cannot be empty.")]
+        [MaxLength(500, ErrorMessage = "Choice text cannot exceed 500 characters.")]
         public string Text { get; set; } = string.Empty;
 
-        [Required]
         public bool IsCorrect { get; set; }
-
         public string? ImageUrl { get; set; }
     }
 }

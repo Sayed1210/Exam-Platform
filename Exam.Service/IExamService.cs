@@ -6,19 +6,20 @@ namespace Exam.Service
     public interface IExamService
     {
         // Create
-        Task<ExamResponseDto> CreateExamAsync(CreateExamDto dto);
+        Task<ExamResponse> CreateExamAsync(CreateExamRequest dto);
 
         // Read
-        Task<IEnumerable<ExamResponseDto>> GetAllExamsAsync();
-        Task<ExamResponseDto?> GetExamByIdAsync(int id);
+        Task<IEnumerable<ExamResponse>> GetAllExamsAsync();
+        Task<ExamResponse?> GetExamByIdAsync(int id);
+        Task<IEnumerable<ExamResponse>> GetAllExamsWithQuestionsAsync();
 
-        Task<ExamResponseDto?> GetExamWithQuestionsAsync(int id);
+        Task<ExamResponse?> GetExamWithQuestionsAsync(int id);
 
         // Update
-        Task<ExamResponseDto?> UpdateExamAsync(int id, CreateExamDto dto);
+        Task<ExamResponse?> UpdateExamAsync(int id, UpdateExamRequest dto);
 
-        Task<ExamResponseDto> AssignQuestionsAsync(int examId, List<int> questionIds);
-        Task<ExamResponseDto> RemoveQuestionAsync(int examId, int questionId);
+        Task<ExamResponse> AssignQuestionsAsync(int examId, List<int> questionIds);
+        Task<ExamResponse?> RemoveQuestionAsync(int examId, int questionId);
 
         // Delete
         Task<bool> DeleteExamAsync(int id);

@@ -12,7 +12,7 @@ public class Exam
         [Required]
         public int DurationMins { get; set; }
 
-        public DateTime? CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
 
         // Navigation
         public ICollection<ExamQuestion> ExamQuestions { get; set; } = new List<ExamQuestion>();
