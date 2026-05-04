@@ -1,4 +1,4 @@
-﻿namespace Exam.Models.dtos.responses
+﻿namespace Exam.Models
 {
     public class TopicResponse
     {

@@ -1,6 +1,4 @@
-﻿using Exam.Models.dtos.requests;
-using Exam.Models.dtos.responses;
-using Exam.Models;
+﻿using Exam.Models;
 using Exam.Repo;
 
 namespace Exam.Service

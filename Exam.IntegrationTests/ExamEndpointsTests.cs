@@ -1,8 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using Exam.Models;
-using Exam.Models.dtos.requests;
-using Exam.Models.dtos.responses;
 using FluentAssertions;
 using Xunit;
 

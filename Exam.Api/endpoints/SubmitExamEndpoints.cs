@@ -1,5 +1,6 @@
 using Exam.Models;
 using Exam.Service;
+namespace Exam.Api;
 public static class SubmitExamEndpoints
 {
     public static void MapSubmitExamEndpoints(this IEndpointRouteBuilder app)

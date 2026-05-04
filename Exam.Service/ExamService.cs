@@ -1,6 +1,4 @@
 ﻿using Exam.Models;
-using Exam.Models.dtos.requests;
-using Exam.Models.dtos.responses;
 using Exam.Repo;
 using ExamEntity = Exam.Models.Exam;
 

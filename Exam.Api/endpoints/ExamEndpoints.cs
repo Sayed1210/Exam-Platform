@@ -1,5 +1,4 @@
-using Exam.Models.dtos.requests;
-using Exam.Models.dtos.responses;
+using Exam.Models;
 using Exam.Repo;
 using Exam.Service;
 using System.ComponentModel.DataAnnotations;

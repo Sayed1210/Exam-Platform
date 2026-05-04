@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Exam.Models.dtos.requests
+namespace Exam.Models
 {
     public class ChoiceRequest
     {
