@@ -1,4 +1,5 @@
 using Exam.Models;
+using Exam.Service;
 public static class ExamEndpoints
 {
     public static void MapExamEndpoints(this IEndpointRouteBuilder app)

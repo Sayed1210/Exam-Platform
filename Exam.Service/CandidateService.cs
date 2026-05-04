@@ -1,5 +1,5 @@
-namespace Exam.Services;
-using Exam.Repositories;
+namespace Exam.Service;
+using Exam.Repo;
 using Exam.Models;
 
 // Constructor injection (Primary Constructor)
@@ -31,7 +31,7 @@ public class CandidateService(ICandidateRepository candidateRepository) : ICandi
         var candidate = await _candidateRepository.GetByIdAsync(id);
 
         if (candidate == null)
-            throw new Exception($"Candidate with id {id} not found"); // return null;
+            return null; // throw new Exception($"Candidate with id {id} not found");
 
         // Map Entity → DTO
         return new CandidateResponse
@@ -49,7 +49,7 @@ public class CandidateService(ICandidateRepository candidateRepository) : ICandi
         var candidate = await _candidateRepository.GetCandidateByExamIdAsync(examId);
 
         if (candidate == null)
-            throw new Exception($"Candidate with exam id {examId} not found");
+            return null; // throw new Exception($"Candidate with exam id {examId} not found");
 
         return new CandidateResponse
         {
@@ -61,13 +61,13 @@ public class CandidateService(ICandidateRepository candidateRepository) : ICandi
         };
     }
 
-    public async Task AddCandidate(CreateCandidate dto)
+    public async Task<bool> AddCandidate(CreateCandidateRequest dto)
     {
         // Check if candidate already exists
         var existingCandidate = await _candidateRepository.GetByEmailAsync(dto.Email);
 
         if (existingCandidate != null)
-            throw new Exception("Candidate already exists");
+            return false; // throw new Exception("Candidate already exists");
         
         // Map DTO → Entity
         var candidate = new Candidate
@@ -80,18 +80,20 @@ public class CandidateService(ICandidateRepository candidateRepository) : ICandi
 
         // Send entity to repository to be saved in DB
         await _candidateRepository.AddAsync(candidate);
+        return true;
     }
 
-    public async Task DeleteCandidate(int id)
+    public async Task<bool> DeleteCandidate(int id)
     {
         // Check if candidate exists first
         var candidate = await _candidateRepository.GetByIdAsync(id);
 
         if (candidate == null)
-            throw new Exception($"Candidate with id {id} not found");
+            return false; // throw new Exception($"Candidate with id {id} not found");
 
         // Delegate deletion to repository
         await _candidateRepository.DeleteAsync(id);
+        return true;
     }
 }
 

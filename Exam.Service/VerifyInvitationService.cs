@@ -1,9 +1,9 @@
 using Exam.Models;
-using Exam.Repositories;
+using Exam.Repo;
 
-namespace Exam.Services;
+namespace Exam.Service;
 
-public class VerifyInvitationService : IVerifyInvitationService
+public class VerifyInvitationService :  IVerifyInvitationService
 {
     private readonly ICandidateExamRepository _repo;
     public VerifyInvitationService(ICandidateExamRepository repo)

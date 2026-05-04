@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-namespace Exam.Repositories;
+namespace Exam.Repo;
 using Exam.Models;
 using Exam.Data;   
 
@@ -15,10 +15,10 @@ public class CandidateAnswerRepository(ApiContext context) : ICandidateAnswerRep
         await _context.SaveChangesAsync();
     }
 
-    public async Task<List<int>> GetCorrectChoiceIdsAsync(int questionId)
+    public async Task<List<int>> GetCorrectChoiceIdsAsync(List<int> questionIds)
     {
         return await _context.Choices
-            .Where(c => c.QuestionId == questionId && c.IsCorrect)
+            .Where(c => questionIds.Contains(c.QuestionId) && c.IsCorrect)
             .Select(c => c.Id)
             .ToListAsync();
     }

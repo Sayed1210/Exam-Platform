@@ -1,4 +1,4 @@
-namespace Exam.Repositories;
+namespace Exam.Repo;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Exam.Data;

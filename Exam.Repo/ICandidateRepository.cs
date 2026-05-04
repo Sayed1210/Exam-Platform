@@ -1,4 +1,4 @@
-namespace Exam.Repositories;
+namespace Exam.Repo;
 using Exam.Data;
 using Exam.Models;
 

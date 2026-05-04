@@ -1,4 +1,5 @@
-namespace Exam.Services;
+namespace Exam.Service;
+using Exam.Models;
 
 
 public interface ICandidateService
@@ -8,6 +9,6 @@ public interface ICandidateService
 
     Task<CandidateResponse?> GetCandidateByExamId(int examId);
     
-    Task AddCandidate(CreateCandidate candidate);
-    Task DeleteCandidate(int id);
+    Task<bool> AddCandidate(CreateCandidateRequest candidate);
+    Task<bool> DeleteCandidate(int id);
 }

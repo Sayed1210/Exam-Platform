@@ -2,33 +2,32 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 namespace Exam.Models;
 
-
 public enum ExamStatus
-    {
-        PENDING,
-        EXPIRED,
-        DONE
-    }
+{
+    PENDING,
+    EXPIRED,
+    DONE
+}
 
 [Index(nameof(InvitationToken), IsUnique = true)]
 public class CandidateExam
-    {
-        public int CandidateId { get; set; }
+{
+    public int CandidateId { get; set; }
 
-        public int ExamId { get; set; }
+    public int ExamId { get; set; }
 
-        public float? Score { get; set; }
+    public float? Score { get; set; }
 
-        public DateTime InvitedAt { get; set; }
-        public DateTime? JoinedAt { get; set; }
-        public ExamStatus Status { get; set; } = ExamStatus.PENDING;
-        
-        [Required]
-        public required String InvitationToken { get; set; } 
+    public DateTime InvitedAt { get; set; }
+    public DateTime? JoinedAt { get; set; }
+    public ExamStatus Status { get; set; } = ExamStatus.PENDING;
 
-        public DateTime ExpiryDate { get; set; }
+    [Required]
+    public required String InvitationToken { get; set; }
 
-        // Navigation
-        public Candidate? Candidate { get; set; }
-        public Exam? Exam { get; set; }
-    }
+    public DateTime ExpiryDate { get; set; }
+
+    // Navigation
+    public Candidate? Candidate { get; set; }
+    public Exam? Exam { get; set; }
+}

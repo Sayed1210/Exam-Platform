@@ -1,14 +1,31 @@
-namespace Exam.Repositories;
-using Microsoft.EntityFrameworkCore;
-using Exam.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Exam.Data;
-
-
+using Exam.Models;
+namespace Exam.Repo;
 public class CandidateExamRepository(ApiContext context) : ICandidateExamRepository
 {
     private readonly ApiContext _context = context;
+    public async Task<Candidate?> GetCandidateByEmailAsync(string email)
+    {
+        return await _context.Candidates.AsNoTracking().FirstOrDefaultAsync(c => c.Email == email);
+    }
 
-    
+    public async Task AddInvitationAsync(CandidateExam invitation)
+    {
+        await _context.CandidateExams.AddAsync(invitation);
+    }
+
+    public async Task<IDbContextTransaction> BeginTransactionAsync()
+    {
+        return await _context.Database.BeginTransactionAsync();
+    }
+
+    public async Task SaveChangesAsync()
+    {
+        await _context.SaveChangesAsync();
+    }
+
     public async Task<CandidateExam?> GetAsync(int candidateId, int examId)
     {
         // Get a CandidateExam from DB by [CandidateId + ExamId]
