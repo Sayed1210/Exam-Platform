@@ -7,9 +7,9 @@ namespace Exam.Api.endpoints;
 
 public static class ExamEndpoints
 {
-    public static void MapExamEndpoints(this WebApplication app)
+    public static void MapExamManagementEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/exams").WithTags("Exams");
+        var group = app.MapGroup("/api/exams").WithTags("Exam Management");
 
         group.MapGet("/", async (IExamService svc) =>
             Results.Ok(await svc.GetAllExamsWithQuestionsAsync()))

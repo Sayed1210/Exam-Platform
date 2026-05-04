@@ -1,16 +1,17 @@
-using Scalar.AspNetCore;
-using Microsoft.EntityFrameworkCore;
+using Exam.Api;
+using Exam.Api.endpoints;
 using Exam.Data;
+using Exam.Repo;
 using Exam.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
 using System.Text;
-using Exam.Repo;
-using Exam.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+builder.Services.AddOpenApi();
 
 // DI Candidate
 builder.Services.AddScoped<ICandidateRepository, CandidateRepository>();
@@ -37,6 +38,8 @@ builder.Services.AddScoped<ITopicService, TopicService>();
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(nameof(JwtSettings)));
 builder.Services.AddRepositoryLayer(); //Dependency injection for repository layer, exists in Exam.Repo/DependencyInjection.cs 
 builder.Services.AddServiceLayer(); //Dependency injection for service layer, exists in Exam.Service/DependencyInjection.cs 
+builder.Services.AddScoped<IInvitationService, InvitationService>();
+builder.Services.AddScoped<ICandidateExamRepository, CandidateExamRepository>();
 
 var jwtSettings = builder.Configuration.GetSection(nameof(JwtSettings)).Get<JwtSettings>()
     ?? throw new InvalidOperationException("JwtSettings section is missing.");
@@ -59,8 +62,7 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddScoped<IInvitationService, InvitationService>();
-builder.Services.AddScoped<ICandidateExamRepository, CandidateExamRepository>();
+
 var app = builder.Build();
 
 
@@ -69,10 +71,12 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
-app.MapInvitationsEndpoints();
+
 app.UseHttpsRedirection();
-// Endpoints
-app.MapExamEndpoints();
+app.UseAuthentication();
+app.UseAuthorization();
+// CreateExam
+app.MapExamManagementEndpoints();
 app.MapQuestionEndpoints();
 app.MapTopicEndpoints();
 app.MapAuthEndpoints();
@@ -83,8 +87,8 @@ app.MapSubmitExamEndpoints();
 // Link Verification
 app.MapVerifyLinkEndpoints();
 
-app.UseAuthentication();
-app.UseAuthorization();
+app.MapInvitationsEndpoints();
+
 
 
 
