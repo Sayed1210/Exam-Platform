@@ -6,6 +6,7 @@ public interface ICandidateExamRepository
     Task<Candidate?> GetCandidateByEmailAsync(string email);
     Task AddInvitationAsync(CandidateExam invitation);
     Task<IDbContextTransaction> BeginTransactionAsync();
+    Task<bool> ExamExistsAsync(int examId);
     Task SaveChangesAsync();
     Task<CandidateExam?> GetAsync(int candidateId, int examId);
     Task SaveAsync(CandidateExam candidateExam);

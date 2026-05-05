@@ -1,18 +1,28 @@
 using Exam.Models;
 using Exam.Repo;
 namespace Exam.Service;
+using System.Net.Sockets;
+using System.Net.Mail;
 public class InvitationService(ICandidateExamRepository repository, IEmailService emailService) : IInvitationService
 {
     public async Task<InvitationStatusResponse> SendInvitationAsync(SendInvitationRequest request)
     {
         var nowUtc = DateTime.UtcNow;
-        
+        var examExists = await repository.ExamExistsAsync(request.ExamId);
+        if (!examExists)
+        {
+            return new InvitationStatusResponse(false, $"Exam with ID {request.ExamId} does not exist.", nowUtc);
+        }
         var candidate = await repository.GetCandidateByEmailAsync(request.Email);
         if (candidate == null)
         {
             return new InvitationStatusResponse(false, "Candidate with this email not found", nowUtc);
         }
-
+        var existingInvitation = await repository.GetAsync(candidate.Id, request.ExamId);
+        if (existingInvitation != null)
+        {
+            return new InvitationStatusResponse(false, "This candidate has already been invited to this exam.", nowUtc);
+        }
         using var transaction = await repository.BeginTransactionAsync();
         try
         {
@@ -29,7 +39,7 @@ public class InvitationService(ICandidateExamRepository repository, IEmailServic
 
             await repository.AddInvitationAsync(invitation);
             await repository.SaveChangesAsync();
-
+            try{
             var invitationLink=$"http://localhost:5173/join-exam?token={invitationToken}";
             string subject="Invitation to Enozom Examination";
             string body = $@"
@@ -46,16 +56,20 @@ public class InvitationService(ICandidateExamRepository repository, IEmailServic
                     <p><b>Note:</b> This link will expire in 3 days.</p>
                 </div>";
             await emailService.SendEmailAsync(request.Email, subject,body);
-
+            }
+            catch(Exception ex)when(ex is SmtpException || ex is SocketException || ex is InvalidOperationException)
+            {
+                await transaction.RollbackAsync();
+                return new InvitationStatusResponse(false, "The invitation server is currently unavailable. Please try again later.", nowUtc);
+            }
             await transaction.CommitAsync();
-            
             return new InvitationStatusResponse(true, "Invitation sent successfully.", nowUtc);
         }
         catch (Exception)
         {
 
             await transaction.RollbackAsync();
-            return new InvitationStatusResponse(false, "Failed to send invitation. Changes rolled back.", nowUtc);
+            return new InvitationStatusResponse(false, "Failed to send invitation. Internal error occured. Changes rolled back.", nowUtc);
         }
     }
 }
