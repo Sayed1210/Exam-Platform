@@ -37,27 +37,27 @@ body {
 
 @layer components {
   .text-title {
-    @apply text-2xl font-bold text-primary;
+    @apply text-2xl font-bold;
   }
 
   .text-heading {
-    @apply text-xl font-semibold text-foreground;
+    @apply text-xl font-bold text-foreground;
   }
 
   .text-subtitle {
-    @apply text-lg font-medium text-foreground;
+    @apply text-base font-bold text-foreground;
   }
 
   .text-body {
-    @apply text-base text-foreground;
+    @apply text-base font-normal text-foreground;
   }
 
   .text-muted {
-    @apply text-sm text-muted;
+    @apply text-sm font-medium text-muted;
   }
 
   .text-label {
-    @apply text-sm font-medium text-foreground;
+    @apply text-sm font-semibold text-foreground;
   }
 
   .text-error {
