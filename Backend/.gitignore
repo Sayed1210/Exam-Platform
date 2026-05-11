@@ -37,6 +37,6 @@ publish/
 
 # Dotnet tools
 .dotnet/
-
+*.lscache
 # Docker
 docker-compose.override.yml
