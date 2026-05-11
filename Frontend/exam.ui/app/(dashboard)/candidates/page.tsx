@@ -25,6 +25,7 @@ export default function CandidatesPage() {
     firstName: string;
     lastName: string;
     email: string;
+    phoneNumber: string;
   }) => {
     const newCandidate: Candidate = {
       id: String(Date.now()),

@@ -49,6 +49,7 @@ export default function CandidateDetailsModal({ candidate, onClose }: Props) {
           <div className="border-t border-gray-100">
             {[
               { label: "Email", value: candidate.email },
+              { label: "Phone Number", value: candidate.phoneNumber },
               { label: "Invited At", value: candidate.invitedAt },
               { label: "Started At", value: candidate.startedAt ?? "—" },
             ].map(({ label, value }) => (

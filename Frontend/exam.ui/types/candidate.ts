@@ -10,6 +10,7 @@ export interface Candidate {
   firstName: string;
   lastName: string;
   email: string;
+  phoneNumber: string;
   status: CandidateStatus;
   score: number | null;
   invitedAt: string | null;
