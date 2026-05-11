@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff; /* Light mode background color */
-  --foreground: #171717; /* Light mode foreground color */
-  --primary: #da0211; /* Primary color for light mode */
-  --black: #111111; 
-  --white: #ffffff;
-  --muted: #6b7280;
+  --background: #FFFFFF;
+  --foreground: #171717;
+  --primary: #DA0211;
+  --black: #111111;
+  --white: #FFFFFF;
+  --muted: #6B7280;
 }
 
-/*This allows Tailwind to use your custom values (my css variables)*/
+/* This allows Tailwind to use your custom values */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -21,20 +21,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-} */
-
-/*This applies global styles to the entire app*/
-body { 
+/* Global styles */
+body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
 }
 
+/* Text Styles */
 @layer components {
   .text-title {
     @apply text-2xl font-bold;
@@ -62,5 +56,17 @@ body {
 
   .text-error {
     @apply text-sm font-medium text-red-500;
+  }
+}
+  /* Button Styles */
+@layer components {
+  .btn-primary {
+    @apply w-full mt-2 py-3 rounded-4xl font-semibold text-white transition hover:brightness-90;
+
+    background-color: var(--primary);
+  }
+
+  .btn-secondary {
+    @apply w-full mt-2 py-3 rounded-4xl font-semibold transition bg-gray-200 text-black hover:brightness-95;
   }
 }
