@@ -41,6 +41,7 @@ builder.Services.AddServiceLayer(); //Dependency injection for service layer, ex
 builder.Services.AddScoped<IInvitationService, InvitationService>();
 builder.Services.AddScoped<ICandidateExamRepository, CandidateExamRepository>();
 
+
 // allow frontend to access api
 // builder.Services.AddCors(options => {
 //     options.AddPolicy("AllowFrontend",
