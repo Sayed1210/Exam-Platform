@@ -77,15 +77,17 @@ export default function LoginPage() {
       {/* Popup Window */}
       <Modal open={open} onClose={() => setOpen(false)}>
         <div className="flex flex-col gap-2 text-center">
-            <h3 className="text-title">Reset Password</h3>
+            <h3 className="text-title mb-3">Reset Password</h3>
             <p className="text-muted">Enter your email and we'll send a reset link</p>
         </div>
         
         <div>   
             <Input placeholder="Enter your email" value={resetEmail} onChange={setResetEmail}/>
-            <div style={{ height: '8px' }} />
-            <Button text="Send Reset Link" onClick={() => setOpen(false)} className="btn-primary" />
-            {/* <Button text="Cancel" onClick={() => setOpen(false)} className="btn-secondary" /> */}
+            <div className="mt-3">  
+              <Button text="Send Reset Link" onClick={() => setOpen(false)} className="btn-primary" />
+              <Button text="Cancel" onClick={() => setOpen(false)} className="btn-secondary w-full" />
+
+            </div>
         </div>
       </Modal>
     </div>
