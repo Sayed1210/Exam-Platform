@@ -12,6 +12,7 @@ public interface ICandidateRepository
     Task<Candidate?> GetByEmailAsync(string email);
 
     Task<Candidate?> GetCandidateByExamIdAsync(int examId);
+    Task<Candidate?> GetWithExamsAndAnswersAsync(int candidateId);
 
     Task AddAsync(Candidate candidate);
     Task DeleteAsync(int id);
