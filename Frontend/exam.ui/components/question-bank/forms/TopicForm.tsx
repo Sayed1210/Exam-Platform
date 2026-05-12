@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { FormValidation } from "@/schemas/form-validation";
+import { createTopicRequestSchema } from "@/schemas/requests/create-topic-request";
 
 export type TopicFormProps = {
   onSubmit: (topicName: string) => void;
@@ -13,15 +15,19 @@ export default function TopicForm({ onSubmit, onCancel }: TopicFormProps) {
 
   function handleSubmit(event:React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
-    const trimmedTopic = topicName.trim();
+    const result = FormValidation(createTopicRequestSchema, {
+      title: topicName,
+    });
 
-    if (!trimmedTopic) {
-      setTopicNameError("Topic name is required.");
+    if (!result.success) {
+      setTopicNameError(
+        result.errors.title ?? "Topic name is invalid."
+      );
       return;
     }
 
     setTopicNameError("");
-    onSubmit(trimmedTopic);
+    onSubmit(result.data.title);
     setTopicName("");
   }
 

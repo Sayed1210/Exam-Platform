@@ -1,6 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { FormValidation } from "@/schemas/form-validation";
+import { createQuestionRequestSchema } from "@/schemas/requests/create-question-request";
+import { updateQuestionRequestSchema } from "@/schemas/requests/update-question-request";
+import { createQuestionResponseSchema } from "@/schemas/responses/create-question-response";
+import { updateQuestionResponseSchema } from "@/schemas/responses/update-question-response";
 import type { QuestionChoice, Question } from "@/types/question";
 
 type QuestionFormProps = {
@@ -11,21 +16,19 @@ type QuestionFormProps = {
 };
 
 type ChoiceDraft = {
-  id: string;
   text: string;
   imageUrl: string;
 };
 
 type FormErrors = {
-  statement?: string;
-  choices: Record<string, string>;
+  text?: string;
+  choicesMessage?: string;
 };
 
 const optionLabels = ["A", "B", "C", "D"];
 
 function createBlankChoices(): ChoiceDraft[] {
-  return optionLabels.map((_, index) => ({
-    id: `choice-${index + 1}`,
+  return optionLabels.map(() => ({
     text: "",
     imageUrl: "",
   }));
@@ -43,7 +46,6 @@ export default function QuestionForm({
     }
 
     return question.choices.map((choice) => ({
-      id: choice.id,
       text: choice.text ?? "",
       imageUrl: choice.imageUrl ?? "",
     }));
@@ -53,7 +55,7 @@ export default function QuestionForm({
     question?.topic ?? topics[0] ?? ""
   );
 
-  const [statement, setStatement] = useState(
+  const [text, setText] = useState(
     question?.statement ?? ""
   );
 
@@ -64,36 +66,32 @@ export default function QuestionForm({
   const [choices, setChoices] =
     useState<ChoiceDraft[]>(initialChoices);
 
-  const [correctChoiceId, setCorrectChoiceId] = useState(
-    question?.choices.find((choice) => choice.isCorrect)?.id ??
-      initialChoices[0]?.id ??
-      "choice-1"
+  const [correctChoiceIndex, setCorrectChoiceIndex] = useState(
+    Math.max(
+      question?.choices.findIndex((choice) => choice.isCorrect) ?? 0,
+      0
+    )
   );
 
-  const [errors, setErrors] = useState<FormErrors>({
-    choices: {},
-  });
+  const [errors, setErrors] = useState<FormErrors>({});
 
   function updateChoice(
-    choiceId: string,
+    choiceIndex: number,
     field: keyof ChoiceDraft,
     value: string
   ) {
     setChoices((currentChoices) =>
-      currentChoices.map((choice) =>
-        choice.id === choiceId
+      currentChoices.map((choice, index) =>
+        index === choiceIndex
           ? { ...choice, [field]: value }
           : choice
       )
     );
 
     setErrors((currentErrors) => {
-      const nextChoiceErrors = { ...currentErrors.choices };
-      delete nextChoiceErrors[choiceId];
-
       return {
         ...currentErrors,
-        choices: nextChoiceErrors,
+        choicesMessage: undefined,
       };
     });
   }
@@ -103,71 +101,119 @@ export default function QuestionForm({
   ) {
     event.preventDefault();
 
-    const nextErrors: FormErrors = {
-      choices: {},
-    };
-
-    if (!statement.trim()) {
-      nextErrors.statement = "Question statement is required.";
-    }
-
-    const cleanedChoices: QuestionChoice[] = choices.map(
-      (choice) => {
+    const questionPayload = {
+      topicId: topic,
+      text,
+      imageUrl,
+      choices: choices.map((choice, index) => {
         const trimmedText = choice.text.trim();
-        const trimmedImage = choice.imageUrl.trim();
+        const trimmedImageUrl = choice.imageUrl.trim();
+        const choiceId = question?.choices[index]?.id;
 
-        if (!trimmedText && !trimmedImage) {
-          nextErrors.choices[choice.id] =
-            "Enter option text or an image URL.";
-        }
-
-        if (trimmedText && trimmedImage) {
-          nextErrors.choices[choice.id] =
-            "Use text or image URL, not both.";
-        }
-
-        if (trimmedText) {
+        if (trimmedText && !trimmedImageUrl) {
           return {
-            id: choice.id,
-            text: trimmedText,
-            isCorrect: choice.id === correctChoiceId,
+            ...(choiceId ? { id: choiceId } : {}),
+            text: choice.text,
+            isCorrect: index === correctChoiceIndex,
+          };
+        }
+
+        if (!trimmedText && trimmedImageUrl) {
+          return {
+            ...(choiceId ? { id: choiceId } : {}),
+            imageUrl: choice.imageUrl,
+            isCorrect: index === correctChoiceIndex,
           };
         }
 
         return {
-          id: choice.id,
-          imageUrl: trimmedImage,
-          isCorrect: choice.id === correctChoiceId,
+          ...(choiceId ? { id: choiceId } : {}),
+          text: choice.text,
+          imageUrl: choice.imageUrl,
+          isCorrect: index === correctChoiceIndex,
+        };
+      }),
+    };
+
+    const result = question
+      ? FormValidation(updateQuestionRequestSchema, {
+          id: question.id,
+          ...questionPayload,
+        })
+      : FormValidation(createQuestionRequestSchema, questionPayload);
+
+    if (!result.success) {
+      setErrors({
+        text: result.errors.text,
+        choicesMessage: result.errors.choices,
+      });
+      return;
+    }
+
+    const questionResponse = {
+      id: question?.id ?? `question-${Date.now()}`,
+      topicId: result.data.topicId,
+      topicTitle: result.data.topicId,
+      text: result.data.text,
+      imageUrl: result.data.imageUrl ?? null,
+      choices: result.data.choices.map((choice) => {
+        if (choice.text) {
+          return {
+            text: choice.text,
+            isCorrect: choice.isCorrect,
+            imageUrl: null,
+          };
+        }
+
+        return {
+          text: null,
+          isCorrect: choice.isCorrect,
+          imageUrl: choice.imageUrl ?? null,
+        };
+      }),
+    };
+
+    const responseResult = question
+      ? FormValidation(updateQuestionResponseSchema, questionResponse)
+      : FormValidation(createQuestionResponseSchema, questionResponse);
+
+    if (!responseResult.success) {
+      setErrors({
+        text: responseResult.errors.text,
+        choicesMessage: responseResult.errors.choices,
+      });
+      return;
+    }
+
+    const cleanedChoices: QuestionChoice[] = responseResult.data.choices.map(
+      (choice, index) => {
+        if (choice.text) {
+          return {
+            id:
+              question?.choices[index]?.id ??
+              `choice-${Date.now()}-${index}`,
+            text: choice.text,
+            isCorrect: choice.isCorrect,
+          };
+        }
+
+        return {
+          id:
+            question?.choices[index]?.id ??
+            `choice-${Date.now()}-${index}`,
+          imageUrl: choice.imageUrl ?? "",
+          isCorrect: choice.isCorrect,
         };
       }
     );
 
-    const hasInvalidChoice = cleanedChoices.some((choice) => {
-      const hasText = "text" in choice;
-      const hasImage = "imageUrl" in choice;
-
-      return hasText === hasImage;
-    });
-
-    if (
-      !topic ||
-      nextErrors.statement ||
-      Object.keys(nextErrors.choices).length > 0 ||
-      hasInvalidChoice
-    ) {
-      setErrors(nextErrors);
-      return;
-    }
-
-    setErrors({
-      choices: {},
-    });
+    setErrors({});
 
     onSubmit({
-      id: question?.id ?? `question-${Date.now()}`,
-      topic,
-      statement: statement.trim(),
-      imageUrl: imageUrl.trim() || undefined,
+      id: responseResult.data.id,
+      topic: responseResult.data.topicTitle,
+      statement: responseResult.data.text,
+      imageUrl: responseResult.data.imageUrl ?? undefined,
       choices: cleanedChoices,
     });
   }
@@ -203,12 +249,12 @@ export default function QuestionForm({
         </span>
 
         <textarea
-          value={statement}
+          value={text}
           onChange={(event) => {
-            setStatement(event.target.value);
+            setText(event.target.value);
             setErrors((currentErrors) => ({
               ...currentErrors,
-              statement: undefined,
+              text: undefined,
             }));
           }}
           placeholder="Enter the question..."
@@ -222,9 +268,9 @@ export default function QuestionForm({
           "
         />
 
-        {errors.statement ? (
+        {errors.text ? (
           <p className="mt-2 text-sm text-red-600">
-            {errors.statement}
+            {errors.text}
           </p>
         ) : null}
       </label>
@@ -263,6 +309,12 @@ export default function QuestionForm({
         </legend>
 
         <div className="mt-3 space-y-3">
+          {errors.choicesMessage ? (
+            <p className="text-sm text-red-600">
+              {errors.choicesMessage}
+            </p>
+          ) : null}
+
           {choices.map((choice, index) => {
             const hasText = Boolean(choice.text.trim());
             const hasImage = Boolean(
@@ -271,7 +323,7 @@ export default function QuestionForm({
 
             return (
               <div
-                key={choice.id}
+                key={optionLabels[index]}
                 className="
                   grid grid-cols-[auto_1fr]
                   gap-x-3 gap-y-2
@@ -281,10 +333,10 @@ export default function QuestionForm({
                   type="radio"
                   name="correctChoice"
                   checked={
-                    correctChoiceId === choice.id
+                    correctChoiceIndex === index
                   }
                   onChange={() =>
-                    setCorrectChoiceId(choice.id)
+                    setCorrectChoiceIndex(index)
                   }
                   className="mt-3 h-4 w-4 accent-blue-600"
                   aria-label={`Mark option ${optionLabels[index]} as correct`}
@@ -296,7 +348,7 @@ export default function QuestionForm({
                     disabled={hasImage}
                     onChange={(event) =>
                       updateChoice(
-                        choice.id,
+                        index,
                         "text",
                         event.target.value
                       )
@@ -324,7 +376,7 @@ export default function QuestionForm({
                       disabled={hasText}
                       onChange={(event) =>
                         updateChoice(
-                          choice.id,
+                          index,
                           "imageUrl",
                           event.target.value
                         )
@@ -363,11 +415,6 @@ export default function QuestionForm({
                   </label>
                 </div>
 
-                {errors.choices[choice.id] ? (
-                  <p className="col-start-2 text-sm text-red-600">
-                    {errors.choices[choice.id]}
-                  </p>
-                ) : null}
               </div>
             );
           })}

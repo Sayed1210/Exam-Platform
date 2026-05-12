@@ -12,7 +12,30 @@ import ConfirmDeleteModal from "@/components/ConfirmDeleteModal";
 import type { Question } from "@/types/question";
 
 
-const initialTopics = ["React", "Node.js", "Algorithms", "QA"];
+// const initialTopics = ["React", "Node.js", "Algorithms", "QA"];
+const initialTopics = [
+  "React",
+  "Node.js",
+  "Algorithms",
+  "QA",
+  "Databases",
+  "Cybersecurity",
+  "Artificial Intelligence",
+  "Machine Learning",
+  "Cloud Computing",
+  "DevOps",
+  "Docker",
+  "Kubernetes",
+  "Linux",
+  "Networking",
+  "System Design",
+  "Data Structures",
+  "Operating Systems",
+  "Computer Vision",
+  "Blockchain",
+  "Mobile Development",
+  "Game Development",
+];
 
 const initialQuestions: Question[] = [
   {
