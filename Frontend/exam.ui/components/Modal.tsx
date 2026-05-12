@@ -8,12 +8,12 @@ export default function Modal({ open, onClose, children }: any) {
       <div className="bg-white rounded-2xl shadow-xl max-w-md p-8 relative relative flex flex-col gap-6">
         
         {/* Close button (top right) */}
-        <button
+        {/* <button
           onClick={onClose}
           className="absolute top-3 right-4 font-bold text-gray-400 hover:text-black"
         >
           ✕
-        </button>
+        </button> */}
 
         {/* Content */}
         {children}

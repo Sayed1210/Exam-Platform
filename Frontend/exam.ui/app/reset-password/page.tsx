@@ -4,6 +4,8 @@ import { useState } from "react";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 import Image from "next/image";
+import { FormValidation } from "@/schemas/form-validation";
+import { resetPasswordSchema } from "@/schemas/requests/reset-password-request";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -11,29 +13,16 @@ export default function ResetPasswordPage() {
   const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({});
 
   const validate = () => {
-    const newErrors: { password?: string; confirmPassword?: string } = {};
-
-    // Password required
-    if (!password) {
-      newErrors.password = "Password is required";
-    } 
-    // Password length
-    else if (password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-
-    // Confirm Password required & must match
-    if (!confirmPassword) {
-      newErrors.confirmPassword = "Password confirmation is required";
-    } 
-    else if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    setErrors(newErrors);
-
-    return Object.keys(newErrors).length === 0;
-  };
+      const result = FormValidation(resetPasswordSchema, { password, confirmPassword });
+  
+      if (!result.success) {
+        setErrors(result.errors);
+        return false;
+      }
+  
+      setErrors({});
+      return true;
+    };
 
   const handleChangePassword = () => {
     if (!validate()) return;

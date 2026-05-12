@@ -6,6 +6,8 @@ import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { loginSchema } from "@/schemas/requests/login-request";
+import { FormValidation } from "@/schemas/form-validation";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,29 +19,15 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   const validate = () => {
-    const newErrors: { email?: string; password?: string } = {};
+    const result = FormValidation(loginSchema, { email, password });
 
-    // Email required
-    if (!email.trim()) {
-      newErrors.email = "Email is required";
-    } 
-    // Email format
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = "Please enter a valid email";
+    if (!result.success) {
+      setErrors(result.errors);
+      return false;
     }
 
-    // Password required
-    if (!password) {
-      newErrors.password = "Password is required";
-    } 
-    // Password length
-    else if (password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-
-    setErrors(newErrors);
-
-    return Object.keys(newErrors).length === 0;
+    setErrors({});
+    return true;
   };
 
   const handleLogin = () => {
@@ -60,11 +48,11 @@ export default function LoginPage() {
         <div className="text-left">
           <label className="text-label">Email</label>
           <Input placeholder="admin@enozom.com" value={email} onChange={setEmail} />
-          <p className="text-error mt-1 min-h-[10px]">{errors.email}</p>
+          <p className="text-error mt-1">{errors.email}</p>
           <div style={{ height: '10px' }} />
           <label className="text-label">Password</label>
           <Input placeholder="••••••••" type="password" value={password}onChange={setPassword}/>
-          <p className="text-error mt-1 min-h-[10px]">{errors.password}</p>
+          <p className="text-error mt-1">{errors.password}</p>
         </div>
 
         <p className="text-muted cursor-pointer hover:underline text-left" onClick={() => setOpen(true)}>
@@ -85,10 +73,9 @@ export default function LoginPage() {
             <Input placeholder="Enter your email" value={resetEmail} onChange={setResetEmail}/>
             <div style={{ height: '8px' }} />
             <Button text="Send Reset Link" onClick={() => setOpen(false)} className="btn-primary" />
-            {/* <Button text="Cancel" onClick={() => setOpen(false)} className="btn-secondary" /> */}
+            <Button text="Cancel" onClick={() => setOpen(false)} className="btn-secondary" />
         </div>
       </Modal>
     </div>
   );
 }
-// can do validation on blur instead of on submit, but for simplicity doing it on submit
