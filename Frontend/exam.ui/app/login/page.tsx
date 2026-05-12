@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { loginSchema } from "@/schemas/requests/login-request";
 import { FormValidation } from "@/schemas/form-validation";
+import { forgetPassword, login } from "@/services/auth-service";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,10 +31,32 @@ export default function LoginPage() {
     return true;
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!validate()) return;
-    // TODO: call API
-    // router.push("/candidates");
+
+    const result = await login({ email, password });
+
+    if (!result.success) {
+      alert(result.message);
+      return;
+    }
+
+    router.push("/reset-password");
+  };
+
+  const handleForgetPassword = async () => {
+    if (!email) {
+      alert("Please enter your email");
+      return;
+    }
+
+    const result = await forgetPassword({ email });
+
+    alert(result.message);
+
+    if (result.success) {
+      setOpen(false);
+    }
   };
 
   return (
@@ -72,10 +95,12 @@ export default function LoginPage() {
         <div>   
             <Input placeholder="Enter your email" value={resetEmail} onChange={setResetEmail}/>
             <div style={{ height: '8px' }} />
-            <Button text="Send Reset Link" onClick={() => setOpen(false)} className="btn-primary" />
+            <Button text="Send Reset Link" onClick={handleForgetPassword} className="btn-primary" />
             <Button text="Cancel" onClick={() => setOpen(false)} className="btn-secondary" />
         </div>
       </Modal>
     </div>
   );
 }
+
+// admin password: test1234

@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 import Image from "next/image";
 import { FormValidation } from "@/schemas/form-validation";
 import { resetPasswordSchema } from "@/schemas/requests/reset-password-request";
+import { resetPassword } from "@/services/auth-service";
 
 export default function ResetPasswordPage() {
+  const router = useRouter();
+  
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({});
@@ -24,9 +28,21 @@ export default function ResetPasswordPage() {
       return true;
     };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (!validate()) return;
     // TODO: call API to change password
+    const result = await resetPassword({
+      password,
+      confirmPassword,
+    });
+
+    if (!result.success) {
+      alert(result.message);
+      return;
+    }
+
+    alert(result.message);
+    router.push("/login");
   };
 
   return (
