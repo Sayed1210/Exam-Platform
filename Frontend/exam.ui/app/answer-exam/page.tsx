@@ -4,20 +4,52 @@ import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import { useState, useEffect } from "react";
 
-const TOTAL_QUESTIONS = 25; // will take from backend
+type Question = {
+  id: number;
+  text: string;
+  options: {
+    id: number;
+    text: string;
+  }[];
+};
+const questions: Question[] = [
+  {
+    id: 101,
+    text: "Select the correct React statement.",
+    options: [
+      { id: 11, text: "Option A" },
+      { id: 12, text: "Option B" },
+      { id: 13, text: "Option C" },
+      { id: 14, text: "Option D" },
+    ],
+  },
+  {
+    id: 102,
+    text: "Select the correct React statement.",
+    options: [
+      { id: 15, text: "Option A" },
+      { id: 16, text: "Option B" },
+      { id: 17, text: "Option C" },
+      { id: 18, text: "Option D" },
+    ],
+  },
+  {
+    id: 103,
+    text: "Select the correct React statement.",
+    options: [
+      { id: 19, text: "Option A" },
+      { id: 20, text: "Option B" },
+      { id: 21, text: "Option C" },
+      { id: 22, text: "Option D" },
+    ],
+  },
+];
 
 export default function ExamPage() {
-  const [current, setCurrent] = useState(1);
-  const [answers, setAnswers] = useState<{ [key: number]: string }>({});
+  const [current, setCurrent] = useState(0);
+  const [answers, setAnswers] = useState<{ [questionId: number]: number }>({});
   const [timeLeft, setTimeLeft] = useState(310); // seconds
   const [open, setOpen] = useState(false);
-
-
-  const question = {
-    id: current,
-    text: "Select the correct React statement.",
-    options: ["Option A", "Option B", "Option C", "Option D"],
-  };
 
   // Timer
   useEffect(() => {
@@ -34,6 +66,8 @@ export default function ExamPage() {
   };
 
   const answeredCount = Object.keys(answers).length;
+  const question = questions[current];
+  const TOTAL_QUESTIONS = questions.length; // will take from backend
 
   return (
     // flex-col lg:flex-row
@@ -45,15 +79,13 @@ export default function ExamPage() {
           <p className="text-muted mb-4">{TOTAL_QUESTIONS} Total</p>
 
           <div className="grid grid-cols-5 gap-2 text-body">
-            {Array.from({ length: TOTAL_QUESTIONS }, (_, i) => {
+            {questions.map((q, i) => {
               const num = i + 1;
-              const isCurrent = num === current;
-              const isAnswered = answers[num];
+              const isCurrent = i === current;
+              const isAnswered = answers[q.id];
 
               return (
-                <button
-                  key={num}
-                  onClick={() => setCurrent(num)}
+                <Button key={q.id} text={num.toString()} onClick={() => setCurrent(i)}
                   className={`h-10 rounded border text-sm hover:brightness-90 transition
                     ${
                       isCurrent
@@ -63,13 +95,12 @@ export default function ExamPage() {
                         : "border-gray-300"
                     }
                   `}
-                >
-                  {num}
-                </button>
+                />
               );
             })}
           </div>
 
+          {/* info */}
           <div className="mt-6 text-muted space-y-2">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 bg-blue-400 rounded shadow-sm" /> Current
@@ -83,9 +114,9 @@ export default function ExamPage() {
           </div>
         </div>
 
-        <button className="btn-primary w-full" onClick={() => setOpen(true)}>
-          Submit Exam
-        </button>
+        {/* Submit Button */}
+        <Button text="Submit Exam" className="btn-primary w-full" onClick={() => setOpen(true)} />
+        
         {/* Submit Modal */}
         <Modal open={open} onClose={() => setOpen(false)}>
           {/* Icon */}
@@ -121,7 +152,7 @@ export default function ExamPage() {
               React Developer Assessment
             </h1>
             <p className="text-muted">
-              Question {current} of {TOTAL_QUESTIONS}
+              Question {current + 1} of {TOTAL_QUESTIONS}
             </p>
           </div>
 
@@ -158,21 +189,17 @@ export default function ExamPage() {
 
         {/* Question Card */}
         <div className="bg-white p-6 rounded-xl shadow-sm">
-          {/* <p className="text-sm text-gray-400 mb-2">
-            QUESTION {current} OF {TOTAL_QUESTIONS}
-          </p> */}
-
           <h2 className="text-lg font-semibold mb-4">
             Question {current}: {question.text}
           </h2>
 
           <div className="space-y-3">
-            {question.options.map((opt) => (
+            {question.options.map((opt, index) => (
               <label
-                key={opt}
+                key={opt.id}
                 className={`text-body flex items-center gap-3 border rounded-2xl p-3 cursor-pointer
                   ${
-                    answers[current] === opt
+                    answers[question.id] === opt.id
                       ? "border-blue-100 bg-blue-100"
                       : "border-gray-300"
                   }
@@ -180,16 +207,16 @@ export default function ExamPage() {
               >
                 <input
                   type="radio"
-                  name={`q-${current}`}
-                  checked={answers[current] === opt}
+                  name={`q-${question.id}`}
+                  checked={answers[question.id] === opt.id}
                   onChange={() =>
                     setAnswers((prev) => ({
                       ...prev,
-                      [current]: opt,
+                      [question.id]: opt.id,
                     }))
                   }
                 />
-                {opt}
+                {opt.text}
               </label>
             ))}
           </div>
@@ -197,21 +224,8 @@ export default function ExamPage() {
 
         {/* Navigation */}
         <div className="flex justify-between mt-6">
-          <button
-            onClick={() => setCurrent((p) => Math.max(1, p - 1))}
-            className="btn-secondary"
-          >
-            ← Previous
-          </button>
-
-          <button
-            onClick={() =>
-              setCurrent((p) => Math.min(TOTAL_QUESTIONS, p + 1))
-            }
-            className="btn-secondary"
-          >
-            Next →
-          </button>
+          <Button text="← Previous" onClick={() => setCurrent((p) => Math.max(1, p - 1))} className="btn-secondary" />
+          <Button text="Next →" onClick={() => setCurrent((p) => Math.min(TOTAL_QUESTIONS, p + 1))} className="btn-secondary" />
         </div>
       </div>
     </div>
