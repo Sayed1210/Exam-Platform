@@ -45,6 +45,15 @@ public class CandidateRepository(ApiContext context) : ICandidateRepository
         // INSERT happens only when SaveChangesAsync is called
         await _context.SaveChangesAsync();
     }
+    public async Task<Candidate?> GetWithExamsAndAnswersAsync(int candidateId) =>
+    await _context.Candidates
+        .Include(c => c.CandidateExams)
+            .ThenInclude(ce => ce.Exam)
+        .Include(c => c.CandidateAnswers)
+            .ThenInclude(ca => ca.Question)
+        .Include(c => c.CandidateAnswers)
+            .ThenInclude(ca => ca.Choice)
+        .FirstOrDefaultAsync(c => c.Id == candidateId);
 
 
     public async Task DeleteAsync(int id)
