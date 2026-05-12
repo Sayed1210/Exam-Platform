@@ -82,6 +82,36 @@ public class CandidateService(ICandidateRepository candidateRepository) : ICandi
         await _candidateRepository.AddAsync(candidate);
         return true;
     }
+    public async Task<CandidateDetailResponse?> GetDetailAsync(int candidateId)
+{
+    var candidate = await _candidateRepository.GetWithExamsAndAnswersAsync(candidateId);
+    if (candidate is null) return null;
+
+    return new CandidateDetailResponse
+    {
+        Id = candidate.Id,
+        Name = candidate.FirstName + " " + candidate.LastName,
+        Email = candidate.Email,
+        Phone= candidate.Phone,
+        Exams = candidate.CandidateExams?.Select(ce => new CandidateExamDetailResponse
+        {
+           
+            ExamTitle = ce.Exam?.Title ?? string.Empty,
+            InvitedAt = ce.InvitedAt,
+            StartedAt = ce.JoinedAt,
+            Status = ce.Status,
+            Score = ce.Score,
+            Answers = candidate.CandidateAnswers?
+                .Where(ca => ca.ExamId == ce.ExamId)
+                .Select(ca => new CandidateAnswerDetail
+                {
+                    QuestionText = ca.Question?.Text ?? string.Empty,
+                    ChoiceText = ca.Choice?.Text ?? string.Empty
+                
+                }).ToList() ?? []
+        }).ToList() ?? []
+    };
+}
 
     public async Task<bool> DeleteCandidate(int id)
     {

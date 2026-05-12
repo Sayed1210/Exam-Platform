@@ -10,5 +10,6 @@ public interface ICandidateService
     Task<CandidateResponse?> GetCandidateByExamId(int examId);
     
     Task<bool> AddCandidate(CreateCandidateRequest candidate);
+    Task<CandidateDetailResponse?> GetDetailAsync(int candidateId);
     Task<bool> DeleteCandidate(int id);
 }
