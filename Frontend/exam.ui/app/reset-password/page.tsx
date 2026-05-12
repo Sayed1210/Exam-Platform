@@ -3,12 +3,9 @@
 import { useState } from "react";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 export default function ResetPasswordPage() {
-  const router = useRouter();
-
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({});
@@ -40,8 +37,7 @@ export default function ResetPasswordPage() {
 
   const handleChangePassword = () => {
     if (!validate()) return;
-    // TODO: call API
-    // router.push("/candidates");
+    // TODO: call API to change password
   };
 
   return (
