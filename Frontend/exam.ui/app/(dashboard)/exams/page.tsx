@@ -3,152 +3,223 @@ import { useState } from 'react';
 import ExamCard from '@/components/exams/ExamCard';
 import Button from '@/components/Button';
 import AssignModal from '@/components/exams/AssignModal';
-import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { PlusIcon } from '@heroicons/react/24/outline';
 import Message from '@/components/Message'; 
+import CreateExamModal from '@/components/exams/CreateExamModal';
+import { SearchBar } from '@/components/exams/SearchBar';
+import ViewExamModal from '@/components/exams/ViewExamModal';
 
-// Example data structure
-//const examList = [
-  //{ id: 1, name: "Frontend Developer Test", topics: "React, TypeScript, and CSS fundamentals", durationMinutes: 60, totalQuestions: 25 },
-  //{ id: 2, name: "Backend Engineer Test", topics: "Node.js, databases, and API design", durationMinutes: 90, totalQuestions: 30 },
-  //{ id: 3, name: "Full Stack Assessment", topics: "Comprehensive full-stack development test", durationMinutes: 120, totalQuestions: 40 }
-//];
+// Interfaces remain the same
+interface Question {
+  text: string;
+  topic: string;
+  options: Array<{ text: string; isCorrect: boolean }>;
+}
 
-//Define the interface to match .NET DTO
 interface Exam {
   id: number;
   name: string;
   topics: string;
   durationMinutes: number;
   totalQuestions: number;
+  questions?: Question[];
 }
 
 export default function ExamsPage() {
-  const [selectedExam, setSelectedExam] = useState<any>(null);
-  const [message, setMessage] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  // for the search query
-  const [searchQuery, setSearchQuery] = useState('');
-  // 2. Initialize state with mock data (Preparation for DB)
-  // These property names (name, topics, etc.) match standard .NET JSON serialization
   const [exams, setExams] = useState<Exam[]>([
-    { id: 1, name: "Frontend Developer Test", topics: "React, TypeScript, and CSS", durationMinutes: 60, totalQuestions: 25 },
-    { id: 2, name: "Backend Engineer Test", topics: "Node.js, SQL, and API Design", durationMinutes: 90, totalQuestions: 30 },
-    { id: 3, name: "Full Stack Assessment", topics: "Full-stack development lifecycle", durationMinutes: 120, totalQuestions: 40 }
-  ]);
-  // Filter the exam list dynamically
-  // This looks at both the exam name and the topics
-    const filteredExams = exams.filter((exam) => {
-    const searchTerm = searchQuery.toLowerCase();
+  { 
+    id: 1, 
+    name: "Frontend Developer Test", 
+    topics: "React, TypeScript", 
+    durationMinutes: 60, 
+    totalQuestions: 1,
+    // Add the actual question data here
+    questions: [
+      { 
+        text: "What is a Hook in React?", 
+        topic: "React", 
+        options: [
+          { text: "A function", isCorrect: true },
+          { text: "A CSS property", isCorrect: false }
+        ] 
+      }
+    ] 
+  },
+  // ... do the same for other mock exams
+]);
+
+  const [examToAssign, setExamToAssign] = useState<Exam | null>(null);
+  const [examToView, setExamToView] = useState<Exam | null>(null);
+  const [examToEdit, setExamToEdit] = useState<any | null>(null);
+  const [fullExamData, setFullExamData] = useState<any | null>(null);
+  const [isLoadingView, setIsLoadingView] = useState(false);
+  const [message, setMessage] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // --- NEW: Missing Handler Functions ---
+
+  const handleCreateExam = async (newData: any) => {
+   const newExam: Exam = {
+    // Generate a unique ID (use timestamp if you don't have a DB yet)
+    id: Date.now(), 
+    name: newData.title,
+    // Extract unique topics from the questions added
+    topics: Array.from(new Set(newData.questions.map((q: any) => q.topic))).join(', '),
+    durationMinutes: newData.durationMins,
+    totalQuestions: newData.questions.length,
+    // CRITICAL: Save the actual questions array here!
+    questions: newData.questions};
+    setExams(prev => [...prev, newExam]);
+  setMessage({ message: 'Exam created with ' + newExam.totalQuestions + ' questions', type: 'success' });
+  setTimeout(() => {
+    setMessage(null);
+  }, 3000);
+  };
+
+  const handleUpdateExam = async (id: number, updatedData: any) => {
+    setExams((prevExams) => 
+    prevExams.map((exam) => 
+      exam.id === id 
+        ? { 
+            ...exam, 
+            name: updatedData.title, 
+            durationMinutes: updatedData.durationMins,
+            // Capture the questions from the modal
+            questions: updatedData.questions, 
+            totalQuestions: updatedData.questions.length,
+            topics: Array.from(new Set(updatedData.questions.map((q: any) => q.topic))).join(', ')
+          } 
+        : exam
+    )
+  );
+  setMessage({ message: 'Changes saved!', type: 'success' });
+  setTimeout(() => {
+    setMessage(null);
+  }, 3000);
+  };
+const handleDeleteExam = async (id: number) => {
+  // 1. Optional: Add a simple browser confirmation for safety
+  if (!window.confirm("Are you sure you want to delete this exam? This action cannot be undone.")) return;
+
+  try {
+    // 2. Future: await api.delete(`/exams/${id}`);
     
+    // 3. Update local state to remove the exam immediately
+    setExams(prevExams => prevExams.filter(exam => exam.id !== id));
+    
+    setMessage({ message: 'Exam deleted successfully', type: 'success' });
+  } catch (error) {
+    setMessage({ message: 'Failed to delete the exam. Please try again.', type: 'error' });
+  }
+  
+  // Auto-hide the message
+  setTimeout(() => setMessage(null), 3000);
+};
+  // --- Fixed Filter Logic ---
+  const filteredExams = exams.filter((exam) => {
+    const searchTerm = searchQuery.toLowerCase();
     return (
       exam.name.toLowerCase().includes(searchTerm) ||
       exam.topics.toLowerCase().includes(searchTerm)
     );
   });
-  /**
-   * ADJUSTED: handleAssignment now receives the structured data object.
-   * This object matches your .NET DTO: { examId, candidateIds, deadline }
-   */
-  const handleAssignment = async (data: { examId: number, candidateIds: number[], deadline: string }) => {
-    // 1. Close the modal immediately for a smooth UX
-    setSelectedExam(null); 
 
-    try {
-      // In the future, this is where you'll call: 
-      // const response = await sendInvitations(data);
-      
-      // Simulating a successful backend response for now
-      const isApiSuccessful = true; 
+  const handleViewExam = async (exam: Exam) => {
+    // Find the most up-to-date version of this exam from our state
+  const currentExam = exams.find(e => e.id === exam.id);
+  
+  if (currentExam) {
+    setFullExamData(currentExam); // This now contains the REAL questions
+    setExamToView(currentExam);
+  }
+  };
 
-      if (isApiSuccessful) {
-        setMessage({ message: 'Invitations sent successfully!', type: 'success' });
-        console.log("Data ready for .NET Backend:", data);
-      } else {
-        setMessage({ message: 'Server error: Could not process invitations.', type: 'error' });
-      }
-    } catch (error) {
-      setMessage({ message: 'Connection failed. Please check your internet.', type: 'error' });
-    }
-
-    // Auto-hide the success/error message
-    setTimeout(() => setMessage(null), 4000);
+  const handleAssignment = async (data: any) => {
+    setExamToAssign(null);
+    setMessage({ message: 'Invitations sent successfully!', type: 'success' });
+    console.log(data);
+    setTimeout(() => setMessage(null), 3000);
   };
 
   return (
     <main className="p-8 max-w-7xl mx-auto">
-      
-      {/* Header Section */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <h2 className="text-heading text-2xl">Exams</h2>
+        <h2 className="text-heading text-2xl font-bold">Exams</h2>
       </div>
 
-      {/* Search and Action Bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 pb-8 border-b border-slate-50">
-          <div className="relative flex-1 max-w-md">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <MagnifyingGlassIcon className="w-5 h-5 text-muted" />
-            </div>
-            {/* 3. Connect the input to the state */}
-            <input
-              type="text"
-              placeholder="Search exams..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-body"
-            />
-          </div>
+      {/* Action Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 pb-8 border-b border-slate-50">
+        <div className="relative flex-1 max-w-md">
+          <SearchBar placeholder="Search exams..." value={searchQuery} onChange={setSearchQuery} />
+        </div>
+        <Button 
+          text={<span className="flex items-center gap-2"><PlusIcon className="w-5 h-5 stroke-[2.5px]" /> Create Exam</span>}
+          onClick={() => setIsCreateOpen(true)}
+          className="btn-primary !w-auto px-8"
+        />
+      </div>
 
-          <Button 
-            text={
-              <span className="flex items-center gap-2">
-                <PlusIcon className="w-5 h-5 stroke-[2.5px]" />
-                Create Exam
-              </span>
+      {/* Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {filteredExams.map((exam) => (
+          <ExamCard 
+            key={exam.id} 
+            exam={exam}
+            onAssign={(e) => setExamToAssign(e)}
+            onView={() => handleViewExam(exam)}
+            onEdit={((clickedExam) => setExamToEdit(clickedExam))}
+            onDelete={(id) => handleDeleteExam(exam.id)}
+          />
+        ))}
+      </div>
+
+      {/* Unified Create/Edit Modal */}
+      {(isCreateOpen || examToEdit) && (
+        <CreateExamModal 
+          initialData={examToEdit} 
+          onClose={() => {
+            setIsCreateOpen(false);
+            setExamToEdit(null);
+          }}
+          onSave={(data) => {
+            console.log(data);
+            if (examToEdit) {
+              handleUpdateExam(examToEdit.id, data);
+            } else {
+              handleCreateExam(data);
             }
-            className="btn-primary !w-auto px-8"
-          />
-        </div>
+            setIsCreateOpen(false);
+            setExamToEdit(null);
+          }} 
+        />
+      )}
 
-        <div className="mb-6">
-          <p className="text-muted">
-            {/* 4. Use the filtered list length */}
-            {filteredExams.length} {filteredExams.length === 1 ? 'Exam' : 'Exams'} Found
-          </p>
-        </div>
+      {/* View Modal */}
+      {examToView && (
+        <ViewExamModal 
+          exam={fullExamData || examToView} 
+          isLoading={isLoadingView}
+          onClose={() => { setExamToView(null); setFullExamData(null); }} 
+          onEdit={() => {
+            const data = fullExamData || examToView;
+            setExamToView(null); 
+            setExamToEdit(data);
+          }} 
+        />
+      )}
 
-        {/* 5. Map over filteredExams instead of examList */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredExams.length > 0 ? (
-            filteredExams.map((exam) => (
-              <ExamCard 
-                key={exam.id} 
-                exam={exam}
-                onAssign={(clickedExam) => setSelectedExam(clickedExam)}
-              />
-            ))
-          ) : (
-            <div className="col-span-full py-20 text-center">
-              <p className="text-muted font-medium">No exams found matching "{searchQuery}"</p>
-            </div>
-          )}
-        </div>
+      {/* Assign Modal */}
+      {examToAssign && (
+        <AssignModal 
+          exam={examToAssign} 
+          onClose={() => setExamToAssign(null)}
+          onConfirm={handleAssignment} 
+        />
+      )}
 
-        {/* Notification */}
-        {message && (
-          <Message 
-            message={message.message} 
-            type={message.type} 
-            onClose={() => setMessage(null)} 
-          />
-        )}
-
-        {/* ADJUSTED: AssignModal now passes the data object to onConfirm */}
-        {selectedExam && (
-          <AssignModal 
-            exam={selectedExam} 
-            onClose={() => setSelectedExam(null)}
-            onConfirm={(data) => handleAssignment(data)} 
-          />
-        )}
+      {message && <Message message={message.message} type={message.type} onClose={() => setMessage(null)} />}
     </main>
   );
 }

@@ -8,11 +8,23 @@ import {
   PencilSquareIcon, 
   TrashIcon 
 } from '@heroicons/react/24/outline'; 
-interface ExamCardProps {
-  exam: any;
-  onAssign: (exam: any) => void; 
+// Define interface to sync with AssignModal and your .NET backend
+interface Exam {
+  id: number;
+  name: string;
+  topics: string;
+  durationMinutes: number;
+  totalQuestions: number;
 }
-export default function ExamCard({ exam,onAssign}: ExamCardProps) {
+interface ExamCardProps {
+  exam: Exam;
+  onAssign: (exam: Exam) => void; 
+  onView: (exam: Exam) => void;
+  onEdit: (exam: Exam) => void;
+  onDelete: (exam: Exam) => void;
+}
+
+export default function ExamCard({ exam,onAssign,onView,onEdit,onDelete}: ExamCardProps) {
   return (
     <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
       
@@ -52,14 +64,17 @@ export default function ExamCard({ exam,onAssign}: ExamCardProps) {
         <Button 
           text={<EyeIcon className="w-5 h-5" />} 
           className="btn-icon-secondary" 
+          onClick={() => onView(exam)}
         />
         <Button 
           text={<PencilSquareIcon className="w-5 h-5" />} 
           className="btn-icon-secondary" 
+          onClick={() => onEdit(exam)}
         />
         <Button 
           text={<TrashIcon className="w-5 h-5" />} 
           className="btn-icon-danger" 
+          onClick={() => onDelete(exam)}
         />
       </div>
     </div>
