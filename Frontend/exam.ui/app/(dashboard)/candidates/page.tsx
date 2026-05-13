@@ -69,16 +69,21 @@ const matchesStatus =
      return matchesSearch && matchesStatus;
 });
   return (
-    <div className="min-h-screen bg-[#f4f6f9] p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Candidates</h1>
+    <div className="p-8">
+      {/* <div className="flex items-center justify-between mb-6">
+        <h1 className="text-title">Candidates</h1>
         <button
           className="bg-primary text-white font-semibold px-6 py-2.5 rounded-full hover:brightness-90 transition"
           onClick={() => setShowAddModal(true)}
         >
           + Add Candidate
         </button>
-      </div>
+      </div> */}
+      <DashboardPageHeader
+        title="Candidates"
+        buttonText="+ Add Candidate"
+        onButtonClick={() => setShowAddModal(true)}
+      />
 
       <CandidatesTable
         candidates={filtered}

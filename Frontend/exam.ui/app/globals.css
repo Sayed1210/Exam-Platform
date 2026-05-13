@@ -1,29 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FFFFFF;
-  --foreground: #171717;
-  --primary: #DA0211;
-  --black: #111111;
-  --white: #FFFFFF;
-  --muted: #6B7280;
+  --background: #ffffff; /* Light mode background color */
+  --foreground: #171717; /* Light mode foreground color */
+  --primary: #da0211; /* Primary color for light mode */
+  --black: #111111; 
+  --white: #ffffff;
+  --muted: #6b7280;
 }
 
-/* Tailwind theme mapping */
-@theme {
+/*This allows Tailwind to use your custom values (my css variables)*/
+@theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-black: var(--black);
   --color-white: var(--white);
   --color-muted: var(--muted);
-
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-/* Global styles */
-body {
+/*This applies global styles to the entire app*/
+body { 
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
@@ -63,11 +62,35 @@ body {
 /* Button Styles */
 @layer components {
   .btn-primary {
-    @apply w-full mt-2 py-3 rounded-4xl font-semibold text-white transition hover:brightness-90;
-    background-color: var(--primary);
+  @apply w-full mt-2 min-w-32 py-3 rounded-4xl shadow-md font-semibold text-white bg-primary transition hover:brightness-90;
   }
 
   .btn-secondary {
-    @apply w-full mt-2 py-3 rounded-4xl font-semibold transition bg-gray-200 text-black hover:brightness-95;
+  @apply mt-2 min-w-32 py-3 rounded-4xl shadow-sm font-semibold text-black bg-gray-200 transition hover:brightness-95;
+  }
+
+  .btn-icon-danger {
+    @apply p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors duration-200;
+  }
+
+  .btn-icon-secondary {
+    @apply p-2 bg-slate-50 text-foreground rounded-lg hover:bg-slate-100 transition-colors duration-200;
+  }
+}
+@layer components {
+  .btn-primary {
+  @apply w-full mt-2 min-w-32 py-3 rounded-4xl shadow-md font-semibold text-white bg-primary transition hover:brightness-90;
+  }
+
+  .btn-secondary {
+  @apply mt-2 min-w-32 py-3 rounded-4xl shadow-sm font-semibold text-black bg-gray-200 transition hover:brightness-95;
+  }
+
+  .btn-icon-danger {
+    @apply p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors duration-200;
+  }
+
+  .btn-icon-secondary {
+    @apply p-2 bg-slate-50 text-foreground rounded-lg hover:bg-slate-100 transition-colors duration-200;
   }
 }
