@@ -40,15 +40,16 @@ builder.Services.AddRepositoryLayer(); //Dependency injection for repository lay
 builder.Services.AddServiceLayer(); //Dependency injection for service layer, exists in Exam.Service/DependencyInjection.cs 
 builder.Services.AddScoped<IInvitationService, InvitationService>();
 builder.Services.AddScoped<ICandidateExamRepository, CandidateExamRepository>();
+builder.Services.AddScoped<IStartExamService, StartExamService>();
 
 
 // allow frontend to access api
-// builder.Services.AddCors(options => {
-//     options.AddPolicy("AllowFrontend",
-//         policy => policy.WithOrigins("http://localhost:3000") // Replace with your frontend URL
-//                         .AllowAnyMethod()
-//                         .AllowAnyHeader());
-// });
+builder.Services.AddCors(options => {
+    options.AddPolicy("AllowFrontend",
+        policy => policy.WithOrigins("http://localhost:3000") // Replace with your frontend URL
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
+});
 
 var jwtSettings = builder.Configuration.GetSection(nameof(JwtSettings)).Get<JwtSettings>()
     ?? throw new InvalidOperationException("JwtSettings section is missing.");
@@ -93,13 +94,15 @@ app.MapAuthEndpoints();
 app.MapCandidateEndpoints();
 // Submit Exam
 app.MapSubmitExamEndpoints();
+// Start Exam
+app.MapStartExamEndpoints();
 // Link Verification
 app.MapVerifyLinkEndpoints();
 
 app.MapInvitationsEndpoints();
 
 // allow frontend to access api
-// app.UseCors("AllowFrontend");
+app.UseCors("AllowFrontend");
 
 
 app.Run();

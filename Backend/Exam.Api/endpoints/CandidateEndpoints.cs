@@ -44,6 +44,20 @@ public static class CandidateEndpoints
 
             return Results.Ok(new { message = "Candidate added successfully" });
         });
+        candidates.MapGet("/{id:int}/details", async (int id, ICandidateService svc) =>
+{
+
+    var result = await svc.GetDetailAsync(id);
+    return result is null
+        ? Results.NotFound(new { message = $"Candidate {id} not found." })
+        : Results.Ok(result);
+})
+.WithName("GetCandidateDetail")
+.WithSummary("Get candidate full details")
+.WithDescription("Returns candidate info with all exam attempts and answers. Returns empty exams array if not assigned to any exam.")
+.Produces<CandidateDetailResponse>(200)
+.Produces(404)
+.ProducesValidationProblem();
 
         candidates.MapDelete("/{id}", async (int id, ICandidateService service) =>
         {
