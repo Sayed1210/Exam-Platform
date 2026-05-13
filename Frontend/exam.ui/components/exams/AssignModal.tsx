@@ -7,8 +7,8 @@ import {
   InformationCircleIcon 
 } from '@heroicons/react/24/outline';
 import Button from '../Button';
-import Modal from '../Modal';
 import { SearchBar } from './SearchBar';
+import ExamModal from './ExamModal';
 interface AssignModalProps {
   exam: { id: number; name: string; durationMinutes: number; totalQuestions: number };
   onClose: () => void;
@@ -52,7 +52,7 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
   const isValid = selectedIds.length > 0 && deadlineDate !== "" && isFutureDateTime();
 
   return (
-    <Modal onClose={onClose} title="Assign to Candidate">
+    <ExamModal onClose={onClose} title="Assign to Candidate">
       {/* Metrics Header */}
       <div className="px-7 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center gap-4 text-slate-500 text-sm shrink-0">
         <span className="flex items-center gap-1.5"><ClockIcon className="w-4 h-4" /> {exam.durationMinutes} min</span>
@@ -172,6 +172,6 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
           }}
         />
       </div>
-    </Modal>
+    </ExamModal>
   );
 }

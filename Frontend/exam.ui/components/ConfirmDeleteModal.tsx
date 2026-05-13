@@ -1,18 +1,21 @@
 export type ConfirmDeleteModalProps = {
   onConfirm: () => void;
   onCancel: () => void;
+  title:String;
+  text:String;
 };
 
 export default function ConfirmDeleteModal({
   onConfirm,
   onCancel,
+  title,text
 }: ConfirmDeleteModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4">
       <section className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between gap-4">
           <h2 className="text-xl font-bold text-slate-950">
-            Delete Question
+            {title}
           </h2>
 
           <button
@@ -26,7 +29,7 @@ export default function ConfirmDeleteModal({
         </div>
 
         <p className="text-sm text-slate-600">
-          Are you sure you want to delete this question?
+          {text}
         </p>
 
         <div className="mt-6 flex justify-end gap-3">
