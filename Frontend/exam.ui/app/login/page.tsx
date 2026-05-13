@@ -6,6 +6,9 @@ import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { loginSchema } from "@/schemas/requests/login-request";
+import { FormValidation } from "@/schemas/form-validation";
+import { forgetPassword, login } from "@/services/auth-service";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,35 +20,43 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   const validate = () => {
-    const newErrors: { email?: string; password?: string } = {};
+    const result = FormValidation(loginSchema, { email, password });
 
-    // Email required
-    if (!email.trim()) {
-      newErrors.email = "Email is required";
-    } 
-    // Email format
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = "Please enter a valid email";
+    if (!result.success) {
+      setErrors(result.errors);
+      return false;
     }
 
-    // Password required
-    if (!password) {
-      newErrors.password = "Password is required";
-    } 
-    // Password length
-    else if (password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-
-    setErrors(newErrors);
-
-    return Object.keys(newErrors).length === 0;
+    setErrors({});
+    return true;
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!validate()) return;
-    // TODO: call API
-    // router.push("/candidates");
+
+    const result = await login({ email, password });
+
+    if (!result.success) {
+      alert(result.message);
+      return;
+    }
+
+    router.push("/reset-password");
+  };
+
+  const handleForgetPassword = async () => {
+    if (!email) {
+      alert("Please enter your email");
+      return;
+    }
+
+    const result = await forgetPassword({ email });
+
+    alert(result.message);
+
+    if (result.success) {
+      setOpen(false);
+    }
   };
 
   return (
@@ -60,11 +71,11 @@ export default function LoginPage() {
         <div className="text-left">
           <label className="text-label">Email</label>
           <Input placeholder="admin@enozom.com" value={email} onChange={setEmail} />
-          <p className="text-error mt-1 min-h-[10px]">{errors.email}</p>
+          <p className="text-error mt-1">{errors.email}</p>
           <div style={{ height: '10px' }} />
           <label className="text-label">Password</label>
           <Input placeholder="••••••••" type="password" value={password}onChange={setPassword}/>
-          <p className="text-error mt-1 min-h-[10px]">{errors.password}</p>
+          <p className="text-error mt-1">{errors.password}</p>
         </div>
 
         <p className="text-muted cursor-pointer hover:underline text-left" onClick={() => setOpen(true)}>
@@ -93,4 +104,5 @@ export default function LoginPage() {
     </div>
   );
 }
-// can do validation on blur instead of on submit, but for simplicity doing it on submit
+
+// admin password: test1234

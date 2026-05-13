@@ -1,47 +1,48 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { FormValidation } from "@/schemas/form-validation";
+import { resetPasswordSchema } from "@/schemas/requests/reset-password-request";
+import { resetPassword } from "@/services/auth-service";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
-
+  
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({});
 
   const validate = () => {
-    const newErrors: { password?: string; confirmPassword?: string } = {};
+      const result = FormValidation(resetPasswordSchema, { password, confirmPassword });
+  
+      if (!result.success) {
+        setErrors(result.errors);
+        return false;
+      }
+  
+      setErrors({});
+      return true;
+    };
 
-    // Password required
-    if (!password) {
-      newErrors.password = "Password is required";
-    } 
-    // Password length
-    else if (password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-
-    // Confirm Password required & must match
-    if (!confirmPassword) {
-      newErrors.confirmPassword = "Password confirmation is required";
-    } 
-    else if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    setErrors(newErrors);
-
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (!validate()) return;
-    // TODO: call API
-    // router.push("/candidates");
+    // TODO: call API to change password
+    const result = await resetPassword({
+      password,
+      confirmPassword,
+    });
+
+    if (!result.success) {
+      alert(result.message);
+      return;
+    }
+
+    alert(result.message);
+    router.push("/login");
   };
 
   return (
