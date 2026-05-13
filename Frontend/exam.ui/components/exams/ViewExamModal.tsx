@@ -1,6 +1,6 @@
 'use client';
-import Modal from '../Modal';
 import Button from '../Button';
+import ExamModal from './ExamModal';
 
 // Mock data to use until the database integration is complete
 const MOCK_QUESTIONS = [
@@ -55,7 +55,7 @@ export default function ViewExamModal({ exam, isLoading, onClose, onEdit }: View
     : MOCK_QUESTIONS;
 
   return (
-    <Modal onClose={onClose} title={exam.name}>
+    <ExamModal onClose={onClose} title={exam.name}>
       {/* Summary Header */}
       <div className="px-8 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
         <div className="flex gap-6 items-center text-slate-500">
@@ -115,6 +115,6 @@ export default function ViewExamModal({ exam, isLoading, onClose, onEdit }: View
       <div className="p-6 border-t border-slate-100 flex justify-end bg-white sticky bottom-0 z-10 rounded-b-3xl">
         <Button text="Close" onClick={onClose} className="btn-secondary !mt-0 px-8" />
       </div>
-    </Modal>
+    </ExamModal>
   );
 }
