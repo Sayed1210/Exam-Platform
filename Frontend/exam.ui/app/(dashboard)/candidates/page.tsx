@@ -6,6 +6,7 @@ import CandidatesTable from "@/components/candidates/CandidatesTable";
 import AddCandidateModal from "@/components/candidates/AddCandidateModal";
 import CandidateDetailsModal from "@/components/candidates/CandidateDetailsModal";
 import { Candidate, CandidateDetail } from "@/types/candidate";
+import DashboardPageHeader from "@/components/DashboardHeader";
 
 export default function CandidatesPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
