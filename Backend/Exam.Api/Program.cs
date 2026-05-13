@@ -42,6 +42,7 @@ builder.Services.AddScoped<IInvitationService, InvitationService>();
 builder.Services.AddScoped<ICandidateExamRepository, CandidateExamRepository>();
 builder.Services.AddScoped<IStartExamService, StartExamService>();
 
+
 // allow frontend to access api
 builder.Services.AddCors(options => {
     options.AddPolicy("AllowFrontend",

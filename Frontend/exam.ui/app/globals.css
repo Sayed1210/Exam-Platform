@@ -1,35 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff; /* Light mode background color */
-  --foreground: #171717; /* Light mode foreground color */
-  --primary: #da0211; /* Primary color for light mode */
-  --black: #111111; 
-  --white: #ffffff;
-  --muted: #6b7280;
+  --background: #FFFFFF;
+  --foreground: #171717;
+  --primary: #DA0211;
+  --black: #111111;
+  --white: #FFFFFF;
+  --muted: #6B7280;
 }
 
-/*This allows Tailwind to use your custom values (my css variables)*/
-@theme inline {
+/* Tailwind theme mapping */
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-black: var(--black);
   --color-white: var(--white);
   --color-muted: var(--muted);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-/* @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-} */
-
-/*This applies global styles to the entire app*/
-body { 
+/* Global styles */
+body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
@@ -62,8 +56,7 @@ body {
   }
 
   .text-error {
-    @apply text-xs font-medium text-red-500 
-           overflow-hidden transition-all duration-300 ease-in-out;
+    @apply text-xs font-medium text-red-500 overflow-hidden transition-all duration-300 ease-in-out;
   }
 }
 
