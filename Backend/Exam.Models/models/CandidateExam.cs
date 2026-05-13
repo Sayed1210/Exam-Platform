@@ -6,6 +6,7 @@ public enum ExamStatus
 {
     PENDING,
     EXPIRED,
+    IN_PROGRESS,
     DONE
 }
 

@@ -7,5 +7,6 @@ public interface ICandidateAnswerRepository
     // More efficient than calling Add() in a loop because EF tracks all entities and saves them together
     Task AddRangeAsync(List<CandidateAnswer> answers);
     Task<List<int>> GetCorrectChoiceIdsAsync(List<int> questionIds);
+    
 
 }
