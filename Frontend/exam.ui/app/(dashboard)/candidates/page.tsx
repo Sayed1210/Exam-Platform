@@ -1,47 +1,52 @@
 "use client";
 
+import { getCandidates, addCandidate, deleteCandidate, getCandidateDetails } from "@/services/candidateService";
 import { useEffect, useState } from "react";
 import CandidatesTable from "@/components/candidates/CandidatesTable";
 import AddCandidateModal from "@/components/candidates/AddCandidateModal";
 import CandidateDetailsModal from "@/components/candidates/CandidateDetailsModal";
-import { Candidate } from "@/types/candidate";
-import { initialCandidates } from "@/lib/data/candidates";
-import DashboardPageHeader from "@/components/DashboardHeader";
+import { Candidate, CandidateDetail } from "@/types/candidate";
 
 export default function CandidatesPage() {
-  const [candidates, setCandidates] = useState<Candidate[]>(initialCandidates);
-
-  useEffect(() => {
-    fetch("/api/candidates")
-      .then((res) => res.json())
-      .then(setCandidates);
-  }, []);
-
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [emailError, setEmailError] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = useState<CandidateDetail | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
 
-  const handleAddCandidate = (data: {
+  useEffect(() => {
+    getCandidates().then(setCandidates);
+  }, []);
+
+  const handleViewCandidate = async (candidate: Candidate) => {
+    const details = await getCandidateDetails(Number(candidate.id));
+    setSelectedCandidate(details);
+  };
+
+  const handleAddCandidate = async (data: {
     firstName: string;
     lastName: string;
     email: string;
     phoneNumber: string;
   }) => {
-    const newCandidate: Candidate = {
-      id: String(Date.now()),
-      ...data,
-      status: null,
-      score: null,
-      invitedAt: null,
-      startedAt: null,
-      answers: [],
-    };
-    setCandidates((prev) => [newCandidate, ...prev]);
-    setShowAddModal(false);
+    setEmailError("");
+    try {
+      await addCandidate(data);
+      const updated = await getCandidates();
+      setCandidates(updated);
+      setShowAddModal(false);
+    } catch (err: any) {
+      if (err?.status === 409) {
+        setEmailError(err.message);
+      } else {
+        setEmailError(err?.message || "Something went wrong");
+      }
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    await deleteCandidate(Number(id));
     setCandidates((prev) => prev.filter((c) => c.id !== id));
   };
 
@@ -50,12 +55,19 @@ export default function CandidatesPage() {
     const matchesSearch =
       fullName.includes(search.toLowerCase()) ||
       c.email.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus =
-      statusFilter === "All Status" ||
-      (statusFilter === "No Status" ? c.status === null : c.status === statusFilter);
-    return matchesSearch && matchesStatus;
-  });
+  const statusLabelToNumber: Record<string, number> = {
+  Pending: 0,
+  Expired: 1,
+  Completed: 2,
+};
 
+const matchesStatus =
+  statusFilter === "All Status" ||
+  (statusFilter === "No Status"
+    ? c.status === null
+    : c.status === statusLabelToNumber[statusFilter]);
+     return matchesSearch && matchesStatus;
+});
   return (
     <div className="p-8">
       {/* <div className="flex items-center justify-between mb-6">
@@ -79,7 +91,7 @@ export default function CandidatesPage() {
         onSearchChange={setSearch}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
-        onViewCandidate={setSelectedCandidate}
+        onViewCandidate={handleViewCandidate}
         onDeleteCandidate={handleDelete}
       />
 
@@ -87,6 +99,8 @@ export default function CandidatesPage() {
         <AddCandidateModal
           onClose={() => setShowAddModal(false)}
           onSubmit={handleAddCandidate}
+          backendError={emailError}
+          clearBackendError={() => setEmailError("")}
         />
       )}
 

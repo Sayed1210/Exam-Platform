@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { candidateSchema } from "@/schemas/requests/candidateSchema";
+import { FormValidation } from "@/schemas/form-validation";
 
 interface Props {
   onClose: () => void;
@@ -10,24 +12,34 @@ interface Props {
     email: string;
     phoneNumber: string;
   }) => void;
+    backendError?: string;
+  clearBackendError?: () => void;
 }
 
-export default function AddCandidateModal({ onClose, onSubmit }: Props) {
+export default function AddCandidateModal({ onClose, onSubmit, backendError,
+  clearBackendError, }: Props) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+const handleSubmit = () => {
+  const result = FormValidation(candidateSchema, {
+    firstName,
+    lastName,
+    email,
+    phoneNumber,
+  });
 
-  const handleSubmit = () => {
-    if (!firstName || !lastName || !email || !phoneNumber) return;
+  if (!result.success) {
+    setErrors(result.errors);
+    return;
+  }
 
-    onSubmit({
-      firstName,
-      lastName,
-      email,
-      phoneNumber,
-    });
-  };
+  setErrors({});
+
+  onSubmit(result.data);
+};
 
   return (
     <div
@@ -75,6 +87,11 @@ export default function AddCandidateModal({ onClose, onSubmit }: Props) {
                 onChange={(e) => setFirstName(e.target.value)}
                 className="border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition placeholder:text-gray-400"
               />
+              {errors.firstName && (
+              <p className="text-red-500 text-xs mt-1">
+              {errors.firstName}
+              </p>
+)}
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -88,6 +105,12 @@ export default function AddCandidateModal({ onClose, onSubmit }: Props) {
                 onChange={(e) => setLastName(e.target.value)}
                 className="border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition placeholder:text-gray-400"
               />
+
+              {errors.lastName && (
+              <p className="text-red-500 text-xs mt-1">
+             {errors.lastName}
+              </p>
+                 )}
             </div>
           </div>
 
@@ -100,9 +123,20 @@ export default function AddCandidateModal({ onClose, onSubmit }: Props) {
               type="email"
               placeholder="candidate@email.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                clearBackendError?.();
+              }}
               className="border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition placeholder:text-gray-400"
             />
+
+                 {errors.email && (
+              <p className="text-red-500 text-xs">{errors.email}</p>
+            )}
+
+            {backendError && (
+              <p className="text-red-500 text-xs">{backendError}</p>
+            )}
           </div>
 
           {/* Phone Number */}
@@ -118,6 +152,11 @@ export default function AddCandidateModal({ onClose, onSubmit }: Props) {
               onChange={(e) => setPhoneNumber(e.target.value)}
               className="border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition placeholder:text-gray-400"
             />
+            {errors.phoneNumber && (
+  <p className="text-red-500 text-xs mt-1">
+    {errors.phoneNumber}
+  </p>
+)}
           </div>
         </div>
 

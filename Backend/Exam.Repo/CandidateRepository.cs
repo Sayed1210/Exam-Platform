@@ -10,12 +10,12 @@ public class CandidateRepository(ApiContext context) : ICandidateRepository
     // Repository needs DbContext to access the database (DI)
     private readonly ApiContext _context = context;
 
-    public async Task<List<Candidate>> GetAllAsync()
-    {
-        // SELECT * FROM Candidates
-        return await _context.Candidates.ToListAsync();
-    }
-
+public async Task<List<Candidate>> GetAllAsync()
+{
+    return await _context.Candidates
+        .Include(c => c.CandidateExams)
+        .ToListAsync();
+}
     public async Task<Candidate?> GetByIdAsync(int id)
     {
         // SELECT * FROM Candidates WHERE Id = @id LIMIT 1

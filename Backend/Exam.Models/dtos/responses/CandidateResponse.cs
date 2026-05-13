@@ -7,6 +7,10 @@ public class CandidateResponse
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string? Phone { get; set; }
+    public float? Score { get; set; }
+    public ExamStatus? Status { get; set; }
+    public DateTime? InvitedAt { get; set; }
+    public DateTime? StartedAt { get; set; }
 }
 // 1 — Top level
 public class CandidateDetailResponse

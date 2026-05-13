@@ -3,14 +3,12 @@
 import { Candidate } from "@/types/candidate";
 import { useState } from "react";
 
-const STATUS_OPTIONS = ["All Status", "Completed", "In Progress", "Invited", "Expired", "No Status"];
+const STATUS_OPTIONS = ["All Status", "Pending", "Expired", "Completed", "No Status"];
 
-const statusStyles: Record<string, { bg: string; color: string }> = {
-  Completed: { bg: "#d1fae5", color: "#065f46" },
-  "In Progress": { bg: "#fef9c3", color: "#854d0e" },
-  Invited: { bg: "#eff6ff", color: "#1d4ed8" },
-  Expired: { bg: "#fee2e2", color: "#991b1b" },
-  "No Status": { bg: "#f3f4f6", color: "#6b7280" },
+const statusMap: Record<number, { label: string; bg: string; color: string }> = {
+  0: { label: "Pending",     bg: "#eff6ff", color: "#1d4ed8" },
+  1: { label: "Expired",     bg: "#fee2e2", color: "#991b1b" },
+  2: { label: "Completed",   bg: "#d1fae5", color: "#065f46" },
 };
 
 interface Props {
@@ -89,26 +87,27 @@ export default function CandidatesTable({
             </tr>
           )}
           {candidates.map((c, i) => {
-            const statusKey = c.status ?? "No Status";
-            const style = statusStyles[statusKey];
             return (
               <tr key={c.id} className={`${i !== candidates.length - 1 ? "border-b border-gray-50" : ""}`}>
                 <td className="px-5 py-4 text-sm font-semibold text-gray-900">
                   {c.firstName} {c.lastName}
                 </td>
                 <td className="px-5 py-4 text-sm text-gray-700">{c.email}</td>
-                <td className="px-5 py-4">
-                  {c.status ? (
-                    <span
-                      className="inline-block px-3 py-1 rounded-full text-[13px] font-medium"
-                      style={{ background: style.bg, color: style.color }}
-                    >
-                      {c.status}
-                    </span>
-                  ) : (
-                    <span className="text-gray-400">—</span>
-                  )}
-                </td>
+         <td className="px-5 py-4">
+  {c.status !== null && c.status !== undefined ? (
+    <span
+      className="inline-block px-3 py-1 rounded-full text-[13px] font-medium"
+      style={{
+        background: statusMap[c.status as unknown as number]?.bg ?? "#f3f4f6",
+        color: statusMap[c.status as unknown as number]?.color ?? "#6b7280",
+      }}
+    >
+      {statusMap[c.status as unknown as number]?.label ?? c.status}
+    </span>
+  ) : (
+    <span className="text-gray-400">—</span>
+  )}
+</td>
                 <td className="px-5 py-4 text-sm text-gray-700">
                   {c.score !== null ? `${c.score}%` : "—"}
                 </td>
