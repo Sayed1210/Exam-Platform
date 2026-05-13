@@ -41,7 +41,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/reset-password");
+    router.push("/candidates");
   };
 
   const handleForgetPassword = async () => {

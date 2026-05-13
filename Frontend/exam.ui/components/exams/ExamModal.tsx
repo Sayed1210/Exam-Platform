@@ -9,7 +9,7 @@ interface ModalProps {
   children: ReactNode;
 }
 
-export default function Modal({ onClose, title, children }: ModalProps) {
+export default function ExamModal({ onClose, title, children }: ModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       {/* Container matches your original 3xl rounded shadow style */}

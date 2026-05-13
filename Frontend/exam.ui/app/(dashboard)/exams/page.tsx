@@ -8,6 +8,7 @@ import Message from '@/components/Message';
 import CreateExamModal from '@/components/exams/CreateExamModal';
 import { SearchBar } from '@/components/exams/SearchBar';
 import ViewExamModal from '@/components/exams/ViewExamModal';
+import DashboardPageHeader from '@/components/DashboardHeader';
 
 // Interfaces remain the same
 interface Question {
@@ -143,22 +144,28 @@ const handleDeleteExam = async (id: number) => {
   };
 
   return (
-    <main className="p-8 max-w-7xl mx-auto">
+    <main className="p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      {/* <div className="flex items-center justify-between mb-8">
         <h2 className="text-heading text-2xl font-bold">Exams</h2>
-      </div>
+      </div> */}
+      <DashboardPageHeader
+        title="Exams"
+        buttonText="+ Add Exam"
+        onButtonClick={() => setIsCreateOpen(true)}
+      />
+      
 
       {/* Action Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 pb-8 border-b border-slate-50">
         <div className="relative flex-1 max-w-md">
           <SearchBar placeholder="Search exams..." value={searchQuery} onChange={setSearchQuery} />
         </div>
-        <Button 
+        {/* <Button 
           text={<span className="flex items-center gap-2"><PlusIcon className="w-5 h-5 stroke-[2.5px]" /> Create Exam</span>}
           onClick={() => setIsCreateOpen(true)}
           className="btn-primary !w-auto px-8"
-        />
+        /> */}
       </div>
 
       {/* Grid */}

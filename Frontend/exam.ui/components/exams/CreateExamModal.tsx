@@ -5,8 +5,8 @@ import {
   ArrowLeftIcon, MagnifyingGlassIcon, PhotoIcon, XMarkIcon
 } from '@heroicons/react/24/outline';
 import Button from '../Button';
-import Modal from '../Modal'; // Import the new wrapper
 import { SearchBar } from './SearchBar';
+import ExamModal from './ExamModal';
 interface Option {
   text: string;
   isCorrect: boolean;
@@ -117,7 +117,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
   };
 
   return (
-    <Modal onClose={onClose} title={initialData ? `Edit Exam: ${initialData.name}` : "Create Exam"}>
+    <ExamModal onClose={onClose} title={initialData ? `Edit Exam: ${initialData.name}` : "Create Exam"}>
       {/* Stepper */}
       <div className="px-12 py-6 flex items-center justify-center gap-4 sticky top-0 bg-white z-10">
         <div className="flex items-center gap-2">
@@ -301,6 +301,6 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
           />
         </div>
       </div>
-    </Modal>
+    </ExamModal>
   );
 }

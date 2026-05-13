@@ -6,6 +6,7 @@ import AddCandidateModal from "@/components/candidates/AddCandidateModal";
 import CandidateDetailsModal from "@/components/candidates/CandidateDetailsModal";
 import { Candidate } from "@/types/candidate";
 import { initialCandidates } from "@/lib/data/candidates";
+import DashboardPageHeader from "@/components/DashboardHeader";
 
 export default function CandidatesPage() {
   const [candidates, setCandidates] = useState<Candidate[]>(initialCandidates);
@@ -56,16 +57,21 @@ export default function CandidatesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#f4f6f9] p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Candidates</h1>
+    <div className="p-8">
+      {/* <div className="flex items-center justify-between mb-6">
+        <h1 className="text-title">Candidates</h1>
         <button
           className="bg-primary text-white font-semibold px-6 py-2.5 rounded-full hover:brightness-90 transition"
           onClick={() => setShowAddModal(true)}
         >
           + Add Candidate
         </button>
-      </div>
+      </div> */}
+      <DashboardPageHeader
+        title="Candidates"
+        buttonText="+ Add Candidate"
+        onButtonClick={() => setShowAddModal(true)}
+      />
 
       <CandidatesTable
         candidates={filtered}

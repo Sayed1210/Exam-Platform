@@ -10,6 +10,7 @@ import QuestionModal from "./QuestionModal";
 import TopicModal from "./TopicModal";
 import ConfirmDeleteModal from "@/components/ConfirmDeleteModal";
 import type { Question } from "@/types/question";
+import DashboardPageHeader from "../DashboardHeader";
 
 
 // const initialTopics = ["React", "Node.js", "Algorithms", "QA"];
@@ -183,12 +184,17 @@ const saveQuestion = (question: Question) => {
 };
 
   return (
-    <div className="w-full p-6 space-y-6">
-      <div className="flex w-full items-center justify-between">
+    <div className="p-8">
+      {/* <div className="flex w-full items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Question Bank</h1>
         
         <AddQuestionButton onClick={() => {openAddQuestionModal()}} />
-      </div>
+      </div> */}
+      <DashboardPageHeader
+        title="Question Bank"
+        buttonText="+ Add Question"
+        onButtonClick={() => openAddQuestionModal()}
+      />
 
       <div className="rounded-md border border-gray-200 bg-white p-4 space-y-4">
         <SearchBar
