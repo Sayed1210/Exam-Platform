@@ -9,11 +9,13 @@ public class CandidateService(ICandidateRepository candidateRepository) : ICandi
      // Store injected repository for use in methods
     private readonly ICandidateRepository _candidateRepository = candidateRepository;
 
-public async Task<List<CandidateResponse>> GetAllCandidates()
+public async Task<PagedResponse<CandidateResponse>> GetAllCandidates(
+    int page, int pageSize, string? search, int? status, bool noStatus)
 {
-    var candidates = await _candidateRepository.GetAllAsync();
+    var totalCount = await _candidateRepository.CountAsync(search, status,noStatus);
+    var candidates = await _candidateRepository.GetPagedAsync(page, pageSize, search, status, noStatus);
 
-    return candidates.Select(c => {
+    var items = candidates.Select(c => {
         var latestExam = c.CandidateExams?
             .OrderByDescending(e => e.InvitedAt)
             .FirstOrDefault();
@@ -31,8 +33,15 @@ public async Task<List<CandidateResponse>> GetAllCandidates()
             StartedAt = latestExam?.JoinedAt
         };
     }).ToList();
-}
 
+    return new PagedResponse<CandidateResponse>
+    {
+        Items = items,
+        TotalCount = totalCount,
+        Page = page,
+        PageSize = pageSize
+    };
+}
     public async Task<CandidateResponse?> GetCandidateById(int id)
     {
         // Ask repository for entity from database

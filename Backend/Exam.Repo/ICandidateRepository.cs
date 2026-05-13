@@ -7,14 +7,12 @@ using Exam.Models;
 public interface ICandidateRepository
 {
     Task<List<Candidate>> GetAllAsync();
+    Task<int> CountAsync(string? search, int? status, bool noStatus = false);
+Task<List<Candidate>> GetPagedAsync(int page, int pageSize, string? search, int? status, bool noStatus = false);
     Task<Candidate?> GetByIdAsync(int id);
-    // to help check if candidate already exists
     Task<Candidate?> GetByEmailAsync(string email);
-
     Task<Candidate?> GetCandidateByExamIdAsync(int examId);
     Task<Candidate?> GetWithExamsAndAnswersAsync(int candidateId);
-
     Task AddAsync(Candidate candidate);
     Task DeleteAsync(int id);
-
 }

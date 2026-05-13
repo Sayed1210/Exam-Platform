@@ -8,6 +8,16 @@ import CandidateDetailsModal from "@/components/candidates/CandidateDetailsModal
 import { Candidate, CandidateDetail } from "@/types/candidate";
 import DashboardPageHeader from "@/components/DashboardHeader";
 
+const ITEMS_PER_PAGE = 8;
+const statusLabelToNumber: Record<string, number | undefined> = {
+  "All Status": undefined,
+  "No Status": undefined,
+  Pending: 0,
+  Expired: 1,
+  "In Progress": 2,
+  Done: 3,
+};
+
 export default function CandidatesPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [emailError, setEmailError] = useState("");
@@ -15,10 +25,30 @@ export default function CandidatesPage() {
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateDetail | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
+const fetchCandidates = (page: number, searchVal: string, statusVal: string) => {
+  const isNoStatus = statusVal === "No Status";
+  const status = isNoStatus ? undefined : statusLabelToNumber[statusVal];
+
+  getCandidates(page, ITEMS_PER_PAGE, searchVal || undefined, status, isNoStatus)
+    .then((res) => {
+      setCandidates(res.items);
+      setTotalPages(res.totalPages);
+    });
+};
+
+  // fetch when page changes
   useEffect(() => {
-    getCandidates().then(setCandidates);
-  }, []);
+    fetchCandidates(currentPage, search, statusFilter);
+  }, [currentPage]);
+
+  // reset to page 1 when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+    fetchCandidates(1, search, statusFilter);
+  }, [search, statusFilter]);
 
   const handleViewCandidate = async (candidate: Candidate) => {
     const details = await getCandidateDetails(Number(candidate.id));
@@ -34,8 +64,7 @@ export default function CandidatesPage() {
     setEmailError("");
     try {
       await addCandidate(data);
-      const updated = await getCandidates();
-      setCandidates(updated);
+      fetchCandidates(currentPage, search, statusFilter);
       setShowAddModal(false);
     } catch (err: any) {
       if (err?.status === 409) {
@@ -48,38 +77,11 @@ export default function CandidatesPage() {
 
   const handleDelete = async (id: string) => {
     await deleteCandidate(Number(id));
-    setCandidates((prev) => prev.filter((c) => c.id !== id));
+    fetchCandidates(currentPage, search, statusFilter);
   };
 
-  const filtered = candidates.filter((c) => {
-    const fullName = `${c.firstName} ${c.lastName}`.toLowerCase();
-    const matchesSearch =
-      fullName.includes(search.toLowerCase()) ||
-      c.email.toLowerCase().includes(search.toLowerCase());
-  const statusLabelToNumber: Record<string, number> = {
-  Pending: 0,
-  Expired: 1,
-  Completed: 2,
-};
-
-const matchesStatus =
-  statusFilter === "All Status" ||
-  (statusFilter === "No Status"
-    ? c.status === null
-    : c.status === statusLabelToNumber[statusFilter]);
-     return matchesSearch && matchesStatus;
-});
   return (
     <div className="p-8">
-      {/* <div className="flex items-center justify-between mb-6">
-        <h1 className="text-title">Candidates</h1>
-        <button
-          className="bg-primary text-white font-semibold px-6 py-2.5 rounded-full hover:brightness-90 transition"
-          onClick={() => setShowAddModal(true)}
-        >
-          + Add Candidate
-        </button>
-      </div> */}
       <DashboardPageHeader
         title="Candidates"
         buttonText="+ Add Candidate"
@@ -87,13 +89,16 @@ const matchesStatus =
       />
 
       <CandidatesTable
-        candidates={filtered}
+        candidates={candidates}
         search={search}
         onSearchChange={setSearch}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
         onViewCandidate={handleViewCandidate}
         onDeleteCandidate={handleDelete}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
       />
 
       {showAddModal && (

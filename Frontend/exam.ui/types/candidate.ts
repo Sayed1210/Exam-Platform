@@ -8,7 +8,7 @@ export interface Candidate {
   firstName: string;
   lastName: string;
   email: string;
-  phoneNumber: string;
+  phone: string;
   status: number | null;
   score: number | null;
   invitedAt: string | null;
