@@ -1,8 +1,6 @@
-export type CandidateStatus = "Completed" | "In Progress" | "Invited" | "Expired"|null;
-
 export interface CandidateAnswer {
-  question: string;
-  answer: string;
+ questionText: string;
+  choiceText: string;
 }
 
 export interface Candidate {
@@ -11,9 +9,24 @@ export interface Candidate {
   lastName: string;
   email: string;
   phoneNumber: string;
-  status: CandidateStatus;
+  status: number | null;
   score: number | null;
   invitedAt: string | null;
   startedAt: string | null;
+}
+export interface CandidateExam {
+  examTitle: string;
+  invitedAt: string;
+  startedAt: string | null;
+  status: number;
+  score: number | null;
   answers: CandidateAnswer[];
+}
+
+export interface CandidateDetail {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  exams: CandidateExam[];
 }

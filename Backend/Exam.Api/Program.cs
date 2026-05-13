@@ -43,12 +43,12 @@ builder.Services.AddScoped<ICandidateExamRepository, CandidateExamRepository>();
 
 
 // allow frontend to access api
-// builder.Services.AddCors(options => {
-//     options.AddPolicy("AllowFrontend",
-//         policy => policy.WithOrigins("http://localhost:3000") // Replace with your frontend URL
-//                         .AllowAnyMethod()
-//                         .AllowAnyHeader());
-// });
+ builder.Services.AddCors(options => {
+     options.AddPolicy("AllowFrontend",
+         policy => policy.WithOrigins("http://localhost:3000") // Replace with your frontend URL
+                         .AllowAnyMethod()
+                         .AllowAnyHeader());
+});
 
 var jwtSettings = builder.Configuration.GetSection(nameof(JwtSettings)).Get<JwtSettings>()
     ?? throw new InvalidOperationException("JwtSettings section is missing.");
@@ -99,7 +99,7 @@ app.MapVerifyLinkEndpoints();
 app.MapInvitationsEndpoints();
 
 // allow frontend to access api
-// app.UseCors("AllowFrontend");
+app.UseCors("AllowFrontend");
 
 
 app.Run();
