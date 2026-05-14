@@ -131,7 +131,7 @@ public class AuthService : IAuthService
 
     private string BuildResetLink(string token)
     {
-        var resetPasswordUrl = _configuration["Auth:ResetPasswordUrl"] ?? "https://localhost:5001/reset-password";
+        var resetPasswordUrl = _configuration["Auth:ResetPasswordUrl"] ?? "http://localhost:3000/reset-password";
         var separator = resetPasswordUrl.Contains('?') ? "&" : "?";
 
         return $"{resetPasswordUrl}{separator}token={Uri.EscapeDataString(token)}";

@@ -13,7 +13,7 @@ public class StartExamService(
     private readonly IExamRepository _examRepo = examRepo;
 
     // Main workflow: candidate starts exam
-    public async Task<(ExamResponse? Response, string? Error)> StartExam(int examId, StartExamRequest request)
+    public async Task<(StartExamResponse? Response, string? Error)> StartExam(int examId, StartExamRequest request)
     {
         // Retrieve CandidateExam (ensures candidate is assigned to this exam)
         var candidateExam = await _candidateExamRepo.GetAsync(request.CandidateId, examId);
@@ -37,12 +37,8 @@ public class StartExamService(
 
         // return success and response data
         return (
-            new ExamResponse{
-                Id = exam.Id,
-                Title = exam.Title,
-                DurationMins = exam.DurationMins,
-                TotalQuestions = exam.ExamQuestions.Count,
-                CreatedAt = exam.CreatedAt,
+            new StartExamResponse 
+            {
                 Questions = exam.ExamQuestions.Select(eq => new QuestionInExamResponse
                 {
                     Id = eq.Question!.Id,
@@ -55,8 +51,9 @@ public class StartExamService(
                         IsCorrect = c.IsCorrect,
                         ImageUrl = c.ImageUrl
                     }).ToList()
-                }).ToList() ?? []
+                }).ToList()
             }
-            , null);
+            , null
+        );
     }
 }

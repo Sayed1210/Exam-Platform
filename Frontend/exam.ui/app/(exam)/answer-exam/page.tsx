@@ -2,54 +2,53 @@
 
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
+import PageLoader from "@/components/PageLoader";
+import { submitExam } from "@/services/exam-service";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
-type Question = {
-  id: number;
-  text: string;
-  options: {
-    id: number;
-    text: string;
-  }[];
-};
-const questions: Question[] = [
-  {
-    id: 101,
-    text: "Select the correct React statement.",
-    options: [
-      { id: 11, text: "Option A" },
-      { id: 12, text: "Option B" },
-      { id: 13, text: "Option C" },
-      { id: 14, text: "Option D" },
-    ],
-  },
-  {
-    id: 102,
-    text: "Select the correct React statement.",
-    options: [
-      { id: 15, text: "Option A" },
-      { id: 16, text: "Option B" },
-      { id: 17, text: "Option C" },
-      { id: 18, text: "Option D" },
-    ],
-  },
-  {
-    id: 103,
-    text: "Select the correct React statement.",
-    options: [
-      { id: 19, text: "Option A" },
-      { id: 20, text: "Option B" },
-      { id: 21, text: "Option C" },
-      { id: 22, text: "Option D" },
-    ],
-  },
-];
 
 export default function ExamPage() {
+  const router = useRouter();
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<{ [questionId: number]: number }>({});
   const [timeLeft, setTimeLeft] = useState(310); // seconds
   const [open, setOpen] = useState(false);
+  const [exam, setExam] = useState<any>(null);
+  
+  const handleSubmitExam = async () => {
+    const formattedAnswers = Object.entries(answers).map(
+      ([questionId, choiceId]) => ({
+        questionId: Number(questionId),
+        choiceId: Number(choiceId),
+      })
+    );
+
+    const result = await submitExam(
+      exam.examId,
+      exam.candidateId,
+      formattedAnswers
+    );
+
+    if (!result.success) {
+      toast.error(result.message);
+      return;
+    }
+
+    setOpen(false);
+    toast.success("Exam submitted successfully");
+    sessionStorage.removeItem("examData");
+    router.push("/submitted-exam");
+  };
+
+  useEffect(() => {
+    const storedExam = sessionStorage.getItem("examData");
+
+    if (!storedExam) return;
+
+    setExam(JSON.parse(storedExam));
+  }, []);
 
   // Timer
   useEffect(() => {
@@ -59,6 +58,10 @@ export default function ExamPage() {
     return () => clearInterval(interval);
   }, []);
 
+  if (!exam) {
+    return <PageLoader />;
+  }
+
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
@@ -66,8 +69,10 @@ export default function ExamPage() {
   };
 
   const answeredCount = Object.keys(answers).length;
-  const question = questions[current];
-  const TOTAL_QUESTIONS = questions.length; // will take from backend
+  // const question = questions[current];
+  // const TOTAL_QUESTIONS = questions.length; // will take from backend
+  const question = exam.questions[current];
+  const TOTAL_QUESTIONS = exam.totalQuestions;
 
   return (
     // flex-col lg:flex-row
@@ -79,7 +84,7 @@ export default function ExamPage() {
           <p className="text-muted mb-4">{TOTAL_QUESTIONS} Total</p>
 
           <div className="grid grid-cols-5 gap-2 text-body">
-            {questions.map((q, i) => {
+            {exam.questions.map((q: any, i: number) => {
               const num = i + 1;
               const isCurrent = i === current;
               const isAnswered = answers[q.id];
@@ -137,7 +142,7 @@ export default function ExamPage() {
             {TOTAL_QUESTIONS} <br></br>This cannot be undone
           </p>
           <div className="flex gap-3">   
-              <Button text="Submit" onClick={() => setOpen(false)} className="btn-primary flex-1" />
+              <Button text="Submit" onClick={() => handleSubmitExam()} className="btn-primary flex-1" />
               <Button text="Go Back" onClick={() => setOpen(false)} className="btn-secondary flex-1" />
           </div>
         </Modal>
@@ -149,7 +154,7 @@ export default function ExamPage() {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-lg font-semibold">
-              React Developer Assessment
+              {exam.title} 
             </h1>
             <p className="text-muted">
               Question {current + 1} of {TOTAL_QUESTIONS}
@@ -190,11 +195,11 @@ export default function ExamPage() {
         {/* Question Card */}
         <div className="bg-white p-6 rounded-xl shadow-sm">
           <h2 className="text-lg font-semibold mb-4">
-            Question {current}: {question.text}
+            Question {current + 1}: {question.text}
           </h2>
 
           <div className="space-y-3">
-            {question.options.map((opt, index) => (
+            {question.choices.map((opt: any) => (
               <label
                 key={opt.id}
                 className={`text-body flex items-center gap-3 border rounded-2xl p-3 cursor-pointer
@@ -224,8 +229,8 @@ export default function ExamPage() {
 
         {/* Navigation */}
         <div className="flex justify-between mt-6">
-          <Button text="← Previous" onClick={() => setCurrent((p) => Math.max(1, p - 1))} className="btn-secondary" />
-          <Button text="Next →" onClick={() => setCurrent((p) => Math.min(TOTAL_QUESTIONS, p + 1))} className="btn-secondary" />
+          <Button text="← Previous" onClick={() => setCurrent((p) => Math.max(0, p - 1))} className="btn-secondary" />
+          <Button text="Next →" onClick={() => setCurrent((p) => Math.min(TOTAL_QUESTIONS - 1, p + 1))} className="btn-secondary" />
         </div>
       </div>
     </div>

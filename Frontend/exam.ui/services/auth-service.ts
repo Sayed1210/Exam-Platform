@@ -7,9 +7,13 @@ type LoginRequest = {
   password: string;
 };
 
+type ForgetPasswordRequest = {
+  email: string;
+};
+
 type ResetPasswordRequest = {
-  password: string;
-  confirmPassword: string;
+  newPassword: string;
+  token: string;
 };
 
 export async function login(data: LoginRequest) {
@@ -41,12 +45,8 @@ export async function login(data: LoginRequest) {
     };
 }
 
-type ForgetPasswordRequest = {
-  email: string;
-};
-
 export async function forgetPassword(data: ForgetPasswordRequest) {
-  const res = await fetch(`${API_BASE_URL}/auth/forget-password`, {
+  const res = await fetch(`${API_BASE_URL}/api/auth/forget-password`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

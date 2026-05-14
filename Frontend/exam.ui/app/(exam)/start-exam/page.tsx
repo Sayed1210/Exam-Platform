@@ -1,48 +1,103 @@
 "use client";
+// http://localhost:3000/start-exam?token=8e709534-d2e6-4491-954e-c7848cb38a4f
 
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
-import { useState } from "react";
+import { ClipboardDocumentListIcon } from '@heroicons/react/24/outline'; 
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { beforeStartExam, startExam } from "@/services/exam-service";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function StartExamPage() {
-    const [open, setOpen] = useState(false);
-    
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const token = searchParams.get("token");
+
+  const [open, setOpen] = useState(false);
+  // const [loading, setLoading] = useState(false);
+
+  const [exam, setExam] = useState<any>(null);
+  // const [pageLoading, setPageLoading] = useState(false);
+  
+  useEffect(() => {
+    const loadExam = async () => {
+      if (!token) {
+        toast.error("Invalid reset link");
+        return;
+      }
+
+      const result = await beforeStartExam(token);
+
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      setExam(result.data);
+      // setPageLoading(false);
+    };
+
+    loadExam();
+  }, [token]);
+
+  const handleStartExam = async () => {
+    if (!exam) return;
+
+    try {
+      // setLoading(true);
+      const result = await startExam(
+        exam.examId,
+        exam.candidateId
+      );
+
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      const fullExamData = {
+      ...exam,
+      questions: result.data.questions,
+    };
+
+    sessionStorage.setItem(
+      "examData",
+      JSON.stringify(fullExamData)
+    );
+
+    router.push("/answer-exam");
+
+    } finally {
+      // setLoading(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-md w-full max-w-md p-8">
         {/* Icon */}
         <div className="flex justify-center mb-5">
           <div className="bg-red-50 rounded-full p-4">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-8 h-8 text-red-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              />
-            </svg>
+            <ClipboardDocumentListIcon className="w-8 h-8 opacity-70 text-primary" />
           </div>
         </div>
 
         {/* Title */}
         <h1 className="text-title mb-2 text-center">
-          React Developer Assessment
+          {exam?.title ?? "Undefined"}
         </h1>
         <p className="text-muted text-center mb-6">
-          Enozom Software Engineering • Technical Screening
+          Enozom • Technical Screening
         </p>
 
         {/* Info Table */}
         <div className="border border-gray-200 rounded-2xl divide-y divide-gray-200 mb-5">
           {[
-            { label: "Duration", value: "60 minutes" },
-            { label: "Questions", value: "25 questions" },
+            { label: "Duration", value: <span>{`${exam?.durationMins} minutes`}</span> },
+            { label: "Questions", value: <span>{`${exam?.totalQuestions} questions`}</span>},
           ].map(({ label, value }) => (
             <div key={label} className="flex justify-between items-center px-4 py-3">
               <span className="text-muted font-normal">{label}</span>
@@ -61,10 +116,6 @@ export default function StartExamPage() {
         </div>
 
         {/* Start Button */}
-        {/* <button className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors text-white font-semibold text-base rounded-xl py-4 flex items-center justify-center gap-2">
-          Start Exam
-          <span className="text-lg">→</span>
-        </button> */}
         <Button text="Start Exam" onClick={() => setOpen(true)} className="btn-primary"/>
         {/* Popup Window */}
         <Modal open={open} onClose={() => setOpen(false)}>
@@ -74,7 +125,13 @@ export default function StartExamPage() {
             </div>
             
             <div className="flex gap-3">  
-                <Button text="Proceed" onClick={() => setOpen(false)} className="btn-primary flex-1" />
+                <Button 
+                text="Proceed" 
+                onClick={handleStartExam}
+                className="btn-primary flex-1"
+                // loading={loading}
+                // loadingText="Opening..." 
+                />
                 <Button text="Cancel" onClick={() => setOpen(false)} className="btn-secondary w-full flex-1" />
             </div>
         </Modal>    
