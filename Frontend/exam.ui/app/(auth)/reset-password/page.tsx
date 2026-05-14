@@ -10,6 +10,7 @@ import { FormValidation } from "@/schemas/form-validation";
 import { resetPasswordSchema } from "@/schemas/requests/reset-password-request";
 import { resetPassword } from "@/services/auth-service";
 import Modal from "@/components/Modal";
+import { toast } from "sonner";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -37,7 +38,7 @@ export default function ResetPasswordPage() {
   const handleChangePassword = async () => {
     if (!validate()) return;
     if (!token) {
-      alert("Invalid reset link");
+      toast.error("Invalid reset link");
       return;
     }
 
@@ -46,7 +47,7 @@ export default function ResetPasswordPage() {
 
     if (!result.success) {
       setLoading(false);
-      alert(result.message);
+      toast.error(result.message);
       return;
     }
 
@@ -74,7 +75,7 @@ export default function ResetPasswordPage() {
         <Button 
           text="Change Password" 
           onClick={handleChangePassword} 
-          className="btn-primary" 
+          className="btn-primary w-full" 
           loading={loading}
           loadingText="Sending..."
           />

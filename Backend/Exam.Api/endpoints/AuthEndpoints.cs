@@ -36,12 +36,19 @@ public static class AuthEndpoints
             .Produces<MessageResponse>(StatusCodes.Status400BadRequest)
             .ProducesValidationProblem(StatusCodes.Status400BadRequest);
 
+        group.MapPost("/logout", (HttpContext httpContext) =>
+        {
+            httpContext.Response.Cookies.Delete("token");
+            return Results.Ok();
+        });
+
         return app;
     }
 
     private static async Task<IResult> Login(
         [FromBody] LoginRequest request,
         [FromServices] IAuthService authService,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         var validationProblem = Validate(request);
@@ -56,7 +63,15 @@ public static class AuthEndpoints
         {
             return Results.Unauthorized();
         }
-
+        // ✅ SET COOKIE HERE (THIS IS THE LINE YOU WERE ASKING ABOUT)
+        httpContext.Response.Cookies.Append("token", result.Token, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = false, // change to true in production
+            SameSite = SameSiteMode.Lax,
+            Expires = result.ExpiresAt
+        });
+    
         return Results.Ok(result);
     }
 

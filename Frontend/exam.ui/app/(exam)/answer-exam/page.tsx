@@ -13,7 +13,7 @@ export default function ExamPage() {
   const router = useRouter();
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<{ [questionId: number]: number }>({});
-  const [timeLeft, setTimeLeft] = useState(310); // seconds
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
   const [exam, setExam] = useState<any>(null);
   
@@ -38,10 +38,13 @@ export default function ExamPage() {
 
     setOpen(false);
     toast.success("Exam submitted successfully");
+    localStorage.removeItem(`exam-end-time`);
+    localStorage.removeItem("exam-answers");
     sessionStorage.removeItem("examData");
     router.push("/submitted-exam");
   };
 
+  // get exam info with questions from beforeStartPage
   useEffect(() => {
     const storedExam = sessionStorage.getItem("examData");
 
@@ -50,15 +53,72 @@ export default function ExamPage() {
     setExam(JSON.parse(storedExam));
   }, []);
 
-  // Timer
+  // timer handling
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+    if (!exam) return;
 
-  if (!exam) {
+    // Create localStorage key
+    const storageKey = "exam-end-time";
+
+    // check if we saved exam ending time before
+    let endTime = localStorage.getItem(storageKey);
+
+    // First time opening exam (calculate exam duration/save final end timestamp)
+    if (!endTime) {
+      const durationInSeconds = exam.durationMins * 60;
+
+      endTime = (
+        Date.now() + durationInSeconds * 1000
+      ).toString();
+
+      localStorage.setItem(storageKey, endTime);
+    }
+    
+    // SET TIMER IMMEDIATELY
+    // const initialRemaining = Math.max(
+    //   0,
+    //   Math.floor((Number(endTime) - Date.now()) / 1000)
+    // );
+    // setTimeLeft(initialRemaining);
+
+    // Start ticking every second
+    const interval = setInterval(() => {
+      // Calculate remaining time
+      const remaining = Math.max(
+        0,
+        Math.floor((Number(endTime) - Date.now()) / 1000)
+      );
+
+      // Update UI timer
+      setTimeLeft(remaining);
+
+      // Auto submit
+      if (remaining <= 0) {
+        clearInterval(interval);
+
+        handleSubmitExam();
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [exam]);
+  // load saved answers
+  useEffect(() => {
+    const savedAnswers = localStorage.getItem("exam-answers");
+
+    if (savedAnswers) {
+      setAnswers(JSON.parse(savedAnswers));
+    }
+  }, []);
+  // save answers
+  useEffect(() => {
+    localStorage.setItem(
+      "exam-answers",
+      JSON.stringify(answers)
+    );
+  }, [answers]);
+
+  if (!exam || timeLeft === null) {
     return <PageLoader />;
   }
 
@@ -69,8 +129,6 @@ export default function ExamPage() {
   };
 
   const answeredCount = Object.keys(answers).length;
-  // const question = questions[current];
-  // const TOTAL_QUESTIONS = questions.length; // will take from backend
   const question = exam.questions[current];
   const TOTAL_QUESTIONS = exam.totalQuestions;
 
@@ -149,7 +207,7 @@ export default function ExamPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-8">
+      <div className="flex-1 h-screen p-8 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -192,43 +250,44 @@ export default function ExamPage() {
           </p>
         </div>
 
-        {/* Question Card */}
-        <div className="bg-white p-6 rounded-xl shadow-sm">
-          <h2 className="text-lg font-semibold mb-4">
-            Question {current + 1}: {question.text}
-          </h2>
+        <div className="flex-1 overflow-y-auto pr-2 rounded-xl">
+          {/* Question Card */}
+          <div className="bg-white p-6 rounded-xl shadow-sm">
+            <h2 className="text-lg font-semibold mb-4">
+              Question {current + 1}: {question.text}
+            </h2>
 
-          <div className="space-y-3">
-            {question.choices.map((opt: any) => (
-              <label
-                key={opt.id}
-                className={`text-body flex items-center gap-3 border rounded-2xl p-3 cursor-pointer
-                  ${
-                    answers[question.id] === opt.id
-                      ? "border-blue-100 bg-blue-100"
-                      : "border-gray-300"
-                  }
-                `}
-              >
-                <input
-                  type="radio"
-                  name={`q-${question.id}`}
-                  checked={answers[question.id] === opt.id}
-                  onChange={() =>
-                    setAnswers((prev) => ({
-                      ...prev,
-                      [question.id]: opt.id,
-                    }))
-                  }
-                />
-                {opt.text}
-              </label>
-            ))}
+            <div className="space-y-3">
+              {question.choices.map((opt: any) => (
+                <label
+                  key={opt.id}
+                  className={`text-body flex items-center gap-3 border rounded-2xl p-3 cursor-pointer
+                    ${
+                      answers[question.id] === opt.id
+                        ? "border-blue-100 bg-blue-100"
+                        : "border-gray-300"
+                    }
+                  `}
+                >
+                  <input
+                    type="radio"
+                    name={`q-${question.id}`}
+                    checked={answers[question.id] === opt.id}
+                    onChange={() =>
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [question.id]: opt.id,
+                      }))
+                    }
+                  />
+                  {opt.text}
+                </label>
+              ))}
+            </div>
           </div>
         </div>
-
         {/* Navigation */}
-        <div className="flex justify-between mt-6">
+        <div className="flex justify-end gap-3 mt-2">
           <Button text="← Previous" onClick={() => setCurrent((p) => Math.max(0, p - 1))} className="btn-secondary" />
           <Button text="Next →" onClick={() => setCurrent((p) => Math.min(TOTAL_QUESTIONS - 1, p + 1))} className="btn-secondary" />
         </div>

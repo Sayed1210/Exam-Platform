@@ -49,7 +49,8 @@ builder.Services.AddScoped<IBeforeStartExamService, BeforeStartExamService>();
      options.AddPolicy("AllowFrontend",
          policy => policy.WithOrigins("http://localhost:3000") // Replace with your frontend URL
                          .AllowAnyMethod()
-                         .AllowAnyHeader());
+                         .AllowAnyHeader()
+                         .AllowCredentials()); // REQUIRED for cookies
 });
 
 var jwtSettings = builder.Configuration.GetSection(nameof(JwtSettings)).Get<JwtSettings>()

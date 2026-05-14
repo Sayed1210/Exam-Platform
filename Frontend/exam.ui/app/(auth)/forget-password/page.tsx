@@ -9,6 +9,8 @@ import { FormValidation } from "@/schemas/form-validation";
 import { forgetPasswordSchema } from "@/schemas/requests/forget-password-request";
 import { forgetPassword } from "@/services/auth-service";
 import Modal from "@/components/Modal";
+import { toast } from "sonner";
+
 
 export default function ForgetPasswordPage() {
     const router = useRouter();
@@ -38,7 +40,7 @@ export default function ForgetPasswordPage() {
         
         if (!result.success) {
             setLoading(false);
-            alert(result.message);
+            toast.error(result.message);
             return;
         }
         setOpen(true);
@@ -65,7 +67,7 @@ export default function ForgetPasswordPage() {
                 <Button 
                     text="Send Reset Link" 
                     onClick={handleResetPassword} 
-                    className="btn-primary" 
+                    className="btn-primary w-full" 
                     loading={loading}
                     loadingText="Sending..."
                 />
