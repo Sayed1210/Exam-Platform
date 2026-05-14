@@ -44,7 +44,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-fit max-w-md bg-white rounded-2xl shadow-xl p-8 text-center flex flex-col items-center">
-        <Image src="/images/enozom-logo.png" alt="logo" width={100} height={100}/>
+        <Image src="/images/enozom-logo.png" alt="logo" width={100} height={100} priority/>
 
         <h1 className="text-title">Enozom</h1>
         <p className="text-muted">Admin Portal</p>

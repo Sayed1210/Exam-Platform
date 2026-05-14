@@ -44,6 +44,7 @@ export type Topic = {
 };
 // API response types (from backend)
 export type APIChoice = {
+  id: number;
   text: string;
   isCorrect: boolean;
   imageUrl: string | null;
