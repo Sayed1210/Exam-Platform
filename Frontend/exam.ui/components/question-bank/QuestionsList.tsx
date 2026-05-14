@@ -1,5 +1,8 @@
 "use client";
-import { useMemo, useState } from "react";
+
+import { useEffect, useState } from "react";
+import { getQuestions, getTopics, deleteQuestion, createQuestion, updateQuestion, createTopic } from "@/services/questionService";
+import type { APIQuestion, APITopic } from "@/types/question";
 
 import AddQuestionButton from "./AddQuestionButton";
 import ClearFiltersButton from "@/components/ClearFiltersButton";
@@ -9,194 +12,124 @@ import TopicFilters from "./TopicFilters";
 import QuestionModal from "./QuestionModal";
 import TopicModal from "./TopicModal";
 import ConfirmDeleteModal from "@/components/ConfirmDeleteModal";
-import type { Question } from "@/types/question";
 import DashboardPageHeader from "../DashboardHeader";
 
-
-// const initialTopics = ["React", "Node.js", "Algorithms", "QA"];
-const initialTopics = [
-  "React",
-  "Node.js",
-  "Algorithms",
-  "QA",
-  "Databases",
-  "Cybersecurity",
-  "Artificial Intelligence",
-  "Machine Learning",
-  "Cloud Computing",
-  "DevOps",
-  "Docker",
-  "Kubernetes",
-  "Linux",
-  "Networking",
-  "System Design",
-  "Data Structures",
-  "Operating Systems",
-  "Computer Vision",
-  "Blockchain",
-  "Mobile Development",
-  "Game Development",
-];
-
-const initialQuestions: Question[] = [
-  {
-    id: "question-1",
-    topic: "React",
-    statement: "What is the purpose of React's useEffect hook?",
-    imageUrl: "https://illustoon.com/photo/dl/7416.png",
-    choices: [
-      { id: "q1-a", text: "To manage component state", isCorrect: false },
-      { id: "q1-b", text: "To handle side effects in functional components", isCorrect: true },
-      { id: "q1-c", text: "To create reusable components", isCorrect: false },
-      { id: "q1-d", text: "To optimize rendering performance", isCorrect: false },
-    ],
-  },
-  {
-    id: "question-2",
-    topic: "Algorithms",
-    statement: "What is the time complexity of binary search?",
-    choices: [
-      { id: "q2-a", text: "O(n)", isCorrect: false },
-      { id: "q2-b", text: "O(log n)", isCorrect: true },
-      { id: "q2-c", text: "O(n²)", isCorrect: false },
-      { id: "q2-d", text: "O(1)", isCorrect: false },
-    ],
-  },
-  {
-    id: "question-3",
-    topic: "Node.js",
-    statement: "Which runtime feature allows Node.js to handle many I/O operations efficiently?",
-    choices: [
-      { id: "q3-a", text: "The event loop", isCorrect: true },
-      { id: "q3-b", text: "Browser rendering", isCorrect: false },
-      { id: "q3-c", text: "CSS cascade layers", isCorrect: false },
-      { id: "q3-d", text: "Static site maps", isCorrect: false },
-    ],
-  },
-];
+const PAGE_SIZE = 10;
 
 export default function QuestionsList() {
+  const [questions, setQuestions] = useState<APIQuestion[]>([]);
+  const [topics, setTopics] = useState<APITopic[]>([]);
   const [search, setSearch] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [questions, setQuestions] = useState<Question[]>(initialQuestions);
-  const [topics, setTopics] = useState<string[]>(initialTopics);
-  const [questionToDelete, setQuestionToDelete] = useState<string | null>(null);
+  const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [questionToDelete, setQuestionToDelete] = useState<number | null>(null);
   const [isTopicModalOpen, setIsTopicModalOpen] = useState(false);
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
-  const filteredQuestions = useMemo(() => {
-  const value = search.toLowerCase();
+  const [editingQuestion, setEditingQuestion] = useState<APIQuestion | null>(null);
 
-  return questions.filter((question) => {
-    const matchesSearch =
-      question.statement.toLowerCase().includes(value);
+  // ── Data fetching ──────────────────────────────────────────────
+  const fetchQuestions = (page: number, searchVal: string, topicId: number | null) => {
+    getQuestions(page, PAGE_SIZE, searchVal || undefined, topicId ?? undefined).then((res) => {
+      setQuestions(res.items);
+      setTotalPages(res.totalPages);
+    });
+  };
 
-    const matchesTags =
-      selectedTags.length === 0 ||
-      selectedTags.includes(question.topic);
+  useEffect(() => {
+    getTopics().then(setTopics);
+  }, []);
 
-    return matchesSearch && matchesTags;
-  });
-}, [questions, search, selectedTags]);
+  useEffect(() => {
+    fetchQuestions(currentPage, search, selectedTopicId);
+  }, [currentPage]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+    fetchQuestions(1, search, selectedTopicId);
+  }, [search, selectedTopicId]);
 
-const toggleTag = (tag: string) => {
-  setSelectedTags((prev) => {
-    if (prev.includes(tag)) {
-      return prev.filter((t) => t !== tag);
+  // ── Topic handlers ─────────────────────────────────────────────
+  const openTopicModal = () => setIsTopicModalOpen(true);
+  const closeTopicModal = () => setIsTopicModalOpen(false);
+
+  const handleAddTopic = async (topicName: string) => {
+    await createTopic(topicName);
+    const updated = await getTopics();
+    setTopics(updated);
+    closeTopicModal();
+  };
+
+  const toggleTag = (topicId: number) => {
+    setSelectedTopicId((prev) => (prev === topicId ? null : topicId));
+  };
+
+  const clearFilters = () => {
+    setSearch("");
+    setSelectedTopicId(null);
+  };
+
+  // ── Question handlers ──────────────────────────────────────────
+  const openAddQuestionModal = () => {
+    setEditingQuestion(null);
+    setIsQuestionModalOpen(true);
+  };
+
+  const openEditQuestionModal = (question: APIQuestion) => {
+    setEditingQuestion(question);
+    setIsQuestionModalOpen(true);
+  };
+
+  const closeQuestionModal = () => {
+    setIsQuestionModalOpen(false);
+    setEditingQuestion(null);
+  };
+
+const handleSaveQuestion = async (data: any) => {
+   console.log("Form data received:", JSON.stringify(data, null, 2));
+  const payload = {
+    topicId: Number(data.topic ?? data.topicId),
+    text: data.statement ?? data.text,
+    imageUrl: data.imageUrl ?? null,
+    choices: data.choices.map((c: any) => ({
+      text: c.text ?? null,
+      imageUrl: c.imageUrl ?? null,
+      isCorrect: c.isCorrect,
+    })),
+  };
+
+  try {
+    if (editingQuestion) {
+      await updateQuestion(editingQuestion.id, payload);
+    } else {
+      await createQuestion(payload);
     }
-
-    return [...prev, tag];
-  });
-};
-
-const clearFilters = () => {
-  setSearch("");
-  setSelectedTags([]);
-};
-
-const confirmDelete = () => {
-  if (!questionToDelete) {
-    return;
+    fetchQuestions(currentPage, search, selectedTopicId);
+    closeQuestionModal();
+  } catch (err: any) {
+    console.error("Save question error:", err);
   }
-
-  setQuestions((prev) =>
-    prev.filter(
-      (question) => question.id !== questionToDelete
-    )
-  );
-
-  setQuestionToDelete(null);
 };
+  const confirmDelete = async () => {
+    if (!questionToDelete) return;
+    await deleteQuestion(questionToDelete);
+    fetchQuestions(currentPage, search, selectedTopicId);
+    setQuestionToDelete(null);
+  };
 
-const cancelDelete = () => {
-  setQuestionToDelete(null);
-};
+  const cancelDelete = () => setQuestionToDelete(null);
 
-const openTopicModal = () => {
-  setIsTopicModalOpen(true);
-};
-
-const closeTopicModal = () => {
-  setIsTopicModalOpen(false);
-};
-
-const addTopic = (topicName: string) => {
-  setTopics((prev) => [...prev, topicName]);
-
-  closeTopicModal();
-};
-
-const openAddQuestionModal = () => {
-  setEditingQuestion(null);
-
-  setIsQuestionModalOpen(true);
-};
-
-const openEditQuestionModal = (question: Question) => {
-  setEditingQuestion(question);
-
-  setIsQuestionModalOpen(true);
-};
-
-const closeQuestionModal = () => {
-  setIsQuestionModalOpen(false);
-
-  setEditingQuestion(null);
-};
-
-const saveQuestion = (question: Question) => {
-  setQuestions((prev) => {
-    const exists = prev.some(
-      (item) => item.id === question.id
-    );
-
-    if (exists) {
-      return prev.map((item) =>
-        item.id === question.id ? question : item
-      );
-    }
-
-    return [...prev, question];
-  });
-
-  closeQuestionModal();
-};
-
+  // ── Render ─────────────────────────────────────────────────────
   return (
     <div className="p-8">
-      {/* <div className="flex w-full items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Question Bank</h1>
-        
-        <AddQuestionButton onClick={() => {openAddQuestionModal()}} />
-      </div> */}
       <DashboardPageHeader
         title="Question Bank"
         buttonText="+ Add Question"
-        onButtonClick={() => openAddQuestionModal()}
+        onButtonClick={openAddQuestionModal}
       />
 
-      <div className="rounded-md border border-gray-200 bg-white p-4 space-y-4">
+      <div className="rounded-md border border-gray-200 bg-white p-4 space-y-4 mb-6">
         <SearchBar
           value={search}
           onChange={setSearch}
@@ -205,59 +138,91 @@ const saveQuestion = (question: Question) => {
 
         <div className="border-t border-gray-200 pt-4">
           <TopicFilters
-            topics={topics}
-            selectedTags={selectedTags}
-            onToggleTag={toggleTag}
-            onAddTopic={() => {openTopicModal()}}
+            topics={topics.map((t) => t.title)}
+            selectedTags={topics
+              .filter((t) => t.id === selectedTopicId)
+              .map((t) => t.title)}
+            onToggleTag={(title) => {
+              const topic = topics.find((t) => t.title === title);
+              if (topic) toggleTag(topic.id);
+            }}
+            onAddTopic={openTopicModal}
           />
         </div>
       </div>
 
       <div className="space-y-4">
-  {filteredQuestions.length > 0 ? (
-    filteredQuestions.map((question) => (
-      <QuestionCard
-        key={question.id}
-        question={question}
-        onEdit={() => {openEditQuestionModal(question);}}
-        onDelete={() => {setQuestionToDelete(question.id);}}
+        {questions.length > 0 ? (
+          questions.map((question) => (
+            <QuestionCard
+              key={question.id}
+              question={question}
+              onEdit={() => openEditQuestionModal(question)}
+              onDelete={() => setQuestionToDelete(question.id)}
+            />
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center">
+            <p className="text-lg font-medium text-gray-700">No questions found</p>
+            <p className="mt-2 text-sm text-gray-500">Try adjusting your search or filters.</p>
+            <ClearFiltersButton onClick={clearFilters} />
+          </div>
+        )}
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-1 py-4 mt-4">
+          <p className="text-sm text-gray-500">
+            Page {currentPage} of {totalPages}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => p - 1)}
+              disabled={currentPage === 1}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              Previous
+            </button>
+            <button
+              onClick={() => setCurrentPage((p) => p + 1)}
+              disabled={currentPage === totalPages}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              Next
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modals */}
+      {questionToDelete && (
+        <ConfirmDeleteModal
+             title="Delete Question"
+             text="Are you sure you want to delete this question? This action cannot be undone."
+             onConfirm={confirmDelete}
+             onCancel={cancelDelete}
+        />
+      )}
+
+      <TopicModal
+        isOpen={isTopicModalOpen}
+        onClose={closeTopicModal}
+        onSave={handleAddTopic}
       />
-    ))
-  ) : (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center">
-      <p className="text-lg font-medium text-gray-700">
-        No questions found
-      </p>
 
-      <p className="mt-2 text-sm text-gray-500">
-        Try adjusting your search or filters.
-      </p>
-
-      <ClearFiltersButton onClick={clearFilters} />
-    </div>
-  )}
-</div>
-
-
-  {questionToDelete && (
-  <ConfirmDeleteModal
-    onConfirm={confirmDelete}
-    onCancel={cancelDelete}
-  />
-)}
-
-<TopicModal
-  isOpen={isTopicModalOpen}
-  onClose={closeTopicModal}
-  onSave={addTopic}
-/>
-
-<QuestionModal
+    <QuestionModal
   isOpen={isQuestionModalOpen}
   topics={topics}
   question={editingQuestion}
   onClose={closeQuestionModal}
-  onSave={saveQuestion}
+  onSave={handleSaveQuestion}
 />
     </div>
   );

@@ -32,7 +32,7 @@ const questionChoiceRequestSchema = z.union([
 export const updateQuestionRequestSchema = z
   .object({
     id: z.string().trim().min(1, "Question id is required."),
-    topicId: z.string().trim().min(1, "Topic id is required."),
+    topicId: z.number().positive("Topic id is required."),
     text: z.string().trim().min(1, "Question statement is required."),
     imageUrl: optionalImageUrlSchema,
     choices: z

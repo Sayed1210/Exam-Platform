@@ -7,12 +7,13 @@ import { updateQuestionRequestSchema } from "@/schemas/requests/update-question-
 import { createQuestionResponseSchema } from "@/schemas/responses/create-question-response";
 import { updateQuestionResponseSchema } from "@/schemas/responses/update-question-response";
 import type { QuestionChoice, Question } from "@/types/question";
+import type { APITopic } from "@/types/question";
 
 type QuestionFormProps = {
-  topics: string[];
+  topics: APITopic[];  
   question?: Question | null;
   onCancel: () => void;
-  onSubmit: (question: Question) => void;
+ onSubmit: (data: any) => void; 
 };
 
 type ChoiceDraft = {
@@ -51,9 +52,9 @@ export default function QuestionForm({
     }));
   }, [question]);
 
-  const [topic, setTopic] = useState(
-    question?.topic ?? topics[0] ?? ""
-  );
+const [topicId, setTopicId] = useState<number>(
+  question ? Number(question.topic) : topics[0]?.id ?? 0
+);
 
   const [text, setText] = useState(
     question?.statement ?? ""
@@ -102,7 +103,7 @@ export default function QuestionForm({
     event.preventDefault();
 
     const questionPayload = {
-      topicId: topic,
+      topicId: topicId,
       text,
       imageUrl,
       choices: choices.map((choice, index) => {
@@ -149,98 +150,37 @@ export default function QuestionForm({
       });
       return;
     }
-
-    const questionResponse = {
-      id: question?.id ?? `question-${Date.now()}`,
-      topicId: result.data.topicId,
-      topicTitle: result.data.topicId,
-      text: result.data.text,
-      imageUrl: result.data.imageUrl ?? null,
-      choices: result.data.choices.map((choice) => {
-        if (choice.text) {
-          return {
-            text: choice.text,
-            isCorrect: choice.isCorrect,
-            imageUrl: null,
-          };
-        }
-
-        return {
-          text: null,
-          isCorrect: choice.isCorrect,
-          imageUrl: choice.imageUrl ?? null,
-        };
-      }),
-    };
-
-    const responseResult = question
-      ? FormValidation(updateQuestionResponseSchema, questionResponse)
-      : FormValidation(createQuestionResponseSchema, questionResponse);
-
-    if (!responseResult.success) {
-      setErrors({
-        text: responseResult.errors.text,
-        choicesMessage: responseResult.errors.choices,
-      });
-      return;
-    }
-
-    const cleanedChoices: QuestionChoice[] = responseResult.data.choices.map(
-      (choice, index) => {
-        if (choice.text) {
-          return {
-            id:
-              question?.choices[index]?.id ??
-              `choice-${Date.now()}-${index}`,
-            text: choice.text,
-            isCorrect: choice.isCorrect,
-          };
-        }
-
-        return {
-          id:
-            question?.choices[index]?.id ??
-            `choice-${Date.now()}-${index}`,
-          imageUrl: choice.imageUrl ?? "",
-          isCorrect: choice.isCorrect,
-        };
-      }
-    );
-
-    setErrors({});
-
-    onSubmit({
-      id: responseResult.data.id,
-      topic: responseResult.data.topicTitle,
-      statement: responseResult.data.text,
-      imageUrl: responseResult.data.imageUrl ?? undefined,
-      choices: cleanedChoices,
-    });
+onSubmit({
+  topicId: result.data.topicId,
+  text: result.data.text,
+  imageUrl: result.data.imageUrl ?? null,
+  choices: result.data.choices.map((choice) => ({
+    text: choice.text ?? null,
+    imageUrl: choice.imageUrl ?? null,
+    isCorrect: choice.isCorrect,
+  })),
+} as any);
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <label className="block">
-        <span className="text-sm font-semibold text-slate-900">
-          Topic
-        </span>
+       
 
-        <select
-          value={topic}
-          onChange={(event) => setTopic(event.target.value)}
-          className="
-            mt-2 h-11 w-full rounded-lg border border-slate-200
-            bg-white px-4 text-sm text-slate-900 outline-none
-            transition focus:border-blue-500 focus:ring-2
-            focus:ring-blue-100
-          "
-        >
-          {topics.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </select>
+<div className="block">
+  <span className="text-sm font-semibold text-slate-900">Topic</span>
+  <select
+    value={topicId}
+    onChange={(e) => setTopicId(Number(e.target.value))}
+    className="mt-2 h-11 w-full rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+  >
+    {topics.map((t) => (
+      <option key={t.id} value={t.id}>
+        {t.title}
+      </option>
+    ))}
+  </select>
+</div>
       </label>
 
       <label className="block">

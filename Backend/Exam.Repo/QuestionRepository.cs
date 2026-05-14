@@ -85,20 +85,30 @@ namespace Exam.Repo
             await _db.SaveChangesAsync();
         }
 
-        public async Task<(IEnumerable<Question> Items, int TotalCount)> GetPagedAsync(int page, int pageSize)
-        {
-            var totalCount = await _db.Questions.CountAsync();
+public async Task<(IEnumerable<Question> items, int totalCount)> GetPagedAsync(
+    int page, int pageSize, string? search = null, int? topicId = null)
+{
+    var query = _db.Questions
+        .Include(q => q.Topic)
+        .Include(q => q.Choices)
+        .AsNoTracking()
+        .AsQueryable();
 
-            var items = await _db.Questions
-                .Include(q => q.Topic)
-                .Include(q => q.Choices)
-                .AsNoTracking()
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+    if (!string.IsNullOrEmpty(search))
+        query = query.Where(q => q.Text.Contains(search));
 
-            return (items, totalCount);
-        }
+    if (topicId.HasValue)
+        query = query.Where(q => q.TopicId == topicId.Value);
+
+    var totalCount = await query.CountAsync();
+
+    var items = await query
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync();
+
+    return (items, totalCount);
+}
         public async Task<Question> UpdateChoiceAsync(Choice choice)
         {
             _db.Choices.Update(choice);

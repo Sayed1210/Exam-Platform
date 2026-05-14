@@ -11,27 +11,22 @@ public static class QuestionEndpoints
     {
         var group = app.MapGroup("/api/questions").WithTags("Questions");
 
-        group.MapGet("/", async (IQuestionService svc) =>
-            Results.Ok(await svc.GetAllAsync()))
-            .WithName("GetAllQuestions")
-            .WithSummary("Get all questions")
-            .WithDescription("Returns all questions with their topic and answer choices.")
-            .Produces<IEnumerable<QuestionResponse>>(200);
+group.MapGet("/", async (
+    IQuestionService svc,
+    int page = 1,
+    int pageSize = 10,
+    string? search = null,
+    int? topicId = null) =>
+{
+    var result = await svc.GetAllAsync(page, pageSize, search, topicId);
+    return Results.Ok(result);
+})
+.WithName("GetAllQuestions")
+.WithSummary("Get all questions")
+.WithDescription("Returns paginated questions with optional search and topic filter.")
+.Produces<PagedResponse<QuestionResponse>>(200);
 
-        group.MapGet("/paged", async (
-            [AsParameters] PaginationRequest pagination,
-            IQuestionService svc) =>
-        {
-            var validation = ValidatePagination(pagination);
-            if (validation is not null) return validation;
 
-            return Results.Ok(await svc.GetPagedAsync(pagination.Page, pagination.PageSize));
-        })
-        .WithName("GetPagedQuestions")
-        .WithSummary("Get paginated questions")
-        .WithDescription("Returns a paginated list of questions. Default page=1, pageSize=10, max pageSize=100.")
-        .Produces<PagedResponse<QuestionResponse>>(200)
-        .ProducesValidationProblem();
 
         group.MapGet("/{id:int}", async (int id, IQuestionService svc) =>
         {

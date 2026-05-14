@@ -9,11 +9,19 @@ namespace Exam.Service
 
         public QuestionService(IQuestionRepository repo) => _repo = repo;
 
-        public async Task<IEnumerable<QuestionResponse>> GetAllAsync()
-        {
-            var questions = await _repo.GetAllAsync();
-            return questions.Select(MapToResponse);
-        }
+public async Task<PagedResponse<QuestionResponse>> GetAllAsync(
+    int page, int pageSize, string? search = null, int? topicId = null)
+{
+    var (items, totalCount) = await _repo.GetPagedAsync(page, pageSize, search, topicId);
+
+    return new PagedResponse<QuestionResponse>
+    {
+        Page = page,
+        PageSize = pageSize,
+        TotalCount = totalCount,
+        Items = items.Select(MapToResponse).ToList()
+    };
+}
 
         public async Task<IEnumerable<QuestionResponse>> GetByTopicIdAsync(int topicId)
         {
@@ -96,18 +104,6 @@ namespace Exam.Service
 
             await _repo.DeleteAsync(question);
             return true;
-        }
-        public async Task<PagedResponse<QuestionResponse>> GetPagedAsync(int page, int pageSize)
-        {
-            var (items, totalCount) = await _repo.GetPagedAsync(page, pageSize);
-
-            return new PagedResponse<QuestionResponse>
-            {
-              Page = page,
-              PageSize = pageSize,
-             TotalCount = totalCount,
-             Items = items.Select(MapToResponse).ToList()
-            };
         }
 
         private static QuestionResponse MapToResponse(Question q) => new()

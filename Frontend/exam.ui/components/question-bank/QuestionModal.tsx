@@ -1,12 +1,12 @@
-import type { Question } from "@/types/question";
 import QuestionForm from "./forms/QuestionForm";
+import type { APIQuestion, APITopic } from "@/types/question";
 
 export type QuestionModalProps = {
   isOpen: boolean;
-  topics: string[];
-  question?: Question | null;
+  topics: APITopic[];
+  question?: APIQuestion | null;
   onClose: () => void;
-  onSave: (question: Question) => void;
+  onSave: (data: any) => void;
 };
 
 export default function QuestionModal({
@@ -16,9 +16,31 @@ export default function QuestionModal({
   onClose,
   onSave,
 }: QuestionModalProps) {
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
+
+  // map APIQuestion to the shape QuestionForm expects
+  const formQuestion = question
+    ? {
+        id: String(question.id),
+        topic: question.topicTitle,
+        statement: question.text,
+        imageUrl: question.imageUrl ?? undefined,
+        choices: question.choices.map((c, i) => {
+          if (c.imageUrl) {
+            return {
+              id: `${question.id}-choice-${i}`,
+              imageUrl: c.imageUrl,
+              isCorrect: c.isCorrect,
+            };
+          }
+          return {
+            id: `${question.id}-choice-${i}`,
+            text: c.text ?? "",
+            isCorrect: c.isCorrect,
+          };
+        }),
+      }
+    : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/45 p-4">
@@ -36,7 +58,12 @@ export default function QuestionModal({
             ×
           </button>
         </div>
-        <QuestionForm topics={topics} question={question} onCancel={onClose} onSubmit={onSave} />
+        <QuestionForm
+          topics={topics}
+          question={formQuestion}
+          onCancel={onClose}
+          onSubmit={onSave}
+        />
       </section>
     </div>
   );
