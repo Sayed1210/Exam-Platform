@@ -10,12 +10,12 @@ public class CandidateRepository(ApiContext context) : ICandidateRepository
     // Repository needs DbContext to access the database (DI)
     private readonly ApiContext _context = context;
 
-    public async Task<List<Candidate>> GetAllAsync()
-    {
-        // SELECT * FROM Candidates
-        return await _context.Candidates.ToListAsync();
-    }
-
+public async Task<List<Candidate>> GetAllAsync()
+{
+    return await _context.Candidates
+        .Include(c => c.CandidateExams)
+        .ToListAsync();
+}
     public async Task<Candidate?> GetByIdAsync(int id)
     {
         // SELECT * FROM Candidates WHERE Id = @id LIMIT 1
@@ -37,6 +37,51 @@ public class CandidateRepository(ApiContext context) : ICandidateRepository
             .FirstOrDefaultAsync(c => c.CandidateExams
                 .Any(ce => ce.ExamId == examId));
     }
+public async Task<int> CountAsync(string? search, int? status, bool noStatus = false)
+{
+    var query = _context.Candidates
+        .Include(c => c.CandidateExams)
+        .AsQueryable();
+
+    if (!string.IsNullOrEmpty(search))
+        query = query.Where(c =>
+            c.FirstName.Contains(search) ||
+            c.LastName.Contains(search) ||
+            c.Email.Contains(search));
+
+    if (noStatus)
+        query = query.Where(c => !c.CandidateExams.Any());
+    else if (status.HasValue)
+        query = query.Where(c =>
+            c.CandidateExams.Any(e => (int)e.Status == status.Value));
+
+    return await query.CountAsync();
+}
+
+public async Task<List<Candidate>> GetPagedAsync(
+    int page, int pageSize, string? search, int? status, bool noStatus = false)
+{
+    var query = _context.Candidates
+        .Include(c => c.CandidateExams)
+        .AsQueryable();
+
+    if (!string.IsNullOrEmpty(search))
+        query = query.Where(c =>
+            c.FirstName.Contains(search) ||
+            c.LastName.Contains(search) ||
+            c.Email.Contains(search));
+
+    if (noStatus)
+        query = query.Where(c => !c.CandidateExams.Any());
+    else if (status.HasValue)
+        query = query.Where(c =>
+            c.CandidateExams.Any(e => (int)e.Status == status.Value));
+
+    return await query
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync();
+}
     
     public async Task AddAsync(Candidate candidate)
     {

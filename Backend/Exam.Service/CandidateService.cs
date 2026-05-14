@@ -9,22 +9,39 @@ public class CandidateService(ICandidateRepository candidateRepository) : ICandi
      // Store injected repository for use in methods
     private readonly ICandidateRepository _candidateRepository = candidateRepository;
 
-    public async Task<List<CandidateResponse>> GetAllCandidates()
-    {
-        // Fetch all Candidate entities from database
-        var candidates = await _candidateRepository.GetAllAsync();
+public async Task<PagedResponse<CandidateResponse>> GetAllCandidates(
+    int page, int pageSize, string? search, int? status, bool noStatus)
+{
+    var totalCount = await _candidateRepository.CountAsync(search, status,noStatus);
+    var candidates = await _candidateRepository.GetPagedAsync(page, pageSize, search, status, noStatus);
 
-        // Map Entity → DTO
-        return candidates.Select(c => new CandidateResponse
+    var items = candidates.Select(c => {
+        var latestExam = c.CandidateExams?
+            .OrderByDescending(e => e.InvitedAt)
+            .FirstOrDefault();
+
+        return new CandidateResponse
         {
             Id = c.Id,
             Email = c.Email,
             FirstName = c.FirstName,
             LastName = c.LastName,
-            Phone = c.Phone
-        }).ToList();
-    }
+            Phone = c.Phone,
+            Score = latestExam?.Score,
+            Status = latestExam?.Status,
+            InvitedAt = latestExam?.InvitedAt,
+            StartedAt = latestExam?.JoinedAt
+        };
+    }).ToList();
 
+    return new PagedResponse<CandidateResponse>
+    {
+        Items = items,
+        TotalCount = totalCount,
+        Page = page,
+        PageSize = pageSize
+    };
+}
     public async Task<CandidateResponse?> GetCandidateById(int id)
     {
         // Ask repository for entity from database

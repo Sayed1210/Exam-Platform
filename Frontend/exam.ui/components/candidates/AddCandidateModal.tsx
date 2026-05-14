@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { candidateSchema } from "@/schemas/requests/candidateSchema";
+import { FormValidation } from "@/schemas/form-validation";
+import ModalPortal from "@/components/ModalPortal";
 
 interface Props {
   onClose: () => void;
@@ -10,60 +13,72 @@ interface Props {
     email: string;
     phoneNumber: string;
   }) => void;
+    backendError?: string;
+  clearBackendError?: () => void;
 }
 
-export default function AddCandidateModal({ onClose, onSubmit }: Props) {
+export default function AddCandidateModal({ onClose, onSubmit, backendError,
+  clearBackendError, }: Props) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+const handleSubmit = () => {
+  const result = FormValidation(candidateSchema, {
+    firstName,
+    lastName,
+    email,
+    phoneNumber,
+  });
 
-  const handleSubmit = () => {
-    if (!firstName || !lastName || !email || !phoneNumber) return;
+  if (!result.success) {
+    setErrors(result.errors);
+    return;
+  }
 
-    onSubmit({
-      firstName,
-      lastName,
-      email,
-      phoneNumber,
-    });
-  };
+  setErrors({});
+
+  onSubmit(result.data);
+};
 
   return (
-    <div
-      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-      onClick={onClose}
-    >
+    <ModalPortal>
       <div
-        className="bg-white rounded-xl w-full max-w-[520px] shadow-2xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
+        className="modal-overlay"
+        onClick={onClose}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-4">
-          <h2 className="text-lg font-bold text-gray-900">
-            Add Candidate
-          </h2>
+        <div
+          className="modal-panel max-w-[520px]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="modal-header">
+            <h2 className="modal-title">
+              Add Candidate
+            </h2>
 
-          <button
-            className="p-1 rounded hover:bg-gray-100 transition"
-            onClick={onClose}
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#6b7280"
-              strokeWidth="2"
+            <button
+              className="modal-close-button"
+              onClick={onClose}
+              aria-label="Close add candidate modal"
             >
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#6b7280"
+                strokeWidth="2"
+              >
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
 
         {/* Body */}
-        <div className="px-6 pb-2 flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="modal-body px-6 py-5 flex flex-col gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-gray-700">
                 First Name
@@ -75,6 +90,11 @@ export default function AddCandidateModal({ onClose, onSubmit }: Props) {
                 onChange={(e) => setFirstName(e.target.value)}
                 className="border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition placeholder:text-gray-400"
               />
+              {errors.firstName && (
+              <p className="text-red-500 text-xs mt-1">
+              {errors.firstName}
+              </p>
+)}
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -88,6 +108,12 @@ export default function AddCandidateModal({ onClose, onSubmit }: Props) {
                 onChange={(e) => setLastName(e.target.value)}
                 className="border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition placeholder:text-gray-400"
               />
+
+              {errors.lastName && (
+              <p className="text-red-500 text-xs mt-1">
+             {errors.lastName}
+              </p>
+                 )}
             </div>
           </div>
 
@@ -100,9 +126,20 @@ export default function AddCandidateModal({ onClose, onSubmit }: Props) {
               type="email"
               placeholder="candidate@email.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                clearBackendError?.();
+              }}
               className="border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition placeholder:text-gray-400"
             />
+
+                 {errors.email && (
+              <p className="text-red-500 text-xs">{errors.email}</p>
+            )}
+
+            {backendError && (
+              <p className="text-red-500 text-xs">{backendError}</p>
+            )}
           </div>
 
           {/* Phone Number */}
@@ -118,11 +155,16 @@ export default function AddCandidateModal({ onClose, onSubmit }: Props) {
               onChange={(e) => setPhoneNumber(e.target.value)}
               className="border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition placeholder:text-gray-400"
             />
+            {errors.phoneNumber && (
+  <p className="text-red-500 text-xs mt-1">
+    {errors.phoneNumber}
+  </p>
+)}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-5">
+        <div className="flex items-center justify-end gap-3 border-t border-slate-100 px-6 py-5">
           <button
             className="bg-white border border-gray-300 rounded-lg px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
             onClick={onClose}
@@ -137,7 +179,8 @@ export default function AddCandidateModal({ onClose, onSubmit }: Props) {
             Add Candidate
           </button>
         </div>
+        </div>
       </div>
-    </div>
+    </ModalPortal>
   );
 }

@@ -9,7 +9,7 @@ import CreateExamModal from '@/components/exams/CreateExamModal';
 import { SearchBar } from '@/components/exams/SearchBar';
 import ViewExamModal from '@/components/exams/ViewExamModal';
 import DashboardPageHeader from '@/components/DashboardHeader';
-
+import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 // Interfaces remain the same
 interface Question {
   text: string;
@@ -52,6 +52,7 @@ export default function ExamsPage() {
   const [examToAssign, setExamToAssign] = useState<Exam | null>(null);
   const [examToView, setExamToView] = useState<Exam | null>(null);
   const [examToEdit, setExamToEdit] = useState<any | null>(null);
+  const [examToDelete, setExamToDelete] = useState<Exam | null>(null);
   const [fullExamData, setFullExamData] = useState<any | null>(null);
   const [isLoadingView, setIsLoadingView] = useState(false);
   const [message, setMessage] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -72,11 +73,11 @@ export default function ExamsPage() {
     // CRITICAL: Save the actual questions array here!
     questions: newData.questions};
     setExams(prev => [...prev, newExam]);
-  setMessage({ message: 'Exam created with ' + newExam.totalQuestions + ' questions', type: 'success' });
-  setTimeout(() => {
-    setMessage(null);
-  }, 3000);
-  };
+    setMessage({ message: 'Exam created with ' + newExam.totalQuestions + ' questions', type: 'success' });
+    setTimeout(() => {
+      setMessage(null);
+    }, 3000);
+    };
 
   const handleUpdateExam = async (id: number, updatedData: any) => {
     setExams((prevExams) => 
@@ -99,25 +100,41 @@ export default function ExamsPage() {
     setMessage(null);
   }, 3000);
   };
-const handleDeleteExam = async (id: number) => {
-  // 1. Optional: Add a simple browser confirmation for safety
-  if (!window.confirm("Are you sure you want to delete this exam? This action cannot be undone.")) return;
+  const handleDeleteExam = async (id: number) => {
+    if (!examToDelete) return;
 
-  try {
-    // 2. Future: await api.delete(`/exams/${id}`);
+    try {
+      setExams(prev => prev.filter(exam => exam.id !== examToDelete.id));
+      setMessage({ message: 'Exam deleted successfully', type: 'success' });
+      
+      // Auto-hide success message
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      setMessage({ message: 'Failed to delete exam', type: 'error' });
+    }
     
-    // 3. Update local state to remove the exam immediately
-    setExams(prevExams => prevExams.filter(exam => exam.id !== id));
+    setExamToDelete(null); // Close the modal
+  };
+  const confirmDelete = () => {
+    if (!examToDelete) return;
+
+    try {
+      // Update local state
+      setExams(prev => prev.filter(exam => exam.id !== examToDelete.id));
+      
+      // Feedback to user
+      setMessage({ message: 'Exam deleted successfully', type: 'success' });
+      
+      // Clean up popup
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      setMessage({ message: 'Failed to delete exam', type: 'error' });
+    }
     
-    setMessage({ message: 'Exam deleted successfully', type: 'success' });
-  } catch (error) {
-    setMessage({ message: 'Failed to delete the exam. Please try again.', type: 'error' });
-  }
-  
-  // Auto-hide the message
-  setTimeout(() => setMessage(null), 3000);
-};
-  // --- Fixed Filter Logic ---
+    // Close the modal
+    setExamToDelete(null); 
+  };
+    // --- Fixed Filter Logic ---
   const filteredExams = exams.filter((exam) => {
     const searchTerm = searchQuery.toLowerCase();
     return (
@@ -144,7 +161,7 @@ const handleDeleteExam = async (id: number) => {
   };
 
   return (
-    <main className="p-8">
+    <main>
       {/* Header */}
       {/* <div className="flex items-center justify-between mb-8">
         <h2 className="text-heading text-2xl font-bold">Exams</h2>
@@ -157,7 +174,7 @@ const handleDeleteExam = async (id: number) => {
       
 
       {/* Action Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 pb-8 border-b border-slate-50">
+      <div className="mb-4 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div className="relative flex-1 max-w-md">
           <SearchBar placeholder="Search exams..." value={searchQuery} onChange={setSearchQuery} />
         </div>
@@ -169,7 +186,7 @@ const handleDeleteExam = async (id: number) => {
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredExams.map((exam) => (
           <ExamCard 
             key={exam.id} 
@@ -177,7 +194,7 @@ const handleDeleteExam = async (id: number) => {
             onAssign={(e) => setExamToAssign(e)}
             onView={() => handleViewExam(exam)}
             onEdit={((clickedExam) => setExamToEdit(clickedExam))}
-            onDelete={(id) => handleDeleteExam(exam.id)}
+            onDelete={(id) => setExamToDelete(exam)}
           />
         ))}
       </div>
@@ -216,6 +233,14 @@ const handleDeleteExam = async (id: number) => {
           }} 
         />
       )}
+      {examToDelete && (
+  <ConfirmDeleteModal 
+    title={examToDelete.name}
+    onCancel={() => setExamToDelete(null)}
+    onConfirm={confirmDelete}
+    text="Are you sure you want to delete this exam?"
+  />
+)}
 
       {/* Assign Modal */}
       {examToAssign && (

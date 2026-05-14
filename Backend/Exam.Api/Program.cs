@@ -45,11 +45,11 @@ builder.Services.AddScoped<IBeforeStartExamService, BeforeStartExamService>();
 
 
 // allow frontend to access api
-builder.Services.AddCors(options => {
-    options.AddPolicy("AllowFrontend",
-        policy => policy.WithOrigins("http://localhost:3000") // Replace with your frontend URL
-                        .AllowAnyMethod()
-                        .AllowAnyHeader());
+ builder.Services.AddCors(options => {
+     options.AddPolicy("AllowFrontend",
+         policy => policy.WithOrigins("http://localhost:3000") // Replace with your frontend URL
+                         .AllowAnyMethod()
+                         .AllowAnyHeader());
 });
 
 var jwtSettings = builder.Configuration.GetSection(nameof(JwtSettings)).Get<JwtSettings>()

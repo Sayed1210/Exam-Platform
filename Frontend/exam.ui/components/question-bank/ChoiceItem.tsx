@@ -36,7 +36,7 @@ export default function ChoiceItem({ choice }: ChoiceItemProps) {
             />
           </div>
         ) : (
-          <span className="break-words">
+          <span className="text-muted">
             {choice.text}
           </span>
         )}

@@ -10,11 +10,18 @@ public static class CandidateEndpoints
     {
         var candidates = app.MapGroup("/candidates");
 
-        candidates.MapGet("/", async (ICandidateService service) =>
-        {
-            var result = await service.GetAllCandidates();
-            return Results.Ok(result);
-        });
+       
+candidates.MapGet("/", async (
+    ICandidateService service,
+    int page = 1,
+    int pageSize = 8,
+    string? search = null,
+    int? status = null,
+    bool noStatus = false) =>
+{
+    var result = await service.GetAllCandidates(page, pageSize, search, status, noStatus);
+    return Results.Ok(result);
+});
 
         candidates.MapGet("/{id}", async (int id, ICandidateService service) =>
         {

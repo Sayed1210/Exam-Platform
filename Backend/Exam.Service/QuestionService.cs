@@ -103,11 +103,10 @@ namespace Exam.Service
 
             return new PagedResponse<QuestionResponse>
             {
-                Page = page,
-                PageSize = pageSize,
-                TotalCount = totalCount,
-                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize),
-                Data = items.Select(MapToResponse)
+              Page = page,
+              PageSize = pageSize,
+             TotalCount = totalCount,
+             Items = items.Select(MapToResponse).ToList()
             };
         }
 

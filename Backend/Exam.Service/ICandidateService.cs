@@ -4,8 +4,9 @@ using Exam.Models;
 
 public interface ICandidateService
 {
-    Task<List<CandidateResponse>> GetAllCandidates();
-    Task<CandidateResponse?> GetCandidateById(int id);
+    
+     Task<PagedResponse<CandidateResponse>> GetAllCandidates(int page, int pageSize, string? search, int? status, bool noStatus = false);
+     Task<CandidateResponse?> GetCandidateById(int id);
 
     Task<CandidateResponse?> GetCandidateByExamId(int examId);
     
