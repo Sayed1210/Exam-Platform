@@ -1,9 +1,11 @@
 'use client';
 import { useState } from 'react';
 import { 
-  PlusIcon, TrashIcon, CheckIcon, 
-  ArrowLeftIcon, MagnifyingGlassIcon, PhotoIcon, XMarkIcon
+  PlusIcon, CheckIcon, 
+  ArrowLeftIcon, PhotoIcon, XMarkIcon
 } from '@heroicons/react/24/outline';
+import TrashIcon from "../TrashIcon";
+import SearchIcon from "../SearchIcon";
 import Button from '../Button';
 import { SearchBar } from './SearchBar';
 import ExamModal from './ExamModal';
@@ -134,15 +136,15 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
       </div>
 
       {/* Content Area */}
-      <div className="p-8 overflow-y-auto custom-scrollbar pb-36 h-[600px] max-h-[70vh]">
+      <div className={`p-8 overflow-y-auto custom-scrollbar ${step === 1 ? 'pb-8' : 'h-[600px] max-h-[70vh] pb-36'}`}>
         {step === 1 ? (
           <div className="space-y-6">
             <div>
-              <label className="block mb-2 font-medium text-slate-700">Exam Title <span className="text-primary">*</span></label>
+              <label className="block mb-2 font-medium text-label">Exam Title <span className="text-primary">*</span></label>
               <input type="text" className="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:border-primary shadow-sm" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} placeholder="e.g. React Developer Test"/>
             </div>
             <div>
-              <label className="block mb-2 font-medium text-slate-700">Duration (minutes) <span className="text-primary">*</span></label>
+              <label className="block mb-2 font-medium text-label">Duration (minutes) <span className="text-primary">*</span></label>
               <input type="number" className="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:border-primary shadow-sm" value={formData.durationMins} onChange={(e) => setFormData({...formData, durationMins: parseInt(e.target.value) || 0})}/>
             </div>
           </div>
@@ -157,7 +159,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
               <div className="space-y-4">
                 <div className="flex gap-3 mb-6">
                   <div className="relative flex-[2]">
-                    <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <SearchBar 
                         placeholder="Search question bank..." 
                         value={bankSearch} 

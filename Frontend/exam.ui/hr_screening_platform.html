@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Enozom HR – Screening Exam Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary: #2563EB; --primary-dk: #1D4ED8; --primary-lt: #EFF6FF;
+    --gray-50: #F9FAFB; --gray-100: #F3F4F6; --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB; --gray-400: #9CA3AF; --gray-500: #6B7280;
+    --gray-600: #4B5563; --gray-700: #374151; --gray-800: #1F2937; --gray-900: #111827;
+    --green: #10B981; --green-lt: #D1FAE5; --red: #EF4444; --red-lt: #FEE2E2;
+    --yellow: #F59E0B; --yellow-lt: #FEF3C7;
+    --sidebar-w: 240px; --radius: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.06);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,.08), 0 4px 6px rgba(0,0,0,.05);
+  }
+  body { font-family: 'Inter', sans-serif; font-size: 14px; color: var(--gray-800); background: var(--gray-50); line-height: 1.5; }
+
+  /* PAGES */
+  .page { display: none; min-height: 100vh; }
+  .page.active { display: flex; }
+
+  /* AUTH */
+  .auth-page { align-items: center; justify-content: center; background: var(--gray-50); }
+  .auth-card { background: #fff; border-radius: 12px; box-shadow: var(--shadow-lg); padding: 40px 36px; width: 100%; max-width: 380px; }
+  .auth-logo { width: 44px; height: 44px; background: var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #fff; font-weight: 700; font-size: 18px; }
+  .auth-title { text-align: center; font-size: 20px; font-weight: 700; color: var(--gray-900); margin-bottom: 4px; }
+  .auth-sub { text-align: center; font-size: 13px; color: var(--gray-500); margin-bottom: 28px; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 13px; font-weight: 500; color: var(--gray-700); margin-bottom: 6px; }
+  .form-input { width: 100%; padding: 9px 12px; border: 1.5px solid var(--gray-200); border-radius: var(--radius); font-size: 14px; font-family: inherit; color: var(--gray-800); transition: border .15s; outline: none; }
+  .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+  .form-input::placeholder { color: var(--gray-400); }
+  .form-input:disabled, .form-input[readonly] { background: var(--gray-50); color: var(--gray-500); cursor: default; }
+  textarea.form-input { resize: vertical; }
+  .input-icon-wrap { position: relative; }
+  .input-icon-wrap > svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--gray-400); pointer-events: none; }
+  .input-icon-wrap .form-input { padding-left: 34px; }
+  .form-select { width: 100%; padding: 9px 30px 9px 12px; border: 1.5px solid var(--gray-200); border-radius: var(--radius); font-size: 14px; font-family: inherit; color: var(--gray-800); background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center; appearance: none; outline: none; transition: border .15s; }
+  .form-select:focus { border-color: var(--primary); }
+  .form-select:disabled { background-color: var(--gray-50); color: var(--gray-500); cursor: not-allowed; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 16px; border-radius: var(--radius); font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; border: none; transition: all .15s; white-space: nowrap; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dk); }
+  .btn-block { width: 100%; }
+  .btn-outline { background: #fff; color: var(--gray-700); border: 1.5px solid var(--gray-200); }
+  .btn-outline:hover { background: var(--gray-50); }
+  .btn-danger { background: var(--red); color: #fff; } .btn-danger:hover { background: #DC2626; }
+  .btn-success { background: var(--green); color: #fff; } .btn-success:hover { background: #059669; }
+  .auth-link { text-align: center; margin-top: 16px; font-size: 13px; color: var(--gray-500); }
+  .auth-link a { color: var(--primary); text-decoration: none; font-weight: 500; cursor: pointer; }
+
+  /* ADMIN LAYOUT */
+  .admin-layout { flex-direction: row; width: 100%; }
+  .sidebar { width: var(--sidebar-w); background: var(--gray-900); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto; z-index: 10; }
+  .sidebar-logo { padding: 20px 20px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .sidebar-logo-icon { width: 34px; height: 34px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 15px; flex-shrink: 0; }
+  .sidebar-logo-text { color: #fff; font-weight: 700; font-size: 15px; }
+  .sidebar-logo-sub { color: var(--gray-400); font-size: 11px; margin-top: 1px; }
+  .sidebar-nav { padding: 12px 10px; flex: 1; }
+  .sidebar-section-title { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-500); padding: 8px 10px 4px; }
+  .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; color: var(--gray-400); font-size: 13.5px; font-weight: 500; cursor: pointer; transition: all .15s; margin-bottom: 2px; }
+  .sidebar-item:hover { background: rgba(255,255,255,.07); color: #fff; }
+  .sidebar-item.active { background: var(--primary); color: #fff; }
+  .sidebar-footer { padding: 12px 10px; border-top: 1px solid rgba(255,255,255,.08); }
+  .admin-main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar { background: #fff; border-bottom: 1px solid var(--gray-200); padding: 0 28px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 5; }
+  .topbar-title { font-size: 16px; font-weight: 600; color: var(--gray-900); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary-lt); display: flex; align-items: center; justify-content: center; color: var(--primary); font-weight: 600; font-size: 13px; }
+  .main-content { padding: 28px; flex: 1; }
+
+  /* CARD / TABLE */
+  .card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .card-header { padding: 16px 20px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .card-title { font-size: 15px; font-weight: 600; color: var(--gray-900); }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { text-align: left; padding: 11px 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--gray-500); background: var(--gray-50); border-bottom: 1px solid var(--gray-200); }
+  tbody td { padding: 12px 16px; border-bottom: 1px solid var(--gray-100); font-size: 13.5px; vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--gray-50); }
+
+  .badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 500; }
+  .badge-green  { background: var(--green-lt);  color: #059669; }
+  .badge-red    { background: var(--red-lt);    color: #DC2626; }
+  .badge-yellow { background: var(--yellow-lt); color: #D97706; }
+  .badge-blue   { background: var(--primary-lt); color: var(--primary); }
+  .badge-gray   { background: var(--gray-100);  color: var(--gray-600); }
+
+  /* SEARCH SECTION*/
+  .search-wrap { position: relative; }
+  .search-wrap > svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--gray-400); pointer-events: none; }
+  .search-input { width: 100%; padding: 8px 12px 8px 34px; border: 1.5px solid var(--gray-200); border-radius: var(--radius); font-size: 13.5px; font-family: inherit; outline: none; background: #fff; transition: border .15s; }
+  .search-input:focus { border-color: var(--primary); }
+
+  .icon-btn { width: 32px; height: 32px; border: none; background: transparent; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; color: var(--gray-500); transition: all .15s; }
+  .icon-btn:hover { background: var(--gray-100); color: var(--gray-800); }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 50; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 12px; box-shadow: var(--shadow-lg); width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; padding: 28px; }
+  .modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; gap: 12px; }
+  .modal-title { font-size: 16px; font-weight: 700; color: var(--gray-900); }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--gray-100); }
+
+  /* TOPIC FILTER PILLS */
+  .topic-filter-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 12px 20px 14px; border-top: 1px solid var(--gray-100); }
+  .topic-pill { padding: 5px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 500; cursor: pointer; border: 1.5px solid var(--gray-200); background: #fff; color: var(--gray-600); transition: all .15s; white-space: nowrap; user-select: none; }
+  .topic-pill:hover { border-color: var(--primary); color: var(--primary); }
+  .topic-pill.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .topic-pill.add-pill { border-style: dashed; color: var(--primary); border-color: #93C5FD; background: var(--primary-lt); }
+  .topic-pill.add-pill:hover { background: var(--primary); color: #fff; border-style: solid; }
+
+  /* QUESTION ITEM */
+  .question-item { border: 1.5px solid var(--gray-200); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; background: #fff; }
+  .question-item-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; gap: 8px; }
+  .option-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .option-dot { width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--gray-300); flex-shrink: 0; }
+  .option-dot.correct { border-color: var(--green); background: var(--green); }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--gray-100); color: var(--gray-600); }
+
+  /* IMAGE UPLOAD */
+  .img-upload-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border: 1.5px solid var(--gray-200); border-radius: 6px; font-size: 12px; color: var(--gray-500); cursor: pointer; transition: all .15s; background: #fff; }
+  .img-upload-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .img-upload-btn input { display: none; }
+  .img-thumb { width: 48px; height: 36px; object-fit: cover; border-radius: 4px; border: 1.5px solid var(--gray-200); display: none; }
+
+  /* EXAM TAKE */
+  .exam-layout { flex-direction: row; width: 100%; }
+  .exam-sidebar { width: 220px; background: #fff; border-right: 1px solid var(--gray-200); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto; z-index: 4; }
+  .exam-sidebar-header { padding: 16px; border-bottom: 1px solid var(--gray-100); }
+  .q-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 14px; }
+  .q-dot { height: 30px; border-radius: 6px; border: 1.5px solid var(--gray-200); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: var(--gray-600); cursor: pointer; transition: all .15s; }
+  .q-dot:hover { border-color: var(--primary); color: var(--primary); }
+  .q-dot.current { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .q-dot.answered { background: var(--green-lt); border-color: var(--green); color: #059669; }
+  .exam-main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .exam-topbar { background: #fff; border-bottom: 1px solid var(--gray-200); padding: 0 28px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 5; }
+  .timer-box { display: flex; align-items: center; gap: 8px; background: var(--red-lt); color: var(--red); padding: 8px 20px; border-radius: 10px; font-size: 22px; font-weight: 700; letter-spacing: .05em; border: 2px solid rgba(239,68,68,.25); min-width: 120px; justify-content: center; }
+  .timer-box svg { flex-shrink: 0; }
+  .exam-body { padding: 28px 40px; flex: 1; max-width: 800px; }
+  .question-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-md); padding: 28px; margin-bottom: 24px; }
+  .question-text { font-size: 16px; font-weight: 500; color: var(--gray-900); margin-bottom: 20px; line-height: 1.65; }
+  .option-card { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; border: 1.5px solid var(--gray-200); margin-bottom: 10px; cursor: pointer; transition: all .15s; }
+  .option-card:hover { border-color: var(--primary); background: var(--primary-lt); }
+  .option-card.selected { border-color: var(--primary); background: var(--primary-lt); }
+  .option-radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--gray-300); flex-shrink: 0; transition: all .15s; }
+  .option-card.selected .option-radio { border-color: var(--primary); background: var(--primary); }
+
+  /* PROGRESS */
+  .progress-bar-wrap { background: var(--gray-200); border-radius: 999px; height: 6px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: var(--primary); border-radius: 999px; transition: width .3s; }
+
+  /* THANK YOU */
+  .thankyou-page { align-items: center; justify-content: center; background: var(--gray-50); flex-direction: column; }
+  .thankyou-card { background: #fff; border-radius: 12px; box-shadow: var(--shadow-lg); padding: 48px 40px; max-width: 460px; text-align: center; }
+  .check-circle { width: 72px; height: 72px; background: var(--green-lt); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+
+  /* EXAM START */
+  .exam-start-page { align-items: center; justify-content: center; background: var(--gray-50); }
+  .exam-start-card { background: #fff; border-radius: 12px; box-shadow: var(--shadow-lg); padding: 40px; max-width: 480px; width: 100%; }
+  .info-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--gray-100); font-size: 13.5px; }
+  .info-row:last-child { border-bottom: none; }
+  .info-row span:first-child { color: var(--gray-500); }
+  .info-row span:last-child { font-weight: 500; }
+
+  /* WIZARD STEPS */
+  .wizard-steps { display: flex; align-items: center; margin-bottom: 24px; }
+  .w-step { display: flex; align-items: center; gap: 8px; }
+  .w-step-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .w-step-num.active  { background: var(--primary); color: #fff; }
+  .w-step-num.done    { background: var(--green); color: #fff; }
+  .w-step-num.pending { background: var(--gray-100); color: var(--gray-500); }
+  .w-step-lbl { font-size: 13px; font-weight: 500; }
+  .w-step-lbl.active  { color: var(--primary); }
+  .w-step-lbl.done    { color: var(--green); }
+  .w-step-lbl.pending { color: var(--gray-400); }
+  .w-divider { flex: 1; height: 2px; background: var(--gray-200); margin: 0 12px; transition: background .3s; }
+  .w-divider.done { background: var(--green); }
+
+  /* EXAM WIZARD QUESTION BUILDER */
+  .wq-list { display: flex; flex-direction: column; gap: 10px; max-height: 370px; overflow-y: auto; padding-right: 2px; }
+  .wq-item { border: 1.5px solid var(--gray-200); border-radius: var(--radius); padding: 14px; background: var(--gray-50); }
+  .wq-item-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .wq-num { width: 22px; height: 22px; background: var(--primary-lt); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .wq-opt-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+
+  /* CANDIDATE DETAIL */
+  .detail-block { margin-bottom: 20px; }
+  .detail-block-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-400); margin-bottom: 10px; }
+  .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--gray-100); font-size: 13.5px; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-row .lbl { color: var(--gray-500); }
+  .answer-card { padding: 10px 12px; border: 1.5px solid var(--gray-100); border-radius: 8px; margin-bottom: 8px; }
+  .answer-card .q { font-size: 13px; font-weight: 500; color: var(--gray-800); margin-bottom: 3px; }
+  .answer-card .a { font-size: 13px; color: var(--primary); }
+
+  /* UTILS */
+  .section-title { font-size: 18px; font-weight: 700; color: var(--gray-900); }
+  .flex { display: flex; } .items-center { align-items: center; } .justify-between { justify-content: space-between; }
+  .gap-2 { gap: 8px; } .gap-3 { gap: 12px; }
+  .mb-4 { margin-bottom: 16px; } .mb-6 { margin-bottom: 24px; }
+  .text-sm { font-size: 13px; } .text-muted { color: var(--gray-500); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--gray-900); color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 13.5px; font-weight: 500; box-shadow: var(--shadow-lg); z-index: 9998; transform: translateY(80px); opacity: 0; transition: all .3s; display: flex; align-items: center; gap: 8px; pointer-events: none; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 9px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     PAGE: LOGIN
+══════════════════════════════════════ -->
+<div id="page-login" class="page auth-page active">
+  <div class="auth-card">
+    <div class="auth-logo">E</div>
+    <div class="auth-title">Enozom HR</div>
+    <div class="auth-sub">Admin Portal</div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <div class="input-icon-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        <input type="email" class="form-input" placeholder="admin@enozom.com" value="admin@enozom.com" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <div class="input-icon-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <input type="password" class="form-input" placeholder="••••••••" value="password" />
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="navigate('page-admin')">
+      Sign In <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+    </button>
+    <div class="auth-link"><a onclick="navigate('page-forgot')">Forgot password?</a></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE: FORGOT PASSWORD
+══════════════════════════════════════ -->
+<div id="page-forgot" class="page auth-page">
+  <div class="auth-card">
+    <div class="auth-logo" style="background:var(--primary-lt)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <div class="auth-title">Reset Password</div>
+    <div class="auth-sub">We'll send a reset link to your email</div>
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <div class="input-icon-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        <input type="email" class="form-input" placeholder="admin@enozom.com" />
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="showToast('Reset link sent ✓'); navigate('page-login')">Send Reset Link</button>
+    <div class="auth-link"><a onclick="navigate('page-login')">← Back to login</a></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE: ADMIN
+══════════════════════════════════════ -->
+<div id="page-admin" class="page admin-layout">
+  <!-- SIDEBAR – no Dashboard tab -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">E</div>
+      <div>
+        <div class="sidebar-logo-text">Enozom HR</div>
+        <div class="sidebar-logo-sub">Admin Portal</div>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="sidebar-section-title">Main</div>
+      <div class="sidebar-item active" onclick="showSection('sec-candidates', this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87m-4-12a4 4 0 0 1 0 7.75"/></svg>
+        Candidates
+      </div>
+      <div class="sidebar-item" onclick="showSection('sec-exams', this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6m-6 4h4"/></svg>
+        Exams
+      </div>
+      <div class="sidebar-item" onclick="showSection('sec-questions', this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3m0 4h.01"/></svg>
+        Question Bank
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-item" onclick="navigate('page-login')" style="color:#F87171">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9"/></svg>
+        Logout
+      </div>
+    </div>
+  </nav>
+
+  <main class="admin-main">
+    
+    <div class="main-content">
+
+      <!-- ────────── CANDIDATES ────────── -->
+      <section id="sec-candidates">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="section-title">Candidates</h2>
+          <button class="btn btn-primary" onclick="openModal('modal-add-candidate')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14m-7-7h14"/></svg>
+            Add Candidate
+          </button>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="search-wrap" style="flex:1;max-width:280px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input class="search-input" placeholder="Search candidates…" oninput="filterCandidates(this.value)" />
+            </div>
+            <select class="form-select" style="width:150px" onchange="filterCandidatesByStatus(this.value)">
+              <option>All Status</option><option>Invited</option><option>In Progress</option><option>Completed</option><option>Expired</option>
+            </select>
+          </div>
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Position</th><th>Status</th><th>Score</th><th>Actions</th></tr></thead>
+            <tbody id="candidates-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ────────── EXAMS ────────── -->
+      <section id="sec-exams" style="display:none">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="section-title">Exams</h2>
+          <button class="btn btn-primary" onclick="openExamWizard()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14m-7-7h14"/></svg>
+            Create Exam
+          </button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px" id="exams-grid">
+          <!-- filled by JS -->
+        </div>
+      </section>
+
+      <!-- ────────── QUESTION BANK ────────── -->
+      <section id="sec-questions" style="display:none">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="section-title">Question Bank</h2>
+          <button class="btn btn-primary" onclick="openAddQuestion()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14m-7-7h14"/></svg>
+            Add Question
+          </button>
+        </div>
+
+        <!-- Search + Filter Card -->
+        <div class="card mb-4" style="overflow:visible">
+          <div style="padding:14px 20px">
+            <div class="search-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input class="search-input" placeholder="Search questions by text or topic…" oninput="filterQuestions(this.value)" />
+            </div>
+          </div>
+          <div class="topic-filter-bar" id="topic-filter-bar">
+            <span class="topic-pill active" onclick="setTopicFilter('All', this)">All</span>
+            <span class="topic-pill" onclick="setTopicFilter('React', this)">React</span>
+            <span class="topic-pill" onclick="setTopicFilter('Node.js', this)">Node.js</span>
+            <span class="topic-pill" onclick="setTopicFilter('Algorithms', this)">Algorithms</span>
+            <span class="topic-pill" onclick="setTopicFilter('QA', this)">QA</span>
+            <span class="topic-pill add-pill" onclick="openModal('modal-add-topic')">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14m-7-7h14"/></svg>
+              Add Topic
+            </span>
+          </div>
+        </div>
+
+        <!-- Questions list -->
+        <div id="qbank-list"></div>
+      </section>
+
+    </div><!-- /main-content -->
+  </main>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE: EXAM START
+══════════════════════════════════════ -->
+<div id="page-exam-start" class="page exam-start-page">
+  <div class="exam-start-card">
+    <div style="text-align:center;margin-bottom:24px">
+      <div class="auth-logo" style="background:var(--primary-lt)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+      </div>
+      <div style="font-size:20px;font-weight:700;color:var(--gray-900);margin-bottom:4px">React Developer Assessment</div>
+      <div style="font-size:13px;color:var(--gray-500)">Enozom Software Engineering • Technical Screening</div>
+    </div>
+    <div style="background:var(--gray-50);border-radius:var(--radius);padding:4px 16px;margin-bottom:20px">
+      <div class="info-row"><span>Duration</span><span>60 minutes</span></div>
+      <div class="info-row"><span>Questions</span><span>25 questions</span></div>
+    </div>
+    <div style="background:var(--yellow-lt);border-radius:var(--radius);padding:14px;margin-bottom:20px;font-size:13px;color:#92400E;line-height:1.6">
+      <b>⚠ Instructions:</b> Once started, the timer cannot be paused. Answers are auto-saved. You may navigate between questions freely.
+    </div>
+    <button class="btn btn-primary btn-block" style="font-size:15px;padding:12px" onclick="openModal('modal-start-confirm')">
+      Start Exam
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+    </button>
+    <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--gray-400)">Issues? <a href="mailto:hr@enozom.com" style="color:var(--primary)">hr@enozom.com</a></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE: EXAM TAKE
+══════════════════════════════════════ -->
+<div id="page-exam-take" class="page exam-layout">
+  <!-- Left nav sidebar -->
+  <div class="exam-sidebar">
+    <div class="exam-sidebar-header">
+      <div style="font-weight:700;color:var(--gray-900)">Questions</div>
+      <div style="font-size:12px;color:var(--gray-500);margin-top:2px">25 Total</div>
+    </div>
+    <div class="q-grid" id="q-grid"></div>
+    <div style="padding:10px 14px;border-top:1px solid var(--gray-100);font-size:11.5px">
+      <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;color:var(--gray-500)"><span style="width:10px;height:10px;background:var(--primary);border-radius:2px;display:inline-block"></span> Current</div>
+      <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;color:var(--gray-500)"><span style="width:10px;height:10px;background:var(--green-lt);border:1.5px solid var(--green);border-radius:2px;display:inline-block"></span> Answered</div>
+      <div style="display:flex;align-items:center;gap:5px;color:var(--gray-500)"><span style="width:10px;height:10px;border:1.5px solid var(--gray-300);border-radius:2px;display:inline-block"></span> Unanswered</div>
+    </div>
+    <!-- Submit at the BOTTOM of sidebar -->
+    <div style="padding:14px;border-top:1px solid var(--gray-200);margin-top:auto">
+      <button class="btn btn-success btn-block" onclick="confirmSubmit()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Submit Exam
+      </button>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="exam-main">
+    <!-- Topbar: title left, PROMINENT timer right -->
+    <div class="exam-topbar">
+      <div>
+        <div style="font-weight:600;font-size:15px">React Developer Assessment</div>
+        <div style="font-size:12px;color:var(--gray-500)">Question <span id="q-current-num">1</span> of 25</div>
+      </div>
+      <div class="timer-box" id="timer-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <span id="timer-display">60:00</span>
+      </div>
+    </div>
+
+    <div class="exam-body">
+      <div style="margin-bottom:20px">
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="exam-progress" style="width:0%"></div></div>
+        <div style="font-size:12px;color:var(--gray-400);margin-top:4px"><span id="answered-count">0</span> of 25 answered</div>
+      </div>
+
+      <div class="question-card" id="question-display"></div>
+
+      <div class="flex justify-between" style="margin-top:4px">
+        <button class="btn btn-outline" id="btn-prev" onclick="prevQuestion()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
+          Previous
+        </button>
+        <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()">
+          Next
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE: THANK YOU
+══════════════════════════════════════ -->
+<div id="page-thankyou" class="page thankyou-page">
+  <div class="thankyou-card">
+    <div class="check-circle">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div style="font-size:22px;font-weight:700;color:var(--gray-900);margin-bottom:8px">Exam Submitted!</div>
+    <div style="font-size:14px;color:var(--gray-500);line-height:1.7;margin-bottom:24px">Your answers have been successfully submitted. Our HR team will review your results and reach out within 3–5 business days.</div>
+    <div style="background:var(--primary-lt);border-radius:var(--radius);padding:16px;text-align:left;margin-bottom:24px">
+      <div style="font-size:13px;color:var(--primary);font-weight:600;margin-bottom:8px">What's Next?</div>
+      <ul style="font-size:13px;color:var(--gray-600);padding-left:16px;line-height:2.2">
+        <li>Review of your assessment by the HR team</li>
+        <li>Technical interview invitation (if selected)</li>
+        <li>Final offer letter or feedback email</li>
+      </ul>
+    </div>
+    <div style="font-size:13px;color:var(--gray-500)">Issues? <a href="mailto:hr@enozom.com" style="color:var(--primary);font-weight:500">hr@enozom.com</a></div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     MODALS
+═══════════════════════════════════════════ -->
+
+<!-- Add Candidate -->
+<div class="modal-overlay" id="modal-add-candidate">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title">Add Candidate</div>
+      <button class="icon-btn" onclick="closeModal('modal-add-candidate')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label class="form-label">First Name</label><input class="form-input" placeholder="Ahmed" /></div>
+      <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" placeholder="Hassan" /></div>
+    </div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" placeholder="candidate@email.com" /></div>
+    <div class="form-group"><label class="form-label">Applied Position</label><input class="form-input" placeholder="React Developer" /></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-candidate')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-add-candidate');showToast('Candidate added ✓')">Add Candidate</button>
+    </div>
+  </div>
+</div>
+
+<!-- Assign from Exam modal -->
+<div class="modal-overlay" id="modal-assign-from-exam">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Assign to Candidate</div>
+        <div style="font-size:12px;color:var(--gray-500);margin-top:3px" id="afe-exam-meta"></div>
+      </div>
+      <button class="icon-btn" onclick="closeModal('modal-assign-from-exam')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+
+    <!-- Exam name pill -->
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--primary-lt);border-radius:var(--radius);margin-bottom:18px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+      <span style="font-size:13.5px;font-weight:600;color:var(--primary)" id="afe-exam-name"></span>
+    </div>
+
+    <!-- Candidate search -->
+    <div class="form-group">
+      <label class="form-label">Search Candidates</label>
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-input" id="afe-search" placeholder="Search by name, email or position…" oninput="renderAssignCandidateList(this.value)" />
+      </div>
+    </div>
+
+    <!-- Candidate list -->
+    <div id="afe-candidate-list" style="max-height:260px;overflow-y:auto;margin-bottom:16px;padding-right:2px"></div>
+
+    <!-- Deadline -->
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">Exam Deadline <span style="color:var(--red)">*</span></label>
+      <input class="form-input" type="date" id="afe-deadline" />
+    </div>
+
+    <div style="background:var(--primary-lt);border-radius:var(--radius);padding:11px 14px;font-size:13px;color:var(--primary);margin-top:12px">
+      📧 A unique exam link will be emailed to each selected candidate.
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-assign-from-exam')">Cancel</button>
+      <button class="btn btn-primary" id="afe-send-btn" onclick="sendExamAssignments()" disabled style="opacity:.45;cursor:not-allowed">
+        Select at least one candidate
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Assign Exam -->
+<div class="modal-overlay" id="modal-assign">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title">Assign Exam</div>
+      <button class="icon-btn" onclick="closeModal('modal-assign')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="form-group"><label class="form-label">Candidate</label><input class="form-input" id="assign-name" readonly /></div>
+    <div class="form-group"><label class="form-label">Select Exam</label>
+      <select class="form-select"><option>React Developer Assessment</option><option>Backend Engineer – Node.js</option><option>QA Engineer – Testing</option></select>
+    </div>
+    <div class="form-group"><label class="form-label">Deadline</label><input class="form-input" type="date" /></div>
+    <div style="background:var(--primary-lt);border-radius:var(--radius);padding:12px;font-size:13px;color:var(--primary)">📧 An invitation email will be sent automatically.</div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-assign')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-assign');showToast('Invitation sent ✓')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13m11-11-7 22-4-9-9-4 22-7z"/></svg>
+        Send Invitation
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Candidate Details -->
+<div class="modal-overlay" id="modal-candidate-detail">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="det-name">—</div>
+        <div style="font-size:12px;color:var(--gray-500);margin-top:2px" id="det-position">—</div>
+      </div>
+      <button class="icon-btn" onclick="closeModal('modal-candidate-detail')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="detail-block">
+      <div class="detail-block-title">Exam Info</div>
+      <div class="detail-row"><span class="lbl">Email</span><span id="det-email">—</span></div>
+      <div class="detail-row"><span class="lbl">Invited At</span><span id="det-invited">—</span></div>
+      <div class="detail-row"><span class="lbl">Started At</span><span id="det-started">—</span></div>
+      <div class="detail-row"><span class="lbl">Status</span><span id="det-status">—</span></div>
+      <div class="detail-row" id="det-score-row"><span class="lbl">Score</span><span id="det-score">—</span></div>
+    </div>
+    <div id="det-answers-wrap" class="detail-block">
+      <div class="detail-block-title">Answers</div>
+      <div id="det-answers-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-candidate-detail')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Exam Wizard (2-step) -->
+<div class="modal-overlay" id="modal-exam-wizard">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-header">
+      <div class="modal-title">Create Exam</div>
+      <button class="icon-btn" onclick="closeModal('modal-exam-wizard')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <!-- Step indicator -->
+    <div class="wizard-steps">
+      <div class="w-step">
+        <div class="w-step-num active" id="ws1-num">1</div>
+        <div class="w-step-lbl active" id="ws1-lbl">Basic Info</div>
+      </div>
+      <div class="w-divider" id="w-div"></div>
+      <div class="w-step">
+        <div class="w-step-num pending" id="ws2-num">2</div>
+        <div class="w-step-lbl pending" id="ws2-lbl">Questions</div>
+      </div>
+    </div>
+
+    <!-- Step 1 -->
+    <div id="wiz-s1">
+      <div class="form-group"><label class="form-label">Exam Title <span style="color:var(--red)">*</span></label><input class="form-input" id="w-title" placeholder="e.g. React Developer Assessment" /></div>
+      <div class="form-group"><label class="form-label">Duration (minutes) <span style="color:var(--red)">*</span></label><input class="form-input" id="w-duration" type="number" min="5" placeholder="60" /></div>
+      <div class="modal-footer" style="border:none;padding:0;margin-top:0">
+        <button class="btn btn-outline" onclick="closeModal('modal-exam-wizard')">Cancel</button>
+        <button class="btn btn-primary" onclick="wizardNext()">
+          Next – Add Questions
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div id="wiz-s2" style="display:none">
+      <!-- Tab switcher -->
+      <div style="display:flex;background:var(--gray-100);border-radius:8px;padding:3px;margin-bottom:16px">
+        <button id="wiz-tab-bank" onclick="switchWizTab('bank')" style="flex:1;padding:7px 12px;border:none;border-radius:6px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;background:#fff;color:var(--gray-900);box-shadow:var(--shadow);transition:all .15s">
+          📋 From Question Bank
+        </button>
+        <button id="wiz-tab-new" onclick="switchWizTab('new')" style="flex:1;padding:7px 12px;border:none;border-radius:6px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;background:transparent;color:var(--gray-500);transition:all .15s">
+          ✏️ Create New Question
+        </button>
+      </div>
+
+      <!-- FROM BANK TAB -->
+      <div id="wiz-panel-bank">
+        <!-- Search + topic filter -->
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <div class="search-wrap" style="flex:1">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input class="search-input" id="wiz-bank-search" placeholder="Search questions…" oninput="renderWizBankList()" />
+          </div>
+          <select class="form-select" style="width:130px" id="wiz-bank-topic" onchange="renderWizBankList()">
+            <option value="">All Topics</option>
+          </select>
+        </div>
+        <!-- Bank question list (checkboxes) -->
+        <div id="wiz-bank-list" style="max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-right:2px"></div>
+        <div style="font-size:12px;color:var(--gray-500);margin-top:8px" id="wiz-bank-count">0 questions selected from bank</div>
+      </div>
+
+      <!-- CREATE NEW TAB -->
+      <div id="wiz-panel-new" style="display:none">
+        <div class="wq-list" id="wq-list"></div>
+        <button class="btn btn-outline" style="width:100%;margin-top:10px;border-style:dashed;color:var(--primary);border-color:#93C5FD" onclick="addWizardQ()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14m-7-7h14"/></svg>
+          Add New Question
+        </button>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="wizardBack()">← Back</button>
+        <button class="btn btn-primary" onclick="saveExamFromWizard()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Save Exam
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit Question -->
+<div class="modal-overlay" id="modal-question">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title" id="q-modal-title">Add Question</div>
+      <button class="icon-btn" onclick="closeModal('modal-question')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <select class="form-select" id="q-cat"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Question Text</label>
+      <textarea class="form-input" rows="2" id="q-text" placeholder="Enter the question…"></textarea>
+    </div>
+    <!-- Question image -->
+    <div class="form-group">
+      <label class="form-label">Question Image <span style="font-size:11px;color:var(--gray-400)">(optional)</span></label>
+      <label class="img-upload-btn" style="display:inline-flex" onclick="document.getElementById('q-img-file').click()">
+        <input type="file" id="q-img-file" accept="image/*" onchange="previewQImg(this)" style="display:none" />
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="21 15 16 10 5 21"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
+        Upload Image
+      </label>
+      <img id="q-img-preview" class="img-thumb" style="margin-left:10px;vertical-align:middle" />
+    </div>
+    <!-- Options -->
+    <div class="form-group">
+      <label class="form-label">Options <span style="font-size:11px;color:var(--gray-400)">(select the correct answer)</span></label>
+      <div id="q-options-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-question')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveQuestion()">Save Question</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Topic -->
+<div class="modal-overlay" id="modal-add-topic">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <div class="modal-title">Add Topic</div>
+      <button class="icon-btn" onclick="closeModal('modal-add-topic')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="form-group"><label class="form-label">Topic Name</label><input class="form-input" id="new-topic-val" placeholder="e.g. Python, SQL, DevOps…" /></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-topic')">Cancel</button>
+      <button class="btn btn-primary" onclick="addTopic()">Add Topic</button>
+    </div>
+  </div>
+</div>
+
+<!-- Start Confirm -->
+<div class="modal-overlay" id="modal-start-confirm">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <div style="width:56px;height:56px;background:var(--primary-lt);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+    </div>
+    <div class="modal-title" style="margin-bottom:8px">Are you sure you want to proceed?</div>
+    <div style="font-size:13.5px;color:var(--gray-500);margin-bottom:24px">The timer will start immediately and cannot be paused once the exam begins.</div>
+    <div class="flex gap-3" style="justify-content:center">
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal('modal-start-confirm')">Cancel</button>
+      <button class="btn btn-primary" style="flex:1" onclick="closeModal('modal-start-confirm');navigate('page-exam-take')">Yes, Start</button>
+    </div>
+  </div>
+</div>
+
+<!-- Submit Confirm -->
+<div class="modal-overlay" id="modal-submit-confirm">
+  <div class="modal" style="max-width:400px;text-align:center">
+    <div style="width:56px;height:56px;background:var(--yellow-lt);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><path d="M12 9v4m0 4h.01"/></svg>
+    </div>
+    <div class="modal-title" style="margin-bottom:8px">Submit Exam?</div>
+    <div style="font-size:13.5px;color:var(--gray-500);margin-bottom:20px">You answered <strong id="submit-answered">0</strong> of 25. This cannot be undone.</div>
+    <div class="flex gap-3" style="justify-content:center">
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal('modal-submit-confirm')">Continue</button>
+      <button class="btn btn-success" style="flex:1" onclick="closeModal('modal-submit-confirm');navigate('page-thankyou')">Submit Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-msg"></span>
+</div>
+
+<!-- Preview nav -->
+<div style="position:fixed;top:0;right:0;z-index:9999;background:rgba(0,0,0,.82);color:#fff;padding:6px 14px;font-size:11.5px;border-bottom-left-radius:8px;display:flex;gap:12px;align-items:center">
+  <span style="opacity:.5">Preview:</span>
+  <a onclick="navigate('page-login')" style="color:#93C5FD;cursor:pointer;text-decoration:none">Login</a>
+  <a onclick="navigate('page-admin')" style="color:#93C5FD;cursor:pointer;text-decoration:none">Admin</a>
+  <a onclick="navigate('page-exam-start')" style="color:#93C5FD;cursor:pointer;text-decoration:none">Exam Start</a>
+  <a onclick="navigate('page-exam-take')" style="color:#93C5FD;cursor:pointer;text-decoration:none">Exam Take</a>
+  <a onclick="navigate('page-thankyou')" style="color:#93C5FD;cursor:pointer;text-decoration:none">Thank You</a>
+</div>
+
+<script>
+// ─── NAVIGATION ───────────────────────────────────
+function navigate(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+function showSection(id, el) {
+  document.querySelectorAll('.admin-main section').forEach(s => s.style.display = 'none');
+  document.getElementById(id).style.display = '';
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  if (id === 'sec-questions') renderQBank();
+  if (id === 'sec-exams') renderExams();
+}
+
+// ─── MODAL ────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('open');
+});
+
+// ─── TOAST ────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── CANDIDATES DATA ──────────────────────────────
+const candidates = [
+  { id:1, name:'Ahmed Hassan',  email:'ahmed@gmail.com',     position:'React Developer',  status:'Completed',  score:'87%', invitedAt:'May 1, 2026',  startedAt:'May 3, 2026',
+    answers:[{q:"What is useEffect?",a:"Handles side effects"},{q:"What is prop drilling?",a:"Passing props through nested components"}] },
+  { id:2, name:'Sara Khalil',   email:'sara.k@outlook.com',  position:'Backend Engineer', status:'In Progress',score:'—',  invitedAt:'May 2, 2026',  startedAt:'May 5, 2026',  answers:[] },
+  { id:3, name:'Omar Farouk',   email:'ofarouk@yahoo.com',   position:'UI/UX Designer',   status:'Invited',    score:'—',  invitedAt:'May 4, 2026',  startedAt:'—',            answers:[] },
+  { id:4, name:'Nadia Selim',   email:'nadia.s@enozom.com',  position:'React Developer',  status:'Completed',  score:'72%',invitedAt:'Apr 28, 2026', startedAt:'Apr 30, 2026',
+    answers:[{q:"Virtual DOM?",a:"Lightweight copy of the real DOM"},{q:"useCallback?",a:"Returns a memoized function"}] },
+  { id:5, name:'Mostafa Ali',   email:'m.ali@gmail.com',     position:'QA Engineer',      status:'Expired',    score:'—',  invitedAt:'Apr 25, 2026', startedAt:'—',            answers:[] },
+];
+
+const BADGE = { 'Completed':'badge-green','In Progress':'badge-yellow','Invited':'badge-blue','Expired':'badge-red' };
+
+function renderCandidates(list) {
+  list = list || candidates;
+  document.getElementById('candidates-tbody').innerHTML = list.map(c => `
+    <tr>
+      <td><b>${c.name}</b></td>
+      <td>${c.email}</td>
+      <td>${c.position}</td>
+      <td><span class="badge ${BADGE[c.status]||'badge-gray'}">${c.status}</span></td>
+      <td>${c.score}</td>
+      <td>
+        <div class="flex gap-2">
+          <button class="btn btn-outline" style="padding:5px 10px;font-size:12px;gap:4px" onclick="viewCandidate(${c.id})">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            View Details
+          </button>
+          <button class="icon-btn" title="Delete" onclick="showToast('Candidate removed')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 13a2 2 0 0 1-2 1.867H7.867A2 2 0 0 1 5.867 19L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function filterCandidates(q) {
+  const lc = q.toLowerCase();
+  renderCandidates(candidates.filter(c => c.name.toLowerCase().includes(lc) || c.email.toLowerCase().includes(lc) || c.position.toLowerCase().includes(lc)));
+}
+function filterCandidatesByStatus(s) {
+  renderCandidates(s === 'All Status' ? candidates : candidates.filter(c => c.status === s));
+}
+
+let currentCandidate = null;
+function viewCandidate(id) {
+  const c = candidates.find(x => x.id === id);
+  currentCandidate = c;
+  document.getElementById('det-name').textContent = c.name;
+  document.getElementById('det-position').textContent = c.position;
+  document.getElementById('det-email').textContent = c.email;
+  document.getElementById('det-invited').textContent = c.invitedAt;
+  document.getElementById('det-started').textContent = c.startedAt;
+  document.getElementById('det-status').innerHTML = `<span class="badge ${BADGE[c.status]||'badge-gray'}">${c.status}</span>`;
+  document.getElementById('det-score').textContent = c.score;
+  document.getElementById('det-score-row').style.display = c.score !== '—' ? '' : 'none';
+  const aWrap = document.getElementById('det-answers-wrap');
+  const aList = document.getElementById('det-answers-list');
+  if (c.status === 'Completed' || c.answers.length > 0) {
+    aWrap.style.display = '';
+    aList.innerHTML = c.answers.length
+      ? c.answers.map((a,i) => `<div class="answer-card"><div class="q">Q${i+1}: ${a.q}</div><div class="a">→ ${a.a}</div></div>`).join('')
+      : '<div style="font-size:13px;color:var(--gray-400)">No answers recorded yet.</div>';
+  } else {
+    aWrap.style.display = 'none';
+  }
+  openModal('modal-candidate-detail');
+}
+
+// ─── EXAMS ────────────────────────────────────────
+const examsData = [
+  { title:'React Developer Assessment', desc:'Assesses React, hooks, state management.', status:'Active', duration:60, questions:25, assigned:12, completed:9 },
+  { title:'Backend Engineer – Node.js',  desc:'Node.js, REST APIs, databases, system design.', status:'Active', duration:90, questions:30, assigned:8, completed:4 },
+  { title:'QA Engineer – Testing',       desc:'Manual testing, automation basics, bug reporting.', status:'Draft', duration:45, questions:20, assigned:0, completed:0 },
+];
+
+function renderExams() {
+  document.getElementById('exams-grid').innerHTML = examsData.map((e,i) => `
+    <div class="card" style="padding:20px;display:flex;flex-direction:column">
+      <div class="flex items-center justify-between mb-4">
+        <span class="badge ${e.status==='Active'?'badge-green':'badge-gray'}">${e.status}</span>
+        <div class="flex gap-2">
+          <button class="icon-btn" onclick="openExamWizard()" title="Edit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="icon-btn" onclick="showToast('Exam deleted')" title="Delete"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 13a2 2 0 0 1-2 1.867H7.867A2 2 0 0 1 5.867 19L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/></svg></button>
+        </div>
+      </div>
+      <div style="font-size:15px;font-weight:600;color:var(--gray-900);margin-bottom:6px">${e.title}</div>
+      <div style="font-size:13px;color:var(--gray-500);margin-bottom:14px">${e.desc}</div>
+      <div class="flex gap-3" style="font-size:12px;color:var(--gray-500);margin-bottom:14px">
+        <span>⏱ ${e.duration} min</span><span>❓ ${e.questions} q's</span><span>👥 ${e.assigned} assigned</span>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${e.assigned?Math.round(e.completed/e.assigned*100):0}%"></div></div>
+      <div style="font-size:11px;color:var(--gray-400);margin-top:4px;margin-bottom:14px">${e.assigned ? e.completed+' of '+e.assigned+' completed' : 'Draft – not published'}</div>
+      <div style="margin-top:auto;padding-top:14px;border-top:1px solid var(--gray-100)">
+        <button class="btn btn-primary" style="width:100%;font-size:13px" onclick="openAssignFromExam(${i})">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          Assign to Candidate
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+// ─── ASSIGN FROM EXAM ─────────────────────────────
+let selectedAssignCandidates = [];
+
+function openAssignFromExam(examIndex) {
+  const exam = examsData[examIndex];
+  document.getElementById('afe-exam-name').textContent = exam.title;
+  document.getElementById('afe-exam-meta').textContent = '⏱ ' + exam.duration + ' min  •  ❓ ' + exam.questions + ' questions';
+  document.getElementById('afe-deadline').value = '';
+  selectedAssignCandidates = [];
+  renderAssignCandidateList('');
+  openModal('modal-assign-from-exam');
+}
+
+function renderAssignCandidateList(search) {
+  const lc = search.toLowerCase();
+  const filtered = candidates.filter(c =>
+    c.name.toLowerCase().includes(lc) || c.email.toLowerCase().includes(lc) || c.position.toLowerCase().includes(lc)
+  );
+  const BDGE = { 'Completed':'badge-green','In Progress':'badge-yellow','Invited':'badge-blue','Expired':'badge-red' };
+  const list = document.getElementById('afe-candidate-list');
+  if (!filtered.length) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray-400);font-size:13px">No candidates found</div>';
+    updateAssignCount(); return;
+  }
+  list.innerHTML = filtered.map(c => {
+    const checked = selectedAssignCandidates.includes(c.id);
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;cursor:pointer;border:1.5px solid ${checked?'var(--primary)':'var(--gray-200)'};background:${checked?'var(--primary-lt)':'#fff'};margin-bottom:8px;transition:all .15s;user-select:none" onclick="toggleAssignCandidate(${c.id})">
+      <div style="width:18px;height:18px;border-radius:4px;border:2px solid ${checked?'var(--primary)':'var(--gray-300)'};background:${checked?'var(--primary)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        ${checked?'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:13.5px;color:var(--gray-900)">${c.name}</div>
+        <div style="font-size:12px;color:var(--gray-500);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.email} · ${c.position}</div>
+      </div>
+      <span class="badge ${BDGE[c.status]||'badge-gray'}" style="flex-shrink:0">${c.status}</span>
+    </div>`;
+  }).join('');
+  updateAssignCount();
+}
+
+function toggleAssignCandidate(id) {
+  const idx = selectedAssignCandidates.indexOf(id);
+  if (idx === -1) selectedAssignCandidates.push(id);
+  else selectedAssignCandidates.splice(idx, 1);
+  renderAssignCandidateList(document.getElementById('afe-search').value);
+}
+
+function updateAssignCount() {
+  const n = selectedAssignCandidates.length;
+  const btn = document.getElementById('afe-send-btn');
+  if (n === 0) {
+    btn.innerHTML = 'Select at least one candidate';
+    btn.disabled = true; btn.style.opacity = '.45'; btn.style.cursor = 'not-allowed';
+  } else {
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13m11-11-7 22-4-9-9-4 22-7z"/></svg> Send Invitation' + (n > 1 ? 's' : '') + ' (' + n + ')';
+    btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+  }
+}
+
+function sendExamAssignments() {
+  if (!selectedAssignCandidates.length) return;
+  if (!document.getElementById('afe-deadline').value) { showToast('Please set a deadline first'); return; }
+  const names = selectedAssignCandidates.map(id => candidates.find(c => c.id === id)?.name).filter(Boolean);
+  closeModal('modal-assign-from-exam');
+  showToast('Invitation' + (names.length > 1 ? 's' : '') + ' sent to ' + names.join(', ') + ' ✓');
+}
+
+// ─── EXAM WIZARD ──────────────────────────────────
+let wizardQs = [];
+function openExamWizard() {
+  wizardQs = [];
+  selectedBankQIds = [];
+  document.getElementById('w-title').value = '';
+  document.getElementById('w-duration').value = '';
+  document.getElementById('wiz-s1').style.display = '';
+  document.getElementById('wiz-s2').style.display = 'none';
+  setWStep(1);
+  openModal('modal-exam-wizard');
+}
+function setWStep(n) {
+  const nums = [document.getElementById('ws1-num'), document.getElementById('ws2-num')];
+  const lbls = [document.getElementById('ws1-lbl'), document.getElementById('ws2-lbl')];
+  nums.forEach((el,i) => {
+    const step = i+1;
+    if (step < n)        { el.className='w-step-num done';    el.innerHTML='✓'; lbls[i].className='w-step-lbl done'; }
+    else if (step === n) { el.className='w-step-num active';  el.textContent=step; lbls[i].className='w-step-lbl active'; }
+    else                 { el.className='w-step-num pending'; el.textContent=step; lbls[i].className='w-step-lbl pending'; }
+  });
+  document.getElementById('w-div').className = n > 1 ? 'w-divider done' : 'w-divider';
+}
+function wizardNext() {
+  if (!document.getElementById('w-title').value.trim() || !document.getElementById('w-duration').value) {
+    showToast('Please fill in title and duration'); return;
+  }
+  document.getElementById('wiz-s1').style.display = 'none';
+  document.getElementById('wiz-s2').style.display = '';
+  setWStep(2);
+  // Populate topic filter in bank tab
+  const sel = document.getElementById('wiz-bank-topic');
+  sel.innerHTML = '<option value="">All Topics</option>' + qTopics.map(t => `<option>${t}</option>`).join('');
+  switchWizTab('bank');
+  renderWizBankList();
+  renderWizardQs();
+}
+function wizardBack() {
+  document.getElementById('wiz-s1').style.display = '';
+  document.getElementById('wiz-s2').style.display = 'none';
+  setWStep(1);
+}
+
+// ── Tab switching ──
+let wizActiveTab = 'bank';
+function switchWizTab(tab) {
+  wizActiveTab = tab;
+  const bankBtn = document.getElementById('wiz-tab-bank');
+  const newBtn  = document.getElementById('wiz-tab-new');
+  const bankPanel = document.getElementById('wiz-panel-bank');
+  const newPanel  = document.getElementById('wiz-panel-new');
+  if (tab === 'bank') {
+    bankBtn.style.background = '#fff'; bankBtn.style.color = 'var(--gray-900)'; bankBtn.style.boxShadow = 'var(--shadow)';
+    newBtn.style.background  = 'transparent'; newBtn.style.color = 'var(--gray-500)'; newBtn.style.boxShadow = 'none';
+    bankPanel.style.display = ''; newPanel.style.display = 'none';
+  } else {
+    newBtn.style.background  = '#fff'; newBtn.style.color = 'var(--gray-900)'; newBtn.style.boxShadow = 'var(--shadow)';
+    bankBtn.style.background = 'transparent'; bankBtn.style.color = 'var(--gray-500)'; bankBtn.style.boxShadow = 'none';
+    newPanel.style.display = ''; bankPanel.style.display = 'none';
+    renderWizardQs();
+  }
+}
+
+// ── From Bank tab ──
+let selectedBankQIds = [];
+function renderWizBankList() {
+  const search = (document.getElementById('wiz-bank-search').value || '').toLowerCase();
+  const topic  = document.getElementById('wiz-bank-topic').value;
+  const filtered = qbankData.filter(q =>
+    (!topic || q.topic === topic) &&
+    (!search || q.text.toLowerCase().includes(search) || q.topic.toLowerCase().includes(search))
+  );
+  const list = document.getElementById('wiz-bank-list');
+  if (!filtered.length) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray-400);font-size:13px">No questions match your search.</div>';
+    updateWizBankCount(); return;
+  }
+  list.innerHTML = filtered.map(q => {
+    const sel = selectedBankQIds.includes(q.id);
+    return `<div onclick="toggleBankQ(${q.id})" style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:8px;border:1.5px solid ${sel?'var(--primary)':'var(--gray-200)'};background:${sel?'var(--primary-lt)':'#fff'};cursor:pointer;transition:all .15s;user-select:none">
+      <div style="width:18px;height:18px;border-radius:4px;border:2px solid ${sel?'var(--primary)':'var(--gray-300)'};background:${sel?'var(--primary)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .15s">
+        ${sel?'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13.5px;font-weight:500;color:var(--gray-800);margin-bottom:4px;line-height:1.4">${q.text}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:999px;background:var(--primary-lt);color:var(--primary)">${q.topic}</span>
+          <span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:999px;background:var(--gray-100);color:var(--gray-600)">${q.type}</span>
+          <span style="font-size:11px;color:var(--gray-400)">${q.opts.length} options</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  updateWizBankCount();
+}
+function toggleBankQ(id) {
+  const idx = selectedBankQIds.indexOf(id);
+  if (idx === -1) selectedBankQIds.push(id);
+  else selectedBankQIds.splice(idx, 1);
+  renderWizBankList();
+}
+function updateWizBankCount() {
+  const n = selectedBankQIds.length;
+  document.getElementById('wiz-bank-count').textContent = n === 0
+    ? '0 questions selected from bank'
+    : n + ' question' + (n > 1 ? 's' : '') + ' selected from bank';
+  document.getElementById('wiz-bank-count').style.color = n > 0 ? 'var(--green)' : 'var(--gray-500)';
+  document.getElementById('wiz-bank-count').style.fontWeight = n > 0 ? '600' : '400';
+}
+
+// ── Create New tab ──
+function addWizardQ() {
+  wizardQs.push({ text:'', topic: qTopics[0]||'React', type:'Multiple Choice', correct:0 });
+  renderWizardQs();
+  setTimeout(() => { const l=document.getElementById('wq-list'); l.scrollTop=l.scrollHeight; }, 50);
+}
+function renderWizardQs() {
+  const list = document.getElementById('wq-list');
+  if (!wizardQs.length) {
+    list.innerHTML = '<div style="text-align:center;padding:28px 0;color:var(--gray-400);font-size:13px">No questions yet. Click "Add New Question" below.</div>';
+    return;
+  }
+  const topics = getTopics();
+  list.innerHTML = wizardQs.map((q,i) => `
+    <div class="wq-item">
+      <div class="wq-item-header">
+        <div class="wq-num">${i+1}</div>
+        <select class="form-select" style="flex:1;font-size:12.5px" onchange="wizardQs[${i}].topic=this.value">
+          ${topics.map(t=>`<option${t===q.topic?' selected':''}>${t}</option>`).join('')}
+        </select>
+        <select class="form-select" style="flex:1;font-size:12.5px" onchange="wizardQs[${i}].type=this.value;renderWizardQs()">
+          <option${q.type==='Multiple Choice'?' selected':''}>Multiple Choice</option>
+          <option${q.type==='True/False'?' selected':''}>True/False</option>
+        </select>
+        <label class="img-upload-btn" style="flex-shrink:0" title="Add question image">
+          <input type="file" accept="image/*" onchange="previewWQImg(this,${i})" />
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span id="wq-img-lbl-${i}">Img</span>
+        </label>
+        <button class="icon-btn" onclick="wizardQs.splice(${i},1);renderWizardQs()" style="color:var(--red)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <input class="form-input" style="margin-bottom:8px;font-size:13.5px" placeholder="Question text…" value="${q.text||''}" oninput="wizardQs[${i}].text=this.value" />
+      ${(q.type==='True/False'?['True','False']:['A','B','C','D']).map((opt,oi)=>`
+        <div class="wq-opt-row">
+          <input type="radio" name="wqc-${i}" ${oi===q.correct?'checked':''} onchange="wizardQs[${i}].correct=${oi}" style="flex-shrink:0" />
+          <input class="form-input" style="font-size:13px;padding:6px 10px" ${q.type==='True/False'?`value="${opt}" readonly`:`placeholder="Option ${opt}"`} />
+          <label class="img-upload-btn" style="padding:4px 8px;font-size:11px;flex-shrink:0" title="Add image to this option">
+            <input type="file" accept="image/*" onchange="previewOptImg(this,${i},${oi})" />
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span id="wq-opt-img-${i}-${oi}">img</span>
+          </label>
+        </div>`).join('')}
+    </div>`).join('');
+}
+function previewWQImg(input, qi) {
+  if (input.files[0]) { document.getElementById(`wq-img-lbl-${qi}`).textContent = '✓'; }
+}
+function previewOptImg(input, qi, oi) {
+  if (input.files[0]) { document.getElementById(`wq-opt-img-${qi}-${oi}`).textContent = '✓'; }
+}
+
+// ── Save exam ──
+function saveExamFromWizard() {
+  const fromBank = selectedBankQIds.length;
+  const newQs    = wizardQs.length;
+  const total    = fromBank + newQs;
+  if (total === 0) { showToast('Add at least one question before saving'); return; }
+  closeModal('modal-exam-wizard');
+  showToast('Exam created with ' + total + ' question' + (total > 1 ? 's' : '') + ' ✓');
+}
+
+// ─── QUESTION BANK ────────────────────────────────
+let qTopics = ['React','Node.js','Algorithms','QA'];
+let activeTopicFilter = 'All';
+
+function getTopics() { return qTopics; }
+
+const qbankData = [
+  { id:1, topic:'React',      type:'Multiple Choice', text:"What is the purpose of React's useEffect hook?",
+    opts:['To manage component state','To handle side effects in functional components','To create reusable components','To optimize rendering performance'], correct:1, img:null, optImgs:[null,null,null,null] },
+  { id:2, topic:'Algorithms', type:'Multiple Choice', text:"What is the time complexity of binary search?",
+    opts:['O(n)','O(log n)','O(n²)','O(1)'], correct:1,
+    img:'https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Binary_Search_Depiction.svg/320px-Binary_Search_Depiction.svg.png', optImgs:[null,null,null,null] },
+  { id:3, topic:'Node.js',    type:'True/False', text:"Node.js is single-threaded and uses an event loop for async operations.",
+    opts:['True','False'], correct:0, img:null, optImgs:[null,null] },
+  { id:4, topic:'QA',         type:'Multiple Choice', text:"Which testing type validates overall system behavior end-to-end?",
+    opts:['Unit Testing','Integration Testing','End-to-End Testing','Regression Testing'], correct:2, img:null, optImgs:[null,null,null,null] },
+];
+
+let editingQId = null;
+
+function renderQBank(filter) {
+  filter = filter || activeTopicFilter;
+  const list = document.getElementById('qbank-list');
+  const data = filter === 'All' ? qbankData : qbankData.filter(q => q.topic === filter);
+  if (!data.length) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray-400)">No questions found.</div>';
+    return;
+  }
+  list.innerHTML = data.map((q,i) => `
+    <div class="question-item">
+      <div class="question-item-header">
+        <div class="flex items-center gap-2" style="flex-wrap:wrap">
+          <span class="chip" style="background:var(--primary-lt);color:var(--primary)">${q.topic}</span>
+          <span class="chip">${q.type}</span>
+        </div>
+        <div class="flex gap-2">
+          <button class="icon-btn" onclick="openEditQ(${q.id})" title="Edit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="icon-btn" onclick="showToast('Question deleted')" title="Delete"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 13a2 2 0 0 1-2 1.867H7.867A2 2 0 0 1 5.867 19L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/></svg></button>
+        </div>
+      </div>
+      <div style="font-size:14px;font-weight:500;color:var(--gray-800);margin-bottom:${q.img?'10px':'10px'}">${q.text}</div>
+      ${q.img ? `<div style="margin-bottom:10px"><img src="${q.img}" alt="question img" style="max-height:90px;border-radius:6px;border:1.5px solid var(--gray-200)" onerror="this.style.display='none'" /></div>` : ''}
+      ${q.opts.map((opt,oi) => `
+        <div class="option-row">
+          <div class="option-dot ${oi===q.correct?'correct':''}"></div>
+          <span class="text-sm ${oi===q.correct?'':'text-muted'}" style="${oi===q.correct?'color:var(--green);font-weight:500':''}">
+            ${opt}${oi===q.correct?' ✓':''}
+          </span>
+          ${q.optImgs && q.optImgs[oi] ? `<img src="${q.optImgs[oi]}" style="height:28px;border-radius:4px;margin-left:6px;border:1px solid var(--gray-200)" />` : ''}
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+function filterQuestions(val) {
+  const lc = val.toLowerCase();
+  const data = (activeTopicFilter === 'All' ? qbankData : qbankData.filter(q => q.topic === activeTopicFilter))
+    .filter(q => q.text.toLowerCase().includes(lc) || q.topic.toLowerCase().includes(lc));
+  const list = document.getElementById('qbank-list');
+  list.innerHTML = data.map(q => `
+    <div class="question-item">
+      <div class="question-item-header">
+        <div class="flex items-center gap-2"><span class="chip" style="background:var(--primary-lt);color:var(--primary)">${q.topic}</span><span class="chip">${q.type}</span></div>
+        <div class="flex gap-2">
+          <button class="icon-btn" onclick="openEditQ(${q.id})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="icon-btn" onclick="showToast('Question deleted')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 13a2 2 0 0 1-2 1.867H7.867A2 2 0 0 1 5.867 19L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/></svg></button>
+        </div>
+      </div>
+      <div style="font-size:14px;font-weight:500;color:var(--gray-800);margin-bottom:10px">${q.text}</div>
+      ${q.opts.map((opt,oi) => `<div class="option-row"><div class="option-dot ${oi===q.correct?'correct':''}"></div><span class="text-sm ${oi===q.correct?'':'text-muted'}" style="${oi===q.correct?'color:var(--green);font-weight:500':''}">${opt}${oi===q.correct?' ✓':''}</span></div>`).join('')}
+    </div>`).join('');
+}
+
+function setTopicFilter(topic, el) {
+  activeTopicFilter = topic;
+  document.querySelectorAll('.topic-pill:not(.add-pill)').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderQBank(topic);
+}
+
+// Topic management
+function addTopic() {
+  const val = document.getElementById('new-topic-val').value.trim();
+  if (!val) { showToast('Enter a topic name'); return; }
+  if (qTopics.includes(val)) { showToast('Topic already exists'); return; }
+  qTopics.push(val);
+  // Add pill
+  const bar = document.getElementById('topic-filter-bar');
+  const addBtn = bar.querySelector('.add-pill');
+  const pill = document.createElement('span');
+  pill.className = 'topic-pill';
+  pill.textContent = val;
+  pill.onclick = function() { setTopicFilter(val, this); };
+  bar.insertBefore(pill, addBtn);
+  // Add to category selects
+  rebuildCatSelect();
+  closeModal('modal-add-topic');
+  document.getElementById('new-topic-val').value = '';
+  showToast(`Topic "${val}" added ✓`);
+}
+
+function rebuildCatSelect() {
+  const sel = document.getElementById('q-cat');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = qTopics.map(t => `<option${t===cur?' selected':''}>${t}</option>`).join('');
+}
+
+// Add / Edit Question modal
+function openAddQuestion() {
+  editingQId = null;
+  document.getElementById('q-modal-title').textContent = 'Add Question';
+  rebuildCatSelect();
+  document.getElementById('q-cat').disabled = false;
+  document.getElementById('q-text').value = '';
+  document.getElementById('q-img-preview').style.display = 'none';
+  buildQOptions();
+  openModal('modal-question');
+}
+
+function openEditQ(id) {
+  const q = qbankData.find(x => x.id === id);
+  if (!q) return;
+  editingQId = id;
+  document.getElementById('q-modal-title').textContent = 'Edit Question';
+  rebuildCatSelect();
+  document.getElementById('q-cat').value = q.topic;
+  document.getElementById('q-cat').disabled = true;
+  document.getElementById('q-text').value = q.text;
+  if (q.img) { const p=document.getElementById('q-img-preview'); p.src=q.img; p.style.display='inline-block'; }
+  else document.getElementById('q-img-preview').style.display='none';
+  buildQOptions(q);
+  openModal('modal-question');
+}
+
+function buildQOptions(qData) {
+  const opts   = ['A','B','C','D'];
+  const correct = qData ? qData.correct : 0;
+  const vals    = qData ? qData.opts : ['','','',''];
+  const optImgs = qData ? (qData.optImgs || []) : [];
+
+  document.getElementById('q-options-list').innerHTML = opts.map((ltr,i) => `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <input type="radio" name="qopt" value="${i}" ${i===correct?'checked':''} style="flex-shrink:0" />
+      <input class="form-input" style="flex:1;font-size:13.5px" placeholder="Option ${ltr}" value="${vals[i]||''}" />
+      <label class="img-upload-btn" style="flex-shrink:0;font-size:11.5px" title="Attach image to this option">
+        <input type="file" accept="image/*" id="qopt-img-${i}" onchange="previewOptBankImg(this,${i})" />
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span id="qopt-img-lbl-${i}">${optImgs[i]?'✓':'img'}</span>
+      </label>
+      ${optImgs[i] ? `<img src="${optImgs[i]}" style="height:30px;border-radius:4px;border:1px solid var(--gray-200)" />` : ''}
+    </div>`).join('');
+}
+
+function previewQImg(input) {
+  const p = document.getElementById('q-img-preview');
+  if (input.files[0]) { const r=new FileReader(); r.onload=e=>{p.src=e.target.result;p.style.display='inline-block';}; r.readAsDataURL(input.files[0]); }
+}
+function previewOptBankImg(input, i) {
+  if (input.files[0]) { document.getElementById(`qopt-img-lbl-${i}`).textContent='✓'; }
+}
+
+function saveQuestion() {
+  showToast(editingQId ? 'Question updated ✓' : 'Question added ✓');
+  closeModal('modal-question');
+  renderQBank();
+}
+
+// ─── EXAM QUESTIONS ───────────────────────────────
+const examQs = [
+  { text:"What is the purpose of React's useEffect hook?", opts:["Manage component state","Handle side effects","Create reusable components","Optimize rendering"], correct:1 },
+  { text:"Which hook accesses the previous value of state?", opts:["useState","useRef","useMemo","useCallback"], correct:1 },
+  { text:"What does the virtual DOM do?", opts:["Replaces the real DOM","Lightweight copy for optimised updates","Stores global state","Handles HTTP"], correct:1 },
+  { text:"How to prevent unnecessary re-renders?", opts:["React.memo","shouldComponentUpdate","Both A and B","useEffect"], correct:2 },
+  { text:"What is prop drilling?", opts:["A performance technique","Passing props through nested components","A debugging method","Mutating props"], correct:1 },
+  { text:"Correct way to update state:", opts:["this.state.count = 5","setState({ count: 5 })","state.count = 5","updateState(count, 5)"], correct:1 },
+  { text:"Context API purpose:", opts:["Fetch API data","Share state without prop drilling","Manage side effects","Form validation"], correct:1 },
+  { text:"What does useCallback return?", opts:["Memoized value","Memoized function","A ref","State updater"], correct:1 },
+  { text:"Keys in arrays give elements stable identity.", opts:["True","False"], correct:0 },
+  { text:"React Router <Link> uses an anchor tag.", opts:["True","False"], correct:0 },
+  ...Array.from({length:15},(_,i) => ({ text:`Question ${i+11}: Select the correct React statement.`, opts:["Option A","Option B","Option C","Option D"], correct:i%4 }))
+];
+let currentQ = 0;
+let examAnswers = new Array(examQs.length).fill(null);
+
+function renderQuestion() {
+  const q = examQs[currentQ];
+  document.getElementById('question-display').innerHTML = `
+    <div style="font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Question ${currentQ+1} of ${examQs.length}</div>
+    <div class="question-text">${q.text}</div>
+    ${q.opts.map((opt,i) => `
+      <div class="option-card ${examAnswers[currentQ]===i?'selected':''}" onclick="selectAnswer(${i})">
+        <div class="option-radio"></div>
+        <span style="font-size:14px">${opt}</span>
+      </div>`).join('')}`;
+  document.getElementById('q-current-num').textContent = currentQ+1;
+  const prev = document.getElementById('btn-prev');
+  prev.disabled = currentQ===0;
+  prev.style.opacity = currentQ===0 ? '.35' : '1';
+  prev.style.cursor  = currentQ===0 ? 'not-allowed' : 'pointer';
+  const next = document.getElementById('btn-next');
+  const isLast = currentQ===examQs.length-1;
+  next.innerHTML = isLast
+    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Finish'
+    : 'Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>';
+  updateGrid(); updateProgress();
+}
+function selectAnswer(i)  { examAnswers[currentQ]=i; renderQuestion(); }
+function nextQuestion()   { if(currentQ<examQs.length-1){currentQ++;renderQuestion();}else{confirmSubmit();} }
+function prevQuestion()   { if(currentQ>0){currentQ--;renderQuestion();} }
+function goToQ(i)         { currentQ=i; renderQuestion(); }
+function confirmSubmit()  {
+  document.getElementById('submit-answered').textContent = examAnswers.filter(a=>a!==null).length;
+  openModal('modal-submit-confirm');
+}
+function updateGrid() {
+  document.getElementById('q-grid').innerHTML = examQs.map((_,i) => `
+    <div class="q-dot ${i===currentQ?'current':examAnswers[i]!==null?'answered':''}" onclick="goToQ(${i})">${i+1}</div>`).join('');
+}
+function updateProgress() {
+  const n = examAnswers.filter(a=>a!==null).length;
+  document.getElementById('exam-progress').style.width = (n/examQs.length*100)+'%';
+  document.getElementById('answered-count').textContent = n;
+}
+
+// ─── TIMER ────────────────────────────────────────
+let timeLeft = 3600;
+function fmtTime(s) { return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+setInterval(() => {
+  if (timeLeft > 0) timeLeft--;
+  document.getElementById('timer-display').textContent = fmtTime(timeLeft);
+  const box = document.getElementById('timer-box');
+  if (timeLeft < 300) {
+    box.style.background='var(--red)'; box.style.color='#fff'; box.style.borderColor='rgba(255,255,255,.3)';
+  } else if (timeLeft < 600) {
+    box.style.background='var(--yellow-lt)'; box.style.color='#92400E'; box.style.borderColor='rgba(245,158,11,.3)';
+  }
+}, 1000);
+
+// ─── INIT ─────────────────────────────────────────
+renderCandidates();
+renderQuestion();
+updateGrid();
+// Rebuild cat select on page load
+document.addEventListener('DOMContentLoaded', () => { rebuildCatSelect(); });
+</script>
+</body>
+</html>

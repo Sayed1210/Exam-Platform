@@ -110,7 +110,7 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
 
         <div className="flex gap-4">
           <div className="flex-[2]">
-            <label className="block text-sm font-bold mb-2 text-slate-700">Expiry Date</label>
+            <label className="block text-sm font-bold mb-2 text-label">Expiry Date</label>
             <input 
               type="date" 
               min={new Date().toISOString().split("T")[0]}
@@ -120,7 +120,7 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
             />
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-bold mb-2 text-slate-700">Hour</label>
+            <label className="block text-sm font-bold mb-2 text-label">Hour</label>
             <select 
               value={selectedHour}
               onChange={(e) => setSelectedHour(e.target.value)}

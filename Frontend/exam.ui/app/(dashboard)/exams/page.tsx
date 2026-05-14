@@ -161,7 +161,7 @@ export default function ExamsPage() {
   };
 
   return (
-    <main className="p-8">
+    <main>
       {/* Header */}
       {/* <div className="flex items-center justify-between mb-8">
         <h2 className="text-heading text-2xl font-bold">Exams</h2>
@@ -174,7 +174,7 @@ export default function ExamsPage() {
       
 
       {/* Action Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 pb-8 border-b border-slate-50">
+      <div className="mb-4 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div className="relative flex-1 max-w-md">
           <SearchBar placeholder="Search exams..." value={searchQuery} onChange={setSearchQuery} />
         </div>
@@ -186,7 +186,7 @@ export default function ExamsPage() {
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredExams.map((exam) => (
           <ExamCard 
             key={exam.id} 

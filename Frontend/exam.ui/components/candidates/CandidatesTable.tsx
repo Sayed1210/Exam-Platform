@@ -1,7 +1,10 @@
 "use client";
 
 import { Candidate } from "@/types/candidate";
+import TrashIcon from "../TrashIcon";
 import { useState } from "react";
+import SearchIcon from "../SearchIcon";
+import ModalPortal from "@/components/ModalPortal";
 
 const STATUS_OPTIONS = ["All Status", "Pending", "Expired", "In Progress", "Done", "No Status"];
 const statusMap: Record<number, { label: string; bg: string; color: string }> = {
@@ -39,15 +42,11 @@ export default function CandidatesTable({
   const target = candidates?.find((c) => c.id === pendingDeleteId);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-
+    <div className="card overflow-hidden">
       {/* Toolbar */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
         <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 w-64">
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" />
-            <path d="M21 21l-4.35-4.35" />
-          </svg>
+          <SearchIcon/>
           <input
             type="text"
             placeholder="Search candidates..."
@@ -92,56 +91,55 @@ export default function CandidatesTable({
               </td>
             </tr>
           )}
-          {candidates?.map((c, i) => (
-            <tr key={c.id} className={`${i !== candidates.length - 1 ? "border-b border-gray-50" : ""}`}>
-              <td className="px-5 py-4 text-sm font-semibold text-gray-900">
-                {c.firstName} {c.lastName}
-              </td>
-              <td className="px-5 py-4 text-sm text-gray-700">{c.email}</td>
-              <td className="px-5 py-4">
-                {c.status !== null && c.status !== undefined ? (
-                  <span
-                    className="inline-block px-3 py-1 rounded-full text-[13px] font-medium"
-                    style={{
-                      background: statusMap[c.status]?.bg ?? "#f3f4f6",
-                      color: statusMap[c.status]?.color ?? "#6b7280",
-                    }}
-                  >
-                    {statusMap[c.status]?.label ?? "—"}
-                  </span>
-                ) : (
-                  <span className="text-gray-400">—</span>
-                )}
-              </td>
-              <td className="px-5 py-4 text-sm text-gray-700">
-                {c.score !== null ? `${c.score}%` : "—"}
-              </td>
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <button
-                    className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-3.5 py-1.5 text-[13px] font-medium text-gray-700 cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition"
-                    onClick={() => onViewCandidate(c)}
-                  >
-                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                    View Details
-                  </button>
-                  <button
-                    title="Delete"
-                    className="p-1.5 rounded-md cursor-pointer hover:bg-gray-100 transition group"
-                    onClick={() => setPendingDeleteId(c.id)}
-                  >
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth="1.8"
-                      className="stroke-gray-400 group-hover:stroke-red-500 transition">
-                      <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
+          {candidates.map((c, i) => {
+            return (
+              <tr key={c.id} className={`${i !== candidates.length - 1 ? "border-b border-gray-50" : ""}`}>
+                <td className="px-5 py-4 text-sm font-semibold text-gray-900">
+                  {c.firstName} {c.lastName}
+                </td>
+                <td className="px-5 py-4 text-sm text-gray-700">{c.email}</td>
+         <td className="px-5 py-4">
+  {c.status !== null && c.status !== undefined ? (
+    <span
+      className="inline-block px-3 py-1 rounded-full text-[13px] font-medium"
+      style={{
+        background: statusMap[c.status as unknown as number]?.bg ?? "#f3f4f6",
+        color: statusMap[c.status as unknown as number]?.color ?? "#6b7280",
+      }}
+    >
+      {statusMap[c.status as unknown as number]?.label ?? c.status}
+    </span>
+  ) : (
+    <span className="text-gray-400">—</span>
+  )}
+</td>
+                <td className="px-5 py-4 text-sm text-gray-700">
+                  {c.score !== null ? `${c.score}%` : "—"}
+                </td>
+                <td className="px-5 py-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-3.5 py-1.5 text-[13px] font-medium text-gray-700 cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition"
+                      onClick={() => onViewCandidate(c)}
+                    >
+                      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                      View Details
+                    </button>
+                    <button
+                      title="Delete"
+                      className="btn-icon-secondary"
+                      onClick={() => setPendingDeleteId(c.id)}
+                    >
+                      <TrashIcon className="text-gray-400 transition group-hover:text-red-500"/>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
@@ -178,33 +176,37 @@ export default function CandidatesTable({
 
       {/* Delete Confirmation Modal */}
       {pendingDeleteId && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-7 w-[380px] shadow-2xl">
-            <h3 className="text-[17px] font-bold text-gray-900 mb-2">Delete Candidate</h3>
-            <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-              Are you sure you want to delete{" "}
-              <strong className="text-gray-700">{target?.firstName} {target?.lastName}</strong>?
-              {" "}This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-2.5">
-              <button
-                className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-50 transition"
-                onClick={() => setPendingDeleteId(null)}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium cursor-pointer hover:brightness-90 transition"
-                onClick={() => {
-                  onDeleteCandidate(pendingDeleteId);
-                  setPendingDeleteId(null);
-                }}
-              >
-                Delete
-              </button>
+        <ModalPortal>
+          <div className="modal-overlay">
+            <div className="modal-panel max-w-[380px]">
+              <div className="modal-body p-7">
+                <h3 className="text-[17px] font-bold text-gray-900 mb-2">Delete Candidate</h3>
+                <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+                  Are you sure you want to delete{" "}
+                  <strong className="text-gray-700">{target?.firstName} {target?.lastName}</strong>?
+                  {" "}This action cannot be undone.
+                </p>
+                <div className="flex justify-end gap-2.5">
+                  <button
+                    className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-50 transition"
+                    onClick={() => setPendingDeleteId(null)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium cursor-pointer hover:brightness-90 transition"
+                    onClick={() => {
+                      onDeleteCandidate(pendingDeleteId);
+                      setPendingDeleteId(null);
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
 
     </div>

@@ -1,7 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
 
-import AddQuestionButton from "./AddQuestionButton";
 import ClearFiltersButton from "@/components/ClearFiltersButton";
 import QuestionCard from "./QuestionCard";
 import SearchBar from "./SearchBar";
@@ -13,29 +12,12 @@ import type { Question } from "@/types/question";
 import DashboardPageHeader from "../DashboardHeader";
 
 
-// const initialTopics = ["React", "Node.js", "Algorithms", "QA"];
 const initialTopics = [
   "React",
   "Node.js",
   "Algorithms",
   "QA",
-  "Databases",
-  "Cybersecurity",
-  "Artificial Intelligence",
-  "Machine Learning",
-  "Cloud Computing",
-  "DevOps",
-  "Docker",
-  "Kubernetes",
-  "Linux",
-  "Networking",
-  "System Design",
-  "Data Structures",
-  "Operating Systems",
-  "Computer Vision",
-  "Blockchain",
-  "Mobile Development",
-  "Game Development",
+  "Databases"
 ];
 
 const initialQuestions: Question[] = [
@@ -43,7 +25,6 @@ const initialQuestions: Question[] = [
     id: "question-1",
     topic: "React",
     statement: "What is the purpose of React's useEffect hook?",
-    imageUrl: "https://illustoon.com/photo/dl/7416.png",
     choices: [
       { id: "q1-a", text: "To manage component state", isCorrect: false },
       { id: "q1-b", text: "To handle side effects in functional components", isCorrect: true },
@@ -184,33 +165,29 @@ const saveQuestion = (question: Question) => {
 };
 
   return (
-    <div className="p-8">
-      {/* <div className="flex w-full items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Question Bank</h1>
-        
-        <AddQuestionButton onClick={() => {openAddQuestionModal()}} />
-      </div> */}
+    <div>
+      
       <DashboardPageHeader
         title="Question Bank"
         buttonText="+ Add Question"
         onButtonClick={() => openAddQuestionModal()}
       />
 
-      <div className="rounded-md border border-gray-200 bg-white p-4 space-y-4">
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder="Search questions by text or topic..."
-        />
-
-        <div className="border-t border-gray-200 pt-4">
-          <TopicFilters
-            topics={topics}
-            selectedTags={selectedTags}
-            onToggleTag={toggleTag}
-            onAddTopic={() => {openTopicModal()}}
+      <div className="card mb-4 overflow-visible">
+        <div className="px-5 py-3.5">
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search questions by text or topic..."
           />
         </div>
+
+        <TopicFilters
+          topics={topics}
+          selectedTags={selectedTags}
+          onToggleTag={toggleTag}
+          onAddTopic={() => {openTopicModal()}}
+        />
       </div>
 
       <div className="space-y-4">
@@ -224,7 +201,7 @@ const saveQuestion = (question: Question) => {
       />
     ))
   ) : (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center">
+    <div className="card flex flex-col items-center justify-center border-dashed border-gray-300 py-16 text-center">
       <p className="text-lg font-medium text-gray-700">
         No questions found
       </p>
@@ -241,6 +218,8 @@ const saveQuestion = (question: Question) => {
 
   {questionToDelete && (
   <ConfirmDeleteModal
+  title="Delete Question"
+  text="Are you sure you want to delete this question?"
     onConfirm={confirmDelete}
     onCancel={cancelDelete}
   />

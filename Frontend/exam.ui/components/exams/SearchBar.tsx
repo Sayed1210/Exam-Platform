@@ -1,4 +1,3 @@
-// components/exams/SearchBar.tsx
 import React from 'react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
