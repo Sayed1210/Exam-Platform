@@ -1,8 +1,7 @@
-import QuestionForm from "./forms/QuestionForm";
-import type { APIQuestion, APITopic } from "@/types/question";
 "use client";
-
+import type { APIQuestion, APITopic } from "@/types/question";
 import type { Question } from "@/types/question";
+import QuestionForm from "./forms/QuestionForm";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import ModalPortal from "@/components/ModalPortal";
 

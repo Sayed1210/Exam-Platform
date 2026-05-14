@@ -4,14 +4,12 @@ import { useMemo, useState } from "react";
 import { FormValidation } from "@/schemas/form-validation";
 import { createQuestionRequestSchema } from "@/schemas/requests/create-question-request";
 import { updateQuestionRequestSchema } from "@/schemas/requests/update-question-request";
-import { createQuestionResponseSchema } from "@/schemas/responses/create-question-response";
-import { updateQuestionResponseSchema } from "@/schemas/responses/update-question-response";
-import type { QuestionChoice, Question } from "@/types/question";
+import type { QuestionChoice, Question, APIQuestion } from "@/types/question";
 import type { APITopic } from "@/types/question";
 
 type QuestionFormProps = {
   topics: APITopic[];  
-  question?: Question | null;
+  question?: APIQuestion | null;
   onCancel: () => void;
  onSubmit: (data: any) => void; 
 };
@@ -53,11 +51,11 @@ export default function QuestionForm({
   }, [question]);
 
 const [topicId, setTopicId] = useState<number>(
-  question ? Number(question.topic) : topics[0]?.id ?? 0
+  question ? Number(question.topicId) : topics[0]?.id ?? 0
 );
 
   const [text, setText] = useState(
-    question?.statement ?? ""
+    question?.text ?? ""
   );
 
   const [imageUrl, setImageUrl] = useState(

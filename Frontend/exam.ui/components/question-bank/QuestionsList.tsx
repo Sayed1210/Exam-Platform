@@ -15,50 +15,6 @@ import DashboardPageHeader from "../DashboardHeader";
 
 const PAGE_SIZE = 10;
 
-const initialTopics = [
-  "React",
-  "Node.js",
-  "Algorithms",
-  "QA",
-  "Databases"
-];
-
-const initialQuestions: Question[] = [
-  {
-    id: "question-1",
-    topic: "React",
-    statement: "What is the purpose of React's useEffect hook?",
-    choices: [
-      { id: "q1-a", text: "To manage component state", isCorrect: false },
-      { id: "q1-b", text: "To handle side effects in functional components", isCorrect: true },
-      { id: "q1-c", text: "To create reusable components", isCorrect: false },
-      { id: "q1-d", text: "To optimize rendering performance", isCorrect: false },
-    ],
-  },
-  {
-    id: "question-2",
-    topic: "Algorithms",
-    statement: "What is the time complexity of binary search?",
-    choices: [
-      { id: "q2-a", text: "O(n)", isCorrect: false },
-      { id: "q2-b", text: "O(log n)", isCorrect: true },
-      { id: "q2-c", text: "O(n²)", isCorrect: false },
-      { id: "q2-d", text: "O(1)", isCorrect: false },
-    ],
-  },
-  {
-    id: "question-3",
-    topic: "Node.js",
-    statement: "Which runtime feature allows Node.js to handle many I/O operations efficiently?",
-    choices: [
-      { id: "q3-a", text: "The event loop", isCorrect: true },
-      { id: "q3-b", text: "Browser rendering", isCorrect: false },
-      { id: "q3-c", text: "CSS cascade layers", isCorrect: false },
-      { id: "q3-d", text: "Static site maps", isCorrect: false },
-    ],
-  },
-];
-
 export default function QuestionsList() {
   const [questions, setQuestions] = useState<APIQuestion[]>([]);
   const [topics, setTopics] = useState<APITopic[]>([]);
@@ -66,7 +22,7 @@ export default function QuestionsList() {
   const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [questionToDelete, setQuestionToDelete] = useState<number | null>(null);
   const [isTopicModalOpen, setIsTopicModalOpen] = useState(false);
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
@@ -106,11 +62,19 @@ export default function QuestionsList() {
 
   const toggleTag = (topicId: number) => {
     setSelectedTopicId((prev) => (prev === topicId ? null : topicId));
+  const topic = topics.find((t) => t.id === topicId);
+  if (!topic) return;
+  setSelectedTags((prev) =>
+    prev.includes(topic.title)
+      ? prev.filter((t) => t !== topic.title)
+      : [...prev, topic.title]
+  );
   };
 
   const clearFilters = () => {
     setSearch("");
     setSelectedTopicId(null);
+    setSelectedTags([]);
   };
 
   // ── Question handlers ──────────────────────────────────────────
@@ -183,9 +147,12 @@ const handleSaveQuestion = async (data: any) => {
         </div>
 
         <TopicFilters
-          topics={topics}
+          topics={topics.map((t) => t.title)}
           selectedTags={selectedTags}
-          onToggleTag={toggleTag}
+          onToggleTag={(title) => {
+            const topic = topics.find((t) => t.title === title);
+            if (topic) toggleTag(topic.id);
+  }}
           onAddTopic={() => {openTopicModal()}}
         />
       </div>
@@ -250,25 +217,20 @@ const handleSaveQuestion = async (data: any) => {
         />
       )}
 
-      <TopicModal
-        isOpen={isTopicModalOpen}
-        onClose={closeTopicModal}
-        onSave={handleAddTopic}
-      />
+  <TopicModal
+  isOpen={isTopicModalOpen}
+  onClose={closeTopicModal}
+  onSave={handleAddTopic}
+/>
 
-      <QuestionModal
+<QuestionModal
   isOpen={isQuestionModalOpen}
   topics={topics}
   question={editingQuestion}
   onClose={closeQuestionModal}
   onSave={handleSaveQuestion}
 />
-    
 </div>
-
-
-
-
 
   );
 }
