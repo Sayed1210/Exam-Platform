@@ -41,6 +41,7 @@ builder.Services.AddServiceLayer(); //Dependency injection for service layer, ex
 builder.Services.AddScoped<IInvitationService, InvitationService>();
 builder.Services.AddScoped<ICandidateExamRepository, CandidateExamRepository>();
 builder.Services.AddScoped<IStartExamService, StartExamService>();
+builder.Services.AddScoped<IBeforeStartExamService, BeforeStartExamService>();
 
 
 // allow frontend to access api
@@ -96,6 +97,8 @@ app.MapCandidateEndpoints();
 app.MapSubmitExamEndpoints();
 // Start Exam
 app.MapStartExamEndpoints();
+// Before Start Exam
+app.MapBeforeStartExamEndpoints();
 // Link Verification
 app.MapVerifyLinkEndpoints();
 

@@ -40,7 +40,7 @@ public class InvitationService(ICandidateExamRepository repository, IEmailServic
             await repository.AddInvitationAsync(invitation);
             await repository.SaveChangesAsync();
             try{
-            var invitationLink=$"http://localhost:5173/join-exam?token={invitationToken}";
+            var invitationLink=$"http://localhost:3000/start-exam?token={invitationToken}";
             string subject="Invitation to Enozom Examination";
             string body = $@"
                 <div style='font-family: sans-serif; line-height: 1.6;'>
