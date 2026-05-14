@@ -1,12 +1,12 @@
 'use client';
 import Button from '../Button';
+import TrashIcon from "../TrashIcon";
+import EditIcon from "../EditIcon";
 import { 
   ClockIcon, 
   ClipboardDocumentListIcon, 
   PaperAirplaneIcon, 
-  EyeIcon, 
-  PencilSquareIcon, 
-  TrashIcon 
+  EyeIcon,  
 } from '@heroicons/react/24/outline'; 
 // Define interface to sync with AssignModal and your .NET backend
 interface Exam {
@@ -26,7 +26,7 @@ interface ExamCardProps {
 
 export default function ExamCard({ exam,onAssign,onView,onEdit,onDelete}: ExamCardProps) {
   return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+    <div className="card p-6">
       
       {/* Name & Topics - Using your custom text classes */}
       <div className="mb-4">
@@ -67,12 +67,12 @@ export default function ExamCard({ exam,onAssign,onView,onEdit,onDelete}: ExamCa
           onClick={() => onView(exam)}
         />
         <Button 
-          text={<PencilSquareIcon className="w-5 h-5" />} 
+          text={<EditIcon className="text-gray-400 transition group-hover:text-blue-500" />} 
           className="btn-icon-secondary" 
           onClick={() => onEdit(exam)}
         />
         <Button 
-          text={<TrashIcon className="w-5 h-5" />} 
+          text={<TrashIcon className="text-gray-400 transition group-hover:text-red-500" />} 
           className="btn-icon-danger" 
           onClick={() => onDelete(exam)}
         />

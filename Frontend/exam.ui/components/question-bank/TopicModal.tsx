@@ -1,4 +1,8 @@
+"use client";
+
 import TopicForm from "./forms/TopicForm";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import ModalPortal from "@/components/ModalPortal";
 
 export type TopicModalProps = {
   isOpen: boolean;
@@ -12,21 +16,25 @@ export default function TopicModal({ isOpen, onClose, onSave }: TopicModalProps)
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4">
-      <section className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <h2 className="text-xl font-bold text-slate-950">Add Topic</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close add topic modal"
-            className="rounded-md p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-          >
-            ×
-          </button>
-        </div>
-        <TopicForm onSubmit={onSave} onCancel={onClose} />
-      </section>
-    </div>
+    <ModalPortal>
+      <div className="modal-overlay">
+        <section className="modal-panel max-w-md">
+          <div className="modal-header">
+            <h2 className="modal-title">Add Topic</h2>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close add topic modal"
+              className="modal-close-button"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="modal-body p-6">
+            <TopicForm onSubmit={onSave} onCancel={onClose} />
+          </div>
+        </section>
+      </div>
+    </ModalPortal>
   );
 }

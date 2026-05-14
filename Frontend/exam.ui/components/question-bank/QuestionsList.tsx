@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { getQuestions, getTopics, deleteQuestion, createQuestion, updateQuestion, createTopic } from "@/services/questionService";
 import type { APIQuestion, APITopic } from "@/types/question";
 
-import AddQuestionButton from "./AddQuestionButton";
 import ClearFiltersButton from "@/components/ClearFiltersButton";
 import QuestionCard from "./QuestionCard";
 import SearchBar from "./SearchBar";
@@ -15,6 +14,50 @@ import ConfirmDeleteModal from "@/components/ConfirmDeleteModal";
 import DashboardPageHeader from "../DashboardHeader";
 
 const PAGE_SIZE = 10;
+
+const initialTopics = [
+  "React",
+  "Node.js",
+  "Algorithms",
+  "QA",
+  "Databases"
+];
+
+const initialQuestions: Question[] = [
+  {
+    id: "question-1",
+    topic: "React",
+    statement: "What is the purpose of React's useEffect hook?",
+    choices: [
+      { id: "q1-a", text: "To manage component state", isCorrect: false },
+      { id: "q1-b", text: "To handle side effects in functional components", isCorrect: true },
+      { id: "q1-c", text: "To create reusable components", isCorrect: false },
+      { id: "q1-d", text: "To optimize rendering performance", isCorrect: false },
+    ],
+  },
+  {
+    id: "question-2",
+    topic: "Algorithms",
+    statement: "What is the time complexity of binary search?",
+    choices: [
+      { id: "q2-a", text: "O(n)", isCorrect: false },
+      { id: "q2-b", text: "O(log n)", isCorrect: true },
+      { id: "q2-c", text: "O(n²)", isCorrect: false },
+      { id: "q2-d", text: "O(1)", isCorrect: false },
+    ],
+  },
+  {
+    id: "question-3",
+    topic: "Node.js",
+    statement: "Which runtime feature allows Node.js to handle many I/O operations efficiently?",
+    choices: [
+      { id: "q3-a", text: "The event loop", isCorrect: true },
+      { id: "q3-b", text: "Browser rendering", isCorrect: false },
+      { id: "q3-c", text: "CSS cascade layers", isCorrect: false },
+      { id: "q3-d", text: "Static site maps", isCorrect: false },
+    ],
+  },
+];
 
 export default function QuestionsList() {
   const [questions, setQuestions] = useState<APIQuestion[]>([]);
@@ -122,33 +165,29 @@ const handleSaveQuestion = async (data: any) => {
 
   // ── Render ─────────────────────────────────────────────────────
   return (
-    <div className="p-8">
+    <div>
+      
       <DashboardPageHeader
         title="Question Bank"
         buttonText="+ Add Question"
         onButtonClick={openAddQuestionModal}
       />
 
-      <div className="rounded-md border border-gray-200 bg-white p-4 space-y-4 mb-6">
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder="Search questions by text or topic..."
-        />
-
-        <div className="border-t border-gray-200 pt-4">
-          <TopicFilters
-            topics={topics.map((t) => t.title)}
-            selectedTags={topics
-              .filter((t) => t.id === selectedTopicId)
-              .map((t) => t.title)}
-            onToggleTag={(title) => {
-              const topic = topics.find((t) => t.title === title);
-              if (topic) toggleTag(topic.id);
-            }}
-            onAddTopic={openTopicModal}
+      <div className="card mb-4 overflow-visible">
+        <div className="px-5 py-3.5">
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search questions by text or topic..."
           />
         </div>
+
+        <TopicFilters
+          topics={topics}
+          selectedTags={selectedTags}
+          onToggleTag={toggleTag}
+          onAddTopic={() => {openTopicModal()}}
+        />
       </div>
 
       <div className="space-y-4">
@@ -217,13 +256,19 @@ const handleSaveQuestion = async (data: any) => {
         onSave={handleAddTopic}
       />
 
-    <QuestionModal
+      <QuestionModal
   isOpen={isQuestionModalOpen}
   topics={topics}
   question={editingQuestion}
   onClose={closeQuestionModal}
   onSave={handleSaveQuestion}
 />
-    </div>
+    
+</div>
+
+
+
+
+
   );
 }

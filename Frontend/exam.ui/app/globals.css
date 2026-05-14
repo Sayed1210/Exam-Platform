@@ -59,27 +59,44 @@ body {
   }
 }
 
+/* Layout Styles */
+@layer components {
+  .card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
+    overflow: hidden;
+  }
+
+  .modal-overlay {
+    @apply fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-black/50 px-4 py-6 sm:p-6;
+  }
+
+  .modal-panel {
+    @apply flex max-h-[calc(100vh-3rem)] w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl;
+  }
+
+  .modal-header {
+    @apply flex items-center justify-between gap-4 border-b border-slate-100 px-6 py-5;
+  }
+
+  .modal-title {
+    @apply text-lg font-bold text-slate-950;
+  }
+
+  .modal-close-button {
+    @apply rounded-md p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900;
+  }
+
+  .modal-body {
+    @apply min-h-0 flex-1 overflow-y-auto;
+  }
+}
+
 /* Button Styles */
 @layer components {
   .btn-primary {
-  @apply w-full mt-2 min-w-32 py-3 rounded-4xl shadow-md font-semibold text-white bg-primary transition hover:brightness-90;
-  }
-
-  .btn-secondary {
-  @apply mt-2 min-w-32 py-3 rounded-4xl shadow-sm font-semibold text-black bg-gray-200 transition hover:brightness-95;
-  }
-
-  .btn-icon-danger {
-    @apply p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors duration-200;
-  }
-
-  .btn-icon-secondary {
-    @apply p-2 bg-slate-50 text-foreground rounded-lg hover:bg-slate-100 transition-colors duration-200;
-  }
-}
-@layer components {
-  .btn-primary {
-  @apply w-full mt-2 min-w-32 py-3 rounded-4xl shadow-md font-semibold text-white bg-primary transition hover:brightness-90;
+  @apply  mt-2 min-w-32 py-2.5 rounded-4xl shadow-md font-semibold text-white bg-primary transition hover:brightness-90;
   }
 
   .btn-secondary {

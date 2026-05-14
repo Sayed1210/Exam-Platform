@@ -3,20 +3,17 @@
 import { useState } from "react";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
-import Modal from "@/components/Modal";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { loginSchema } from "@/schemas/requests/login-request";
 import { FormValidation } from "@/schemas/form-validation";
-import { forgetPassword, login } from "@/services/auth-service";
+import { login } from "@/services/auth-service";
 
 export default function LoginPage() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [open, setOpen] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   const validate = () => {
@@ -44,21 +41,6 @@ export default function LoginPage() {
     router.push("/candidates");
   };
 
-  const handleForgetPassword = async () => {
-    if (!email) {
-      alert("Please enter your email");
-      return;
-    }
-
-    const result = await forgetPassword({ email });
-
-    alert(result.message);
-
-    if (result.success) {
-      setOpen(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-fit max-w-md bg-white rounded-2xl shadow-xl p-8 text-center flex flex-col items-center">
@@ -78,31 +60,13 @@ export default function LoginPage() {
           <p className="text-error mt-1">{errors.password}</p>
         </div>
 
-        <p className="text-muted cursor-pointer hover:underline text-left" onClick={() => setOpen(true)}>
+        <p className="text-muted cursor-pointer hover:underline mt-2" onClick={() => router.push("/forget-password")}>
           Forgot password?
         </p>
-        <div style={{ height: '10px' }} />
         <Button text="Sign In" onClick={handleLogin} className="btn-primary" />
       </div>
-      
-      {/* Popup Window */}
-      <Modal open={open} onClose={() => setOpen(false)}>
-        <div className="flex flex-col gap-2 text-center">
-            <h3 className="text-title mb-3">Reset Password</h3>
-            <p className="text-muted">Enter your email and we'll send a reset link</p>
-        </div>
-        
-        <div>   
-            <Input placeholder="Enter your email" value={resetEmail} onChange={setResetEmail}/>
-            <div className="mt-3">  
-              <Button text="Send Reset Link" onClick={() => setOpen(false)} className="btn-primary" />
-              <Button text="Cancel" onClick={() => setOpen(false)} className="btn-secondary w-full" />
-
-            </div>
-        </div>
-      </Modal>
     </div>
   );
 }
 
-// admin password: test1234
+// admin password: admin123

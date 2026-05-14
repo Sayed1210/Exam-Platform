@@ -1,5 +1,10 @@
 import QuestionForm from "./forms/QuestionForm";
 import type { APIQuestion, APITopic } from "@/types/question";
+"use client";
+
+import type { Question } from "@/types/question";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import ModalPortal from "@/components/ModalPortal";
 
 export type QuestionModalProps = {
   isOpen: boolean;
@@ -43,28 +48,27 @@ export default function QuestionModal({
     : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/45 p-4">
-      <section className="my-8 w-full max-w-3xl rounded-lg bg-white p-6 shadow-xl">
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <h2 className="text-xl font-bold text-slate-950">
-            {question ? "Edit Question" : "Add Question"}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close question modal"
-            className="rounded-md p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-          >
-            ×
-          </button>
-        </div>
-        <QuestionForm
-          topics={topics}
-          question={formQuestion}
-          onCancel={onClose}
-          onSubmit={onSave}
-        />
-      </section>
-    </div>
+    <ModalPortal>
+      <div className="modal-overlay">
+        <section className="modal-panel max-w-3xl">
+          <div className="modal-header">
+            <h2 className="modal-title">
+              {question ? "Edit Question" : "Add Question"}
+            </h2>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close question modal"
+              className="modal-close-button"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="modal-body p-6">
+            <QuestionForm topics={topics} question={question} onCancel={onClose} onSubmit={onSave} />
+          </div>
+        </section>
+      </div>
+    </ModalPortal>
   );
 }

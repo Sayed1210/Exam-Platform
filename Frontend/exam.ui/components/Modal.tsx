@@ -1,24 +1,27 @@
-export default function Modal({ open, onClose, children }: any) {
+"use client";
+
+import type { ReactNode } from "react";
+import ModalPortal from "./ModalPortal";
+
+type ModalProps = {
+  open: boolean;
+  onClose: () => void;
+  children: ReactNode;
+};
+
+export default function Modal({ open, onClose, children }: ModalProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center text-center z-50 p-4">
-      
-      {/* Modal Card */}
-      <div className="bg-white rounded-3xl max-w-lg p-8 relative flex flex-col gap-3 
-      min-w-70 shadow-2xl animate-in fade-in zoom-in duration-200">
-        
-        {/* Close button (top right) */}
-        {/* <button
-          onClick={onClose}
-          className="absolute top-3 right-4 font-bold text-gray-400 hover:text-black"
+    <ModalPortal>
+      <div className="modal-overlay text-center" onClick={onClose}>
+        <div
+          className="modal-panel max-w-lg p-8"
+          onClick={(event) => event.stopPropagation()}
         >
-          ✕
-        </button> */}
-
-        {/* Content */}
-        {children}
+          {children}
+        </div>
       </div>
-    </div>
+    </ModalPortal>
   );
 }
