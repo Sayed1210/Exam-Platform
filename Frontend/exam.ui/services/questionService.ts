@@ -4,13 +4,15 @@ export const getQuestions = (
   page: number = 1,
   pageSize: number = 10,
   search?: string,
-  topicId?: number
+  topicIds?: number[]
 ) => {
   const params = new URLSearchParams();
   params.append("page", String(page));
   params.append("pageSize", String(pageSize));
   if (search) params.append("search", search);
-  if (topicId !== undefined) params.append("topicId", String(topicId));
+  if (topicIds && topicIds.length > 0) {
+    topicIds.forEach((id) => params.append("topicId", String(id)));
+  }
   return apiFetch(`/api/questions?${params.toString()}`);
 };
 
@@ -20,7 +22,7 @@ export const createQuestion = (data: any) =>
   apiFetch("/api/questions", { method: "POST", body: JSON.stringify(data) });
 
 export const updateQuestion = (id: number, data: any) =>
-  apiFetch(`/api/questions/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  apiFetch(`/api/questions/${id}`, { method: "PATCH", body: JSON.stringify(data) });
 
 export const deleteQuestion = (id: number) =>
   apiFetch(`/api/questions/${id}`, { method: "DELETE" });

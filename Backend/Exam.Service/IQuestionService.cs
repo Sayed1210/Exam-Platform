@@ -5,7 +5,7 @@ namespace Exam.Service
     public interface IQuestionService
     {
     Task<PagedResponse<QuestionResponse>> GetAllAsync(
-    int page, int pageSize, string? search = null, int? topicId = null);
+    int page, int pageSize, string? search = null, int[]? topicIds = null);
         Task<IEnumerable<QuestionResponse>> GetByTopicIdAsync(int topicId);
         Task<QuestionResponse?> GetByIdAsync(int id);
         Task<QuestionResponse> CreateAsync(QuestionRequest request);

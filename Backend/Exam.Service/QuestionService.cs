@@ -10,9 +10,9 @@ namespace Exam.Service
         public QuestionService(IQuestionRepository repo) => _repo = repo;
 
 public async Task<PagedResponse<QuestionResponse>> GetAllAsync(
-    int page, int pageSize, string? search = null, int? topicId = null)
+    int page, int pageSize, string? search = null,int[]? topicIds = null)
 {
-    var (items, totalCount) = await _repo.GetPagedAsync(page, pageSize, search, topicId);
+    var (items, totalCount) = await _repo.GetPagedAsync(page, pageSize, search, topicIds);
 
     return new PagedResponse<QuestionResponse>
     {
@@ -62,6 +62,9 @@ public async Task<PagedResponse<QuestionResponse>> GetAllAsync(
 
             if (request.Text is not null)
                 question.Text = request.Text.Trim();
+
+             if (request.TopicId > 0)
+                 question.TopicId = request.TopicId;
 
             if (request.ImageUrl is not null)
                 question.ImageUrl = request.ImageUrl;

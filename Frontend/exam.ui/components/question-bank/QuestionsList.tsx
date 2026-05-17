@@ -19,7 +19,7 @@ export default function QuestionsList() {
   const [questions, setQuestions] = useState<APIQuestion[]>([]);
   const [topics, setTopics] = useState<APITopic[]>([]);
   const [search, setSearch] = useState("");
-  const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
+  const [selectedTopicId, setSelectedTopicId] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -29,8 +29,8 @@ export default function QuestionsList() {
   const [editingQuestion, setEditingQuestion] = useState<APIQuestion | null>(null);
 
   // ── Data fetching ──────────────────────────────────────────────
-  const fetchQuestions = (page: number, searchVal: string, topicId: number | null) => {
-    getQuestions(page, PAGE_SIZE, searchVal || undefined, topicId ?? undefined).then((res) => {
+  const fetchQuestions = (page: number, searchVal: string,  topicIds: number[]) => {
+    getQuestions(page, PAGE_SIZE, searchVal || undefined, topicIds.length > 0 ? topicIds : undefined).then((res) => {
       setQuestions(res.items);
       setTotalPages(res.totalPages);
     });
@@ -60,8 +60,10 @@ export default function QuestionsList() {
     closeTopicModal();
   };
 
-  const toggleTag = (topicId: number) => {
-    setSelectedTopicId((prev) => (prev === topicId ? null : topicId));
+const toggleTag = (topicId: number) => {
+  setSelectedTopicId((prev) =>
+    prev.includes(topicId) ? prev.filter((id) => id !== topicId) : [...prev, topicId]
+  );
   const topic = topics.find((t) => t.id === topicId);
   if (!topic) return;
   setSelectedTags((prev) =>
@@ -69,11 +71,11 @@ export default function QuestionsList() {
       ? prev.filter((t) => t !== topic.title)
       : [...prev, topic.title]
   );
-  };
+};
 
   const clearFilters = () => {
     setSearch("");
-    setSelectedTopicId(null);
+    setSelectedTopicId([]);
     setSelectedTags([]);
   };
 

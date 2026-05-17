@@ -99,6 +99,8 @@ const [topicId, setTopicId] = useState<number>(
     event: React.SyntheticEvent<HTMLFormElement>
   ) {
     event.preventDefault();
+     console.log("handleSubmit called, topicId:", topicId, "text:", text);
+  console.log("choices:", JSON.stringify(choices));
 
     const questionPayload = {
       topicId: topicId,
@@ -136,12 +138,14 @@ const [topicId, setTopicId] = useState<number>(
 
     const result = question
       ? FormValidation(updateQuestionRequestSchema, {
-          id: question.id,
+          id: String(question.id),
           ...questionPayload,
         })
       : FormValidation(createQuestionRequestSchema, questionPayload);
+      console.log("Validation result:", result);
 
     if (!result.success) {
+        console.log("Validation errors:", result.errors);
       setErrors({
         text: result.errors.text,
         choicesMessage: result.errors.choices,

@@ -44,4 +44,16 @@ export const createQuestionRequestSchema = z
         path: ["choices"],
       });
     }
+      // check for duplicate text choices
+  const texts = question.choices
+    .map((c) => ("text" in c ? c.text?.trim().toLowerCase() : null))
+    .filter(Boolean);
+  const hasDuplicates = new Set(texts).size !== texts.length;
+  if (hasDuplicates) {
+    context.addIssue({
+      code: "custom",
+      message: "Duplicate choice texts are not allowed.",
+      path: ["choices"],
+    });
+  }
   });

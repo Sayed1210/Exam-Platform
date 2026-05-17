@@ -8,17 +8,15 @@ const optionalImageUrlSchema = z.preprocess(
   z.string().trim().url("Image URL must be valid.").optional()
 );
 
-const choiceIdSchema = z.string().trim().min(1, "Choice id is required.");
-
 const textChoiceRequestSchema = z.object({
-  id: choiceIdSchema,
+  id: z.string().optional(),
   text: z.string().trim().min(1, "Choice text is required."),
   imageUrl: z.undefined().optional(),
   isCorrect: z.boolean(),
 });
 
 const imageChoiceRequestSchema = z.object({
-  id: choiceIdSchema,
+  id: z.string().optional(),
   text: z.undefined().optional(),
   imageUrl: z.string().trim().url("Choice image URL must be valid."),
   isCorrect: z.boolean(),
@@ -49,4 +47,16 @@ export const updateQuestionRequestSchema = z
         path: ["choices"],
       });
     }
+      // check for duplicate text choices
+  const texts = question.choices
+    .map((c) => ("text" in c ? c.text?.trim().toLowerCase() : null))
+    .filter(Boolean);
+  const hasDuplicates = new Set(texts).size !== texts.length;
+  if (hasDuplicates) {
+    context.addIssue({
+      code: "custom",
+      message: "Duplicate choice texts are not allowed.",
+      path: ["choices"],
+    });
+  }
   });

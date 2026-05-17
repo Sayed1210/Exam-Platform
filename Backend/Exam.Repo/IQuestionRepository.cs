@@ -15,6 +15,6 @@ namespace Exam.Repo
         Task<bool> ExistsAsync(int id);
         Task<List<int>> GetExistingIdsAsync(List<int> ids);
        Task<(IEnumerable<Question> items, int totalCount)> GetPagedAsync(
-    int page, int pageSize, string? search = null, int? topicId = null);
+    int page, int pageSize, string? search = null, int[]? topicIds = null);
     }
 }

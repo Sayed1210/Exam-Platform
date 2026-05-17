@@ -86,7 +86,7 @@ namespace Exam.Repo
         }
 
 public async Task<(IEnumerable<Question> items, int totalCount)> GetPagedAsync(
-    int page, int pageSize, string? search = null, int? topicId = null)
+    int page, int pageSize, string? search = null,int[]? topicIds = null)
 {
     var query = _db.Questions
         .Include(q => q.Topic)
@@ -97,8 +97,8 @@ public async Task<(IEnumerable<Question> items, int totalCount)> GetPagedAsync(
     if (!string.IsNullOrEmpty(search))
         query = query.Where(q => q.Text.Contains(search));
 
-    if (topicId.HasValue)
-        query = query.Where(q => q.TopicId == topicId.Value);
+    if (topicIds is not null && topicIds.Length > 0)
+        query = query.Where(q => topicIds.Contains(q.TopicId));
 
     var totalCount = await query.CountAsync();
 

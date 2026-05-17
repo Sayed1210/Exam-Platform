@@ -16,7 +16,7 @@ group.MapGet("/", async (
     int page = 1,
     int pageSize = 10,
     string? search = null,
-    int? topicId = null) =>
+    int[]? topicId = null) =>
 {
     var result = await svc.GetAllAsync(page, pageSize, search, topicId);
     return Results.Ok(result);
