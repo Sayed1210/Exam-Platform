@@ -4,10 +4,10 @@ import { CandidateDetail } from "@/types/candidate";
 import ModalPortal from "@/components/ModalPortal";
 
 const statusMap: Record<number, { label: string; bg: string; color: string }> = {
-  0: { label: "Invited", bg: "#eff6ff", color: "#1d4ed8" },
-  1: { label: "In Progress", bg: "#fef9c3", color: "#854d0e" },
-  2: { label: "Completed", bg: "#d1fae5", color: "#065f46" },
-  3: { label: "Expired", bg: "#fee2e2", color: "#991b1b" },
+  0: { label: "Pending",     bg: "#eff6ff", color: "#1d4ed8" },
+  1: { label: "Expired",     bg: "#fee2e2", color: "#991b1b" },
+  2: { label: "In Progress", bg: "#fef9c3", color: "#854d0e" },
+  3: { label: "Done",        bg: "#d1fae5", color: "#065f46" },
 };
 interface Props {
   candidate: CandidateDetail;
