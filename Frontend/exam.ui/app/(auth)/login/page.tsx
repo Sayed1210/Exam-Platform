@@ -38,10 +38,9 @@ export default function LoginPage() {
       toast.error(result.message);
       return;
     }
-    
-    toast.success("Welcome back!");
+
     router.push("/candidates");
-    router.refresh(); // Because cookies are server-readable, Next.js needs a refresh to re-evaluate auth state.
+    toast.success("Welcome back!");
   };
 
   return (
@@ -68,4 +67,4 @@ export default function LoginPage() {
   );
 }
 
-// admin password: test1234
+// admin password: admin123 or test1234
