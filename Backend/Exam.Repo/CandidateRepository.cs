@@ -111,6 +111,12 @@ public async Task<List<Candidate>> GetPagedAsync(
             .ThenInclude(ca => ca.Choice)
         .FirstOrDefaultAsync(c => c.Id == candidateId);
 
+    public async Task<List<Candidate>> GetUnassignedCandidatesAsync()
+    {
+        return await _context.Candidates
+            .Where(c => !c.CandidateExams.Any())
+            .ToListAsync();
+    }
 
     public async Task DeleteAsync(int id)
     {
@@ -120,6 +126,10 @@ public async Task<List<Candidate>> GetPagedAsync(
 
         if (candidate == null)
             throw new Exception($"Candidate with id {id} not found");
+
+        // Delete related CandidateExams
+        var candidateExams = _context.CandidateExams.Where(ce => ce.CandidateId == id);
+        _context.CandidateExams.RemoveRange(candidateExams);
 
         // Mark entity for deletion
         _context.Candidates.Remove(candidate);
