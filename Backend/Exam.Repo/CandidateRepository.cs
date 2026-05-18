@@ -127,6 +127,10 @@ public async Task<List<Candidate>> GetPagedAsync(
         if (candidate == null)
             throw new Exception($"Candidate with id {id} not found");
 
+        // Delete related CandidateExams
+        var candidateExams = _context.CandidateExams.Where(ce => ce.CandidateId == id);
+        _context.CandidateExams.RemoveRange(candidateExams);
+
         // Mark entity for deletion
         _context.Candidates.Remove(candidate);
 
