@@ -39,6 +39,7 @@ builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(nameof(
 builder.Services.AddRepositoryLayer(); //Dependency injection for repository layer, exists in Exam.Repo/DependencyInjection.cs 
 builder.Services.AddServiceLayer(); //Dependency injection for service layer, exists in Exam.Service/DependencyInjection.cs 
 builder.Services.AddScoped<IInvitationService, InvitationService>();
+builder.Services.AddScoped<IInvitationValidator, InvitationValidator>();
 builder.Services.AddScoped<ICandidateExamRepository, CandidateExamRepository>();
 builder.Services.AddScoped<IStartExamService, StartExamService>();
 builder.Services.AddScoped<IBeforeStartExamService, BeforeStartExamService>();

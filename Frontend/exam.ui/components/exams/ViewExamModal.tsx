@@ -38,8 +38,8 @@ interface ViewExamModalProps {
   isLoading: boolean;
   exam: {
     id: number;
-    name: string;
-    durationMinutes: number;
+    title: string;
+    durationMins: number;
     totalQuestions: number;
     questions?: Question[]; // Made optional for the transition period
   };
@@ -55,11 +55,11 @@ export default function ViewExamModal({ exam, isLoading, onClose, onEdit }: View
     : MOCK_QUESTIONS;
 
   return (
-    <ExamModal onClose={onClose} title={exam.name}>
+    <ExamModal onClose={onClose} title={exam.title}>
       {/* Summary Header */}
       <div className="px-8 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
         <div className="flex gap-6 items-center text-slate-500">
-          <span className="text-xs font-bold">{exam.durationMinutes} mins</span>
+          <span className="text-xs font-bold">{exam.durationMins} mins</span>
           <span className="text-xs font-bold">{exam.totalQuestions} Questions</span>
         </div>
         {/* Re-added the Edit button to match your initial requirement */}
