@@ -1,5 +1,4 @@
 "use client";
-// http://localhost:3000/start-exam?token=8e709534-d2e6-4491-954e-c7848cb38a4f
 
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
@@ -12,34 +11,31 @@ import { toast } from "sonner";
 
 export default function StartExamPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
+  const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
   const [open, setOpen] = useState(false);
-  // const [loading, setLoading] = useState(false);
-
   const [exam, setExam] = useState<any>(null);
-  // const [pageLoading, setPageLoading] = useState(false);
   
+  // get exam info (candidateID, examID & info: title/duration/#questions/status)
+  const loadExam = async () => {
+    if (!token) {
+      toast.error("Invalid Exam Link");
+      return;
+    }
+
+    const result = await beforeStartExam(token);
+
+    if (!result.success) {
+      toast.error(result.message);
+      return;
+    }
+
+    setExam(result.data);
+  };
+
   useEffect(() => {
-    const loadExam = async () => {
-      if (!token) {
-        toast.error("Invalid reset link");
-        return;
-      }
-
-      const result = await beforeStartExam(token);
-
-      if (!result.success) {
-        toast.error(result.message);
-        return;
-      }
-
-      setExam(result.data);
-      // setPageLoading(false);
-    };
-
     loadExam();
   }, [token]);
 
@@ -116,7 +112,7 @@ export default function StartExamPage() {
         </div>
 
         {/* Start Button */}
-        <Button text="Start Exam" onClick={() => setOpen(true)} className="btn-primary"/>
+        <Button text="Start Exam" onClick={() => setOpen(true)} className="btn-primary w-full"/>
         {/* Popup Window */}
         <Modal open={open} onClose={() => setOpen(false)}>
             <div className="flex flex-col gap-2 text-center">
@@ -124,7 +120,7 @@ export default function StartExamPage() {
                 <p className="text-muted">The timer will start immediately and <br></br> cannot be paused once exam begins</p>
             </div>
             
-            <div className="flex gap-3">  
+            <div className="flex justify-center gap-3 w-full mt-2">  
                 <Button 
                 text="Proceed" 
                 onClick={handleStartExam}
@@ -132,7 +128,7 @@ export default function StartExamPage() {
                 // loading={loading}
                 // loadingText="Opening..." 
                 />
-                <Button text="Cancel" onClick={() => setOpen(false)} className="btn-secondary w-full flex-1" />
+                <Button text="Cancel" onClick={() => setOpen(false)} className="btn-secondary flex-1" />
             </div>
         </Modal>    
 

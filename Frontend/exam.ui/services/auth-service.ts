@@ -22,11 +22,13 @@ export async function login(data: LoginRequest) {
         headers: {
         "Content-Type": "application/json",
         },
+        credentials: "include", // Without this, the browser will ignore the cookie.
         body: JSON.stringify(data),
     });
 
-    const text = await res.text();
-    const result = text ? JSON.parse(text) : null;
+    // const text = await res.text();
+    // const result = text ? JSON.parse(text) : null;
+    const result = await res.json();
 
     if (!res.ok) {
         return {
@@ -35,9 +37,11 @@ export async function login(data: LoginRequest) {
         };
     }
 
-    if (result?.token) {
-        localStorage.setItem("token", result.token);
-    }
+    // store token and expiry
+    // if (result?.token) {
+    //     localStorage.setItem("token", result.token);
+    //     localStorage.setItem("token_expires", result.expiresAt);
+    // }
 
     return {
         success: true,
@@ -97,14 +101,23 @@ export async function resetPassword(data: ResetPasswordRequest) {
   };
 }
 
-export function logout() {
-  localStorage.removeItem("token");
+// LOGOUT (IMPORTANT FIX)
+export async function logout() {
+  await fetch(`${API_BASE_URL}/api/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
 }
 
-export function getToken() {
-  return localStorage.getItem("token");
-}
+// export function getToken() {
+//   return localStorage.getItem("token");
+// }
 
-export function isAuthenticated() {
-  return !!getToken();
-}
+// export function isLoggedIn() {
+//   const token = localStorage.getItem("token");
+//   const expiresAt = localStorage.getItem("token_expires");
+
+//   if (!token || !expiresAt) return false;
+
+//   return new Date(expiresAt) > new Date();
+// }
