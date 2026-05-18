@@ -63,7 +63,7 @@ public static class AuthEndpoints
         {
             return Results.Unauthorized();
         }
-        // ✅ SET COOKIE HERE (THIS IS THE LINE YOU WERE ASKING ABOUT)
+        // SET COOKIE HERE
         httpContext.Response.Cookies.Append("token", result.Token, new CookieOptions
         {
             HttpOnly = true,
