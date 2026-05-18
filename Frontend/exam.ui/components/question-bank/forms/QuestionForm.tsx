@@ -6,6 +6,8 @@ import { createQuestionRequestSchema } from "@/schemas/requests/create-question-
 import { updateQuestionRequestSchema } from "@/schemas/requests/update-question-request";
 import type { QuestionChoice, Question, APIQuestion } from "@/types/question";
 import type { APITopic } from "@/types/question";
+import {uploadImage} from "@/services/questionService";
+import { getImageUrl } from "@/lib/api";
 
 type QuestionFormProps = {
   topics: APITopic[];  
@@ -71,6 +73,8 @@ const [topicId, setTopicId] = useState<number>(
       0
     )
   );
+
+  const [isUploading, setIsUploading] = useState(false);
 
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -217,30 +221,93 @@ onSubmit({
         ) : null}
       </label>
 
-      <label className="block">
-        <span className="text-sm font-semibold text-slate-900">
-          Question Image{" "}
-          <span className="font-medium text-slate-400">
-            (optional)
-          </span>
-        </span>
+     <label className="block">
+  <span className="text-sm font-semibold text-slate-900">
+    Question Image
+    <span className="ml-1 font-medium text-slate-400">
+      (optional)
+    </span>
+  </span>
 
-        <input
-          value={imageUrl}
-          onChange={(event) =>
-            setImageUrl(event.target.value)
+  <div className="mt-3">
+    <label
+      className="
+        flex h-32 w-full cursor-pointer flex-col
+        items-center justify-center gap-2 rounded-2xl
+        border-2 border-dashed border-slate-300
+        bg-slate-50 transition
+        hover:border-blue-400 hover:bg-blue-50
+      "
+    >
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={async (event) => {
+          const file = event.target.files?.[0];
+
+          if (!file) return;
+
+          setIsUploading(true);
+
+          try {
+            const response = await uploadImage(file);
+            setImageUrl(response.imageUrl);
+          } catch (error) {
+            console.error(error);
+          } finally {
+            setIsUploading(false);
           }
-          placeholder="Paste image URL"
-          className="
-            mt-2 h-11 w-full rounded-lg border
-            border-slate-200 px-4 text-sm text-slate-900
-            outline-none transition
-            placeholder:text-slate-400
-            focus:border-blue-500 focus:ring-2
-            focus:ring-blue-100
-          "
-        />
-      </label>
+        }}
+      />
+
+      <div
+        className="
+          flex h-12 w-12 items-center justify-center
+          rounded-full bg-white shadow-sm
+        "
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6 text-slate-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3 15a4 4 0 014-4h1m4-4l4 4m0 0l4-4m-4 4V3"
+          />
+        </svg>
+      </div>
+
+      <div className="text-center">
+        <p className="text-sm font-medium text-slate-700">
+          {isUploading
+            ? "Uploading..."
+            : "Click to upload an image"}
+        </p>
+
+        <p className="mt-1 text-xs text-slate-400">
+          PNG, JPG, WEBP
+        </p>
+      </div>
+    </label>
+  </div>
+
+  {imageUrl ? (
+    <img
+      src={getImageUrl(imageUrl)}
+      alt="Question preview"
+      className="
+        mt-4 max-h-56 rounded-xl border
+        border-slate-200 shadow-sm
+      "
+    />
+  ) : null}
+</label>
 
       <fieldset>
         <legend className="text-sm font-semibold text-slate-900">
@@ -308,53 +375,44 @@ onSubmit({
                     "
                   />
 
-                  <label className="relative">
-                    <span className="sr-only">
-                      Option {optionLabels[index]} image URL
-                    </span>
+                  <label
+  className={`
+    flex h-11 cursor-pointer items-center
+    justify-center rounded-lg border
+    px-4 text-sm font-medium transition
+    ${hasText
+      ? "cursor-not-allowed bg-slate-100 text-slate-400"
+      : "border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50"}
+  `}
+>
+  <input
+    type="file"
+    accept="image/*"
+    disabled={hasText}
+    className="hidden"
+    onChange={async (event) => {
+      const file = event.target.files?.[0];
 
-                    <input
-                      value={choice.imageUrl}
-                      disabled={hasText}
-                      onChange={(event) =>
-                        updateChoice(
-                          index,
-                          "imageUrl",
-                          event.target.value
-                        )
-                      }
-                      placeholder="Image URL"
-                      className="
-                        h-11 w-full rounded-lg border
-                        border-slate-200 pl-9 pr-3 text-sm
-                        text-slate-900 outline-none transition
-                        placeholder:text-slate-400
-                        focus:border-blue-500 focus:ring-2
-                        focus:ring-blue-100
-                        disabled:bg-slate-100
-                        disabled:text-slate-400
-                        disabled:cursor-not-allowed
-                      "
-                    />
+      if (!file) return;
 
-                    <span
-                      aria-hidden="true"
-                      className="
-                        absolute left-3 top-1/2 h-4 w-4
-                        -translate-y-1/2 rounded-sm
-                        border border-slate-400
-                      "
-                    >
-                      <span
-                        className="
-                          absolute bottom-0.5 left-0.5
-                          h-1.5 w-2.5 rotate-[-18deg]
-                          rounded-sm border-b border-l
-                          border-slate-400
-                        "
-                      />
-                    </span>
-                  </label>
+      try {
+        const response = await uploadImage(file);
+
+        updateChoice(
+          index,
+          "imageUrl",
+          response.imageUrl
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    }}
+  />
+
+  {choice.imageUrl
+    ? "Image Uploaded"
+    : "Upload Image"}
+</label>
                 </div>
 
               </div>
@@ -383,6 +441,7 @@ onSubmit({
             px-6 py-2.5 rounded-full
             hover:brightness-90 transition
           "
+          disabled={isUploading}
         >
           Save Question
         </button>

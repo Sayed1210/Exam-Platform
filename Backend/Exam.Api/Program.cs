@@ -1,5 +1,4 @@
 using Exam.Api;
-using Exam.Api.endpoints;
 using Exam.Data;
 using Exam.Repo;
 using Exam.Service;
@@ -87,6 +86,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseStaticFiles();
 // CreateExam
 app.MapExamManagementEndpoints();
 app.MapQuestionEndpoints();
@@ -102,8 +102,10 @@ app.MapStartExamEndpoints();
 app.MapBeforeStartExamEndpoints();
 // Link Verification
 app.MapVerifyLinkEndpoints();
-
+// Invitation Management
 app.MapInvitationsEndpoints();
+// Upload Files
+app.MapUploadEndpoints();
 
 // allow frontend to access api
 app.UseCors("AllowFrontend");

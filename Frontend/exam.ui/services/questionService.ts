@@ -29,3 +29,15 @@ export const deleteQuestion = (id: number) =>
 
 export const createTopic = (title: string) =>
   apiFetch("/api/topics", { method: "POST", body: JSON.stringify({ title }) });
+
+export const uploadImage = async (file: File) => {
+  const formData = new FormData();
+
+  formData.append("file", file);
+
+  return apiFetch("/api/upload", {
+    method: "POST",
+    body: formData,
+    isFormData: true,
+  });
+};

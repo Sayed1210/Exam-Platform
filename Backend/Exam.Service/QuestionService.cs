@@ -44,7 +44,7 @@ public async Task<PagedResponse<QuestionResponse>> GetAllAsync(
                 ImageUrl = request.ImageUrl,
                 Choices = request.Choices.Select(c => new Choice
                 {
-                    Text = c.Text.Trim(),
+                    Text = c.Text?.Trim(),
                     IsCorrect = c.IsCorrect,
                     ImageUrl = c.ImageUrl
                 }).ToList()
@@ -74,7 +74,7 @@ public async Task<PagedResponse<QuestionResponse>> GetAllAsync(
                 question.Choices = request.Choices!.Select(c => new Choice
                 {
                     QuestionId = id,
-                    Text = c.Text.Trim(),
+                    Text = c.Text?.Trim(),
                     IsCorrect = c.IsCorrect,
                     ImageUrl = c.ImageUrl
                 }).ToList();
@@ -90,7 +90,7 @@ public async Task<PagedResponse<QuestionResponse>> GetAllAsync(
             var choice = question.Choices.FirstOrDefault(c => c.Id == choiceId);
             if (choice is null) return null;
 
-            choice.Text = request.Text.Trim();
+            choice.Text = request.Text?.Trim();
             choice.IsCorrect = request.IsCorrect;
             choice.ImageUrl = request.ImageUrl;
 

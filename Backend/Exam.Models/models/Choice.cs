@@ -8,8 +8,7 @@ public class Choice
 
     public int QuestionId { get; set; }
 
-        [Required]
-    public string Text { get; set; } = string.Empty;
+    public string? Text { get; set; }
 
     [Required]
     public bool IsCorrect { get; set; }

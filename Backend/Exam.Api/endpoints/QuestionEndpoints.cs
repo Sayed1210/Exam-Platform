@@ -198,28 +198,78 @@ group.MapGet("/", async (
         return await ValidateTopicExistsAsync(request.TopicId, topicRepo);
     }
 
-    private static IResult? ValidateChoices(List<ChoiceRequest>? choices)
-    {
-        if (choices is null || choices.Count == 0) return null;
-
-        if (choices.Count > 6)
-            return Results.ValidationProblem(new Dictionary<string, string[]>
-            { ["Choices"] = ["A question cannot have more than 6 choices."] });
-
-        if (choices.Any(c => string.IsNullOrWhiteSpace(c.Text)))
-            return Results.ValidationProblem(new Dictionary<string, string[]>
-            { ["Choices"] = ["Choice text cannot be empty."] });
-
-        if (!choices.Any(c => c.IsCorrect))
-            return Results.ValidationProblem(new Dictionary<string, string[]>
-            { ["Choices"] = ["At least one choice must be marked as correct."] });
-
-        if (choices.GroupBy(c => c.Text.Trim().ToLower()).Any(g => g.Count() > 1))
-            return Results.ValidationProblem(new Dictionary<string, string[]>
-            { ["Choices"] = ["Duplicate choice texts are not allowed."] });
-
+   private static IResult? ValidateChoices(
+    List<ChoiceRequest>? choices)
+{
+    if (choices is null || choices.Count == 0)
         return null;
+
+    if (choices.Count > 4)
+    {
+        return Results.ValidationProblem(
+            new Dictionary<string, string[]>
+            {
+                ["Choices"] =
+                [
+                    "A question cannot have more than 4 choices."
+                ]
+            });
     }
+
+    foreach (var choice in choices)
+    {
+        var hasText =
+            !string.IsNullOrWhiteSpace(choice.Text);
+
+        var hasImage =
+            !string.IsNullOrWhiteSpace(choice.ImageUrl);
+
+        // must have exactly one
+        if (hasText == hasImage)
+        {
+            return Results.ValidationProblem(
+                new Dictionary<string, string[]>
+                {
+                    ["Choices"] =
+                    [
+                        "Each choice must contain either text or image, but not both."
+                    ]
+                });
+        }
+    }
+
+    if (!choices.Any(c => c.IsCorrect))
+    {
+        return Results.ValidationProblem(
+            new Dictionary<string, string[]>
+            {
+                ["Choices"] =
+                [
+                    "At least one choice must be marked as correct."
+                ]
+            });
+    }
+
+    // duplicate TEXT choices only
+    var textChoices = choices
+        .Where(c => !string.IsNullOrWhiteSpace(c.Text))
+        .Select(c => c.Text!.Trim().ToLower());
+
+    if (textChoices.GroupBy(x => x)
+        .Any(g => g.Count() > 1))
+    {
+        return Results.ValidationProblem(
+            new Dictionary<string, string[]>
+            {
+                ["Choices"] =
+                [
+                    "Duplicate choice texts are not allowed."
+                ]
+            });
+    }
+
+    return null;
+}
 
     private static async Task<IResult?> ValidateTopicExistsAsync(
         int topicId,
