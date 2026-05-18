@@ -188,13 +188,13 @@ export default function CandidatesTable({
                 </p>
                 <div className="flex justify-end gap-2.5">
                   <button
-                    className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-50 transition"
+                    className="btn-secondary"
                     onClick={() => setPendingDeleteId(null)}
                   >
                     Cancel
                   </button>
                   <button
-                    className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium cursor-pointer hover:brightness-90 transition"
+                    className="btn-primary"
                     onClick={() => {
                       onDeleteCandidate(pendingDeleteId);
                       setPendingDeleteId(null);

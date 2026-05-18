@@ -82,15 +82,6 @@ const fetchCandidates = (page: number, searchVal: string, statusVal: string) => 
 
   return (
     <div>
-      {/* <div className="flex items-center justify-between mb-6">
-        <h1 className="text-title">Candidates</h1>
-        <button
-          className="bg-primary text-white font-semibold px-6 py-2.5 rounded-full hover:brightness-90 transition"
-          onClick={() => setShowAddModal(true)}
-        >
-          + Add Candidate
-        </button>
-      </div> */}
       <DashboardPageHeader
         title="Candidates"
         buttonText="+ Add Candidate"

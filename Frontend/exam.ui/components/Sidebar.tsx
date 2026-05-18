@@ -75,7 +75,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1">
-        <p className="text-[11px] font-semibold tracking-widest text-gray-600 px-2 mb-2">
+        <p className="nav-section-label">
           MAIN
         </p>
         <ul className="flex flex-col gap-0.5">

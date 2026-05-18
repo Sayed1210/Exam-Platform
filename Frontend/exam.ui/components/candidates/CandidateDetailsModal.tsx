@@ -37,7 +37,7 @@ export default function CandidateDetailsModal({ candidate, onClose }: Props) {
 
         <div className="modal-body">
           <div className="px-6 py-5">
-            <p className="text-[11px] font-bold tracking-widest text-gray-400 mb-3">
+            <p className="nav-section-label">
               Candidate Details
             </p>
             <div className="border-t border-gray-100">
@@ -46,7 +46,7 @@ export default function CandidateDetailsModal({ candidate, onClose }: Props) {
                 { label: "Phone Number", value: candidate.phone ?? "-" },
               ].map(({ label, value }) => (
                 <div key={label} className="flex items-center justify-between gap-4 py-3 border-b border-gray-100">
-                  <span className="text-sm text-gray-500">{label}</span>
+                  <span className="text-label">{label}</span>
                   <span className="text-right text-sm font-medium text-gray-900">{value}</span>
                 </div>
               ))}
@@ -58,7 +58,7 @@ export default function CandidateDetailsModal({ candidate, onClose }: Props) {
 
             return (
               <div key={examIndex} className="px-6 pb-5">
-                <p className="text-[11px] font-bold tracking-widest text-gray-400 mb-3">
+                <p className="nav-section-label">
                   EXAM INFO - {exam.examTitle}
                 </p>
                 <div className="border-t border-gray-100">
@@ -77,13 +77,13 @@ export default function CandidateDetailsModal({ candidate, onClose }: Props) {
                     },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-center justify-between gap-4 py-3 border-b border-gray-100">
-                      <span className="text-sm text-gray-500">{label}</span>
+                      <span className="text-label">{label}</span>
                       <span className="text-right text-sm font-medium text-gray-900">{value}</span>
                     </div>
                   ))}
 
                   <div className="flex items-center justify-between gap-4 py-3 border-b border-gray-100">
-                    <span className="text-sm text-gray-500">Status</span>
+                    <span className="text-label">Status</span>
                     <span
                       className="inline-block px-3 py-1 rounded-full text-[13px] font-medium"
                       style={{ background: status.bg, color: status.color }}
@@ -93,7 +93,7 @@ export default function CandidateDetailsModal({ candidate, onClose }: Props) {
                   </div>
 
                   <div className="flex items-center justify-between gap-4 py-3 border-b border-gray-100">
-                    <span className="text-sm text-gray-500">Score</span>
+                    <span className="text-label">Score</span>
                     <span className="text-right text-sm font-medium text-gray-900">
                       {exam.score !== null ? `${exam.score}%` : "-"}
                     </span>
@@ -102,7 +102,7 @@ export default function CandidateDetailsModal({ candidate, onClose }: Props) {
 
                 {exam.answers.length > 0 && (
                   <div className="mt-4">
-                    <p className="text-[11px] font-bold tracking-widest text-gray-400 mb-3">
+                    <p className="nav-section-label">
                       ANSWERS
                     </p>
                     <div className="flex flex-col gap-2.5">
@@ -131,7 +131,7 @@ export default function CandidateDetailsModal({ candidate, onClose }: Props) {
         <div className="border-t border-slate-100 px-6 py-5">
           <div className="flex justify-end">
             <button
-              className="bg-white border border-gray-300 rounded-lg px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+              className="btn-secondary"
               onClick={onClose}
             >
               Close
