@@ -73,7 +73,7 @@ body {
   }
 
   .modal-panel {
-    @apply flex max-h-[calc(100vh-3rem)] w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl;
+    @apply flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl;
   }
 
   .modal-header {
