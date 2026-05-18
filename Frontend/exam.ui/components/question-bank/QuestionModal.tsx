@@ -1,5 +1,5 @@
 "use client";
-
+import type { APIQuestion, APITopic } from "@/types/question";
 import type { Question } from "@/types/question";
 import QuestionForm from "./forms/QuestionForm";
 import { XMarkIcon } from "@heroicons/react/24/outline";
@@ -7,10 +7,10 @@ import ModalPortal from "@/components/ModalPortal";
 
 export type QuestionModalProps = {
   isOpen: boolean;
-  topics: string[];
-  question?: Question | null;
+  topics: APITopic[];
+  question?: APIQuestion | null;
   onClose: () => void;
-  onSave: (question: Question) => void;
+  onSave: (data: any) => void;
 };
 
 export default function QuestionModal({
@@ -20,9 +20,31 @@ export default function QuestionModal({
   onClose,
   onSave,
 }: QuestionModalProps) {
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
+
+  // map APIQuestion to the shape QuestionForm expects
+  const formQuestion = question
+    ? {
+        id: String(question.id),
+        topic: question.topicTitle,
+        statement: question.text,
+        imageUrl: question.imageUrl ?? undefined,
+        choices: question.choices.map((c, i) => {
+          if (c.imageUrl) {
+            return {
+              id: `${question.id}-choice-${i}`,
+              imageUrl: c.imageUrl,
+              isCorrect: c.isCorrect,
+            };
+          }
+          return {
+            id: `${question.id}-choice-${i}`,
+            text: c.text ?? "",
+            isCorrect: c.isCorrect,
+          };
+        }),
+      }
+    : null;
 
   return (
     <ModalPortal>

@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { loginSchema } from "@/schemas/requests/login-request";
 import { FormValidation } from "@/schemas/form-validation";
 import { login } from "@/services/auth-service";
+import { toast } from "sonner";
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,11 +35,13 @@ export default function LoginPage() {
     const result = await login({ email, password });
 
     if (!result.success) {
-      alert(result.message);
+      toast.error(result.message);
       return;
     }
-
+    
+    toast.success("Welcome back!");
     router.push("/candidates");
+    router.refresh(); // Because cookies are server-readable, Next.js needs a refresh to re-evaluate auth state.
   };
 
   return (
@@ -64,4 +68,4 @@ export default function LoginPage() {
   );
 }
 
-// admin password: admin123
+// admin password: test1234

@@ -42,6 +42,27 @@ export type Topic = {
   id: string;
   name: string;
 };
+// API response types (from backend)
+export type APIChoice = {
+  id: number;
+  text: string;
+  isCorrect: boolean;
+  imageUrl: string | null;
+};
+
+export type APIQuestion = {
+  id: number;
+  topicId: number;
+  topicTitle: string;
+  text: string;
+  imageUrl: string | null;
+  choices: APIChoice[];
+};
+
+export type APITopic = {
+  id: number;
+  title: string;
+};
 
 export type GetTopicsRequest = z.infer<typeof getTopicsRequestSchema>;
 export type GetTopicsResponse = z.infer<typeof getTopicsResponseSchema>;

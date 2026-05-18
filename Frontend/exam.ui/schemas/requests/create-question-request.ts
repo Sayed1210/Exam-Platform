@@ -27,7 +27,7 @@ const questionChoiceRequestSchema = z.union([
 
 export const createQuestionRequestSchema = z
   .object({
-    topicId: z.string().trim().min(1, "Topic id is required."),
+    topicId: z.number().positive("Topic id is required."),
     text: z.string().trim().min(1, "Question statement is required."),
     imageUrl: optionalImageUrlSchema,
     choices: z
@@ -44,4 +44,16 @@ export const createQuestionRequestSchema = z
         path: ["choices"],
       });
     }
+      // check for duplicate text choices
+  const texts = question.choices
+    .map((c) => ("text" in c ? c.text?.trim().toLowerCase() : null))
+    .filter(Boolean);
+  const hasDuplicates = new Set(texts).size !== texts.length;
+  if (hasDuplicates) {
+    context.addIssue({
+      code: "custom",
+      message: "Duplicate choice texts are not allowed.",
+      path: ["choices"],
+    });
+  }
   });

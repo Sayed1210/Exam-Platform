@@ -25,6 +25,7 @@ namespace Exam.Models
         public string? Text { get; set; }  // null = don't update
 
         public string? ImageUrl { get; set; }
+         public int TopicId { get; set; }
 
         public List<ChoiceRequest>? Choices { get; set; }  // null = don't touch, empty = remove all
     }

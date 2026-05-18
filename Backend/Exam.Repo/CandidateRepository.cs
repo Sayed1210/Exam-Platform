@@ -51,9 +51,14 @@ public async Task<int> CountAsync(string? search, int? status, bool noStatus = f
 
     if (noStatus)
         query = query.Where(c => !c.CandidateExams.Any());
-    else if (status.HasValue)
-        query = query.Where(c =>
-            c.CandidateExams.Any(e => (int)e.Status == status.Value));
+else if (status.HasValue)
+{
+
+
+     string statusString = ((ExamStatus)status.Value).ToString();
+    query = query.Where(c => c.CandidateExams
+        .Any(e => e.Status.ToString() == statusString));
+}
 
     return await query.CountAsync();
 }
@@ -61,6 +66,7 @@ public async Task<int> CountAsync(string? search, int? status, bool noStatus = f
 public async Task<List<Candidate>> GetPagedAsync(
     int page, int pageSize, string? search, int? status, bool noStatus = false)
 {
+    Console.WriteLine($"DEBUG: status={status}, noStatus={noStatus}");
     var query = _context.Candidates
         .Include(c => c.CandidateExams)
         .AsQueryable();
@@ -73,9 +79,14 @@ public async Task<List<Candidate>> GetPagedAsync(
 
     if (noStatus)
         query = query.Where(c => !c.CandidateExams.Any());
-    else if (status.HasValue)
-        query = query.Where(c =>
-            c.CandidateExams.Any(e => (int)e.Status == status.Value));
+   else if (status.HasValue)
+{
+
+
+    string statusString = ((ExamStatus)status.Value).ToString();
+    query = query.Where(c => c.CandidateExams
+        .Any(e => e.Status.ToString() == statusString));
+}
 
     return await query
         .Skip((page - 1) * pageSize)

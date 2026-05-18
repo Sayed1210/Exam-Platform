@@ -37,5 +37,8 @@ namespace Exam.Data;
             modelBuilder.Entity<User>()
                 .Property(ce => ce.Role)
                 .HasConversion<string>();
+                modelBuilder.Entity<CandidateExam>()
+        .Property(e => e.Status)
+        .HasConversion<int>();
     }
 }

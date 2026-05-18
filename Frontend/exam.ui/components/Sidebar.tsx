@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { logout } from "@/services/auth-service";
 
 const navItems = [
   {
@@ -42,6 +43,15 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    logout();
+    router.replace("/login");
+    router.refresh();
+  };
 
   return (
     <aside className="w-60 min-w-60 bg-[#0f1117] flex flex-col h-screen sticky top-0 px-3 py-5">
@@ -92,17 +102,25 @@ export default function Sidebar() {
 
       {/* Logout */}
       <div className="pt-3 border-t border-gray-800">
-     <Link
-        href="/login"
-          className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-gray-800 transition-colors duration-150"
-                                                        >
-     <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
-     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-     <polyline points="16 17 21 12 16 7" />
-     <line x1="21" y1="12" x2="9" y2="12" />
-     </svg>
-               Logout
-    </Link>
+     <button
+    onClick={handleLogout}
+    className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-gray-800 transition-colors duration-150"
+  >
+    <svg
+      width="18"
+      height="18"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+
+    Logout
+  </button>
       </div>
 
     </aside>

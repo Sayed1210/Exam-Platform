@@ -9,11 +9,19 @@ namespace Exam.Service
 
         public QuestionService(IQuestionRepository repo) => _repo = repo;
 
-        public async Task<IEnumerable<QuestionResponse>> GetAllAsync()
-        {
-            var questions = await _repo.GetAllAsync();
-            return questions.Select(MapToResponse);
-        }
+public async Task<PagedResponse<QuestionResponse>> GetAllAsync(
+    int page, int pageSize, string? search = null,int[]? topicIds = null)
+{
+    var (items, totalCount) = await _repo.GetPagedAsync(page, pageSize, search, topicIds);
+
+    return new PagedResponse<QuestionResponse>
+    {
+        Page = page,
+        PageSize = pageSize,
+        TotalCount = totalCount,
+        Items = items.Select(MapToResponse).ToList()
+    };
+}
 
         public async Task<IEnumerable<QuestionResponse>> GetByTopicIdAsync(int topicId)
         {
@@ -54,6 +62,9 @@ namespace Exam.Service
 
             if (request.Text is not null)
                 question.Text = request.Text.Trim();
+
+             if (request.TopicId > 0)
+                 question.TopicId = request.TopicId;
 
             if (request.ImageUrl is not null)
                 question.ImageUrl = request.ImageUrl;
@@ -96,18 +107,6 @@ namespace Exam.Service
 
             await _repo.DeleteAsync(question);
             return true;
-        }
-        public async Task<PagedResponse<QuestionResponse>> GetPagedAsync(int page, int pageSize)
-        {
-            var (items, totalCount) = await _repo.GetPagedAsync(page, pageSize);
-
-            return new PagedResponse<QuestionResponse>
-            {
-              Page = page,
-              PageSize = pageSize,
-             TotalCount = totalCount,
-             Items = items.Select(MapToResponse).ToList()
-            };
         }
 
         private static QuestionResponse MapToResponse(Question q) => new()
