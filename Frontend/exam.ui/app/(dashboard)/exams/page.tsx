@@ -1,9 +1,11 @@
 'use client';
 import { useState } from 'react'; 
+import { useEffect } from 'react';
+import { createExamBackendSchema } from '@/schemas/requests/create-exam-request';
+import { getExams, deleteExam, createExam } from '@/services/examService';
+import { Exam } from '@/types/exam';
 import ExamCard from '@/components/exams/ExamCard';
-import Button from '@/components/Button';
 import AssignModal from '@/components/exams/AssignModal';
-import { PlusIcon } from '@heroicons/react/24/outline';
 import Message from '@/components/Message'; 
 import CreateExamModal from '@/components/exams/CreateExamModal';
 import { SearchBar } from '@/components/exams/SearchBar';
@@ -11,44 +13,10 @@ import ViewExamModal from '@/components/exams/ViewExamModal';
 import DashboardPageHeader from '@/components/DashboardHeader';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 // Interfaces remain the same
-interface Question {
-  text: string;
-  topic: string;
-  options: Array<{ text: string; isCorrect: boolean }>;
-}
-
-interface Exam {
-  id: number;
-  name: string;
-  topics: string;
-  durationMinutes: number;
-  totalQuestions: number;
-  questions?: Question[];
-}
 
 export default function ExamsPage() {
-  const [exams, setExams] = useState<Exam[]>([
-  { 
-    id: 1, 
-    name: "Frontend Developer Test", 
-    topics: "React, TypeScript", 
-    durationMinutes: 60, 
-    totalQuestions: 1,
-    // Add the actual question data here
-    questions: [
-      { 
-        text: "What is a Hook in React?", 
-        topic: "React", 
-        options: [
-          { text: "A function", isCorrect: true },
-          { text: "A CSS property", isCorrect: false }
-        ] 
-      }
-    ] 
-  },
-  // ... do the same for other mock exams
-]);
-
+  const [exams, setExams] = useState<Exam[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [examToAssign, setExamToAssign] = useState<Exam | null>(null);
   const [examToView, setExamToView] = useState<Exam | null>(null);
   const [examToEdit, setExamToEdit] = useState<any | null>(null);
@@ -57,20 +25,53 @@ export default function ExamsPage() {
   const [isLoadingView, setIsLoadingView] = useState(false);
   const [message, setMessage] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');  
+
+  useEffect(()=>{
+    const loadExams=async()=>{
+      try{
+        const data=await getExams();
+        setExams(data);
+      }catch(error){
+        setMessage({ message: 'Failed to sync with backend.', type: 'error' });
+      }finally{
+        setIsLoading(false);
+      }
+    };
+    loadExams();
+  },[]);
+//   { 
+//     id: 1, 
+//     name: "Frontend Developer Test", 
+//     topics: "React, TypeScript", 
+//     durationMinutes: 60, 
+//     totalQuestions: 1,
+//     // Add the actual question data here
+//     questions: [
+//       { 
+//         text: "What is a Hook in React?", 
+//         topic: "React", 
+//         options: [
+//           { text: "A function", isCorrect: true },
+//           { text: "A CSS property", isCorrect: false }
+//         ] 
+//       }
+//     ] 
+//   },
+//   // ... do the same for other mock exams
+// ]);
+
 
   // --- NEW: Missing Handler Functions ---
 
   const handleCreateExam = async (newData: any) => {
    const newExam: Exam = {
-    // Generate a unique ID (use timestamp if you don't have a DB yet)
     id: Date.now(), 
-    name: newData.title,
-    // Extract unique topics from the questions added
+    title: newData.title,
     topics: Array.from(new Set(newData.questions.map((q: any) => q.topic))).join(', '),
-    durationMinutes: newData.durationMins,
+    durationMins: newData.durationMins,
     totalQuestions: newData.questions.length,
-    // CRITICAL: Save the actual questions array here!
+    createdAt: new Date().toISOString(),
     questions: newData.questions};
     setExams(prev => [...prev, newExam]);
     setMessage({ message: 'Exam created with ' + newExam.totalQuestions + ' questions', type: 'success' });
@@ -85,9 +86,8 @@ export default function ExamsPage() {
       exam.id === id 
         ? { 
             ...exam, 
-            name: updatedData.title, 
-            durationMinutes: updatedData.durationMins,
-            // Capture the questions from the modal
+            title: updatedData.title, 
+            durationMins: updatedData.durationMins,
             questions: updatedData.questions, 
             totalQuestions: updatedData.questions.length,
             topics: Array.from(new Set(updatedData.questions.map((q: any) => q.topic))).join(', ')
@@ -100,37 +100,16 @@ export default function ExamsPage() {
     setMessage(null);
   }, 3000);
   };
-  const handleDeleteExam = async (id: number) => {
+  const confirmDelete = async() => {
     if (!examToDelete) return;
 
     try {
-      setExams(prev => prev.filter(exam => exam.id !== examToDelete.id));
+      await deleteExam(examToDelete.id);
+      setExams(prev => prev.filter(e => e.id !== examToDelete.id));
       setMessage({ message: 'Exam deleted successfully', type: 'success' });
-      
-      // Auto-hide success message
-      setTimeout(() => setMessage(null), 3000);
     } catch (error) {
       setMessage({ message: 'Failed to delete exam', type: 'error' });
     }
-    
-    setExamToDelete(null); // Close the modal
-  };
-  const confirmDelete = () => {
-    if (!examToDelete) return;
-
-    try {
-      // Update local state
-      setExams(prev => prev.filter(exam => exam.id !== examToDelete.id));
-      
-      // Feedback to user
-      setMessage({ message: 'Exam deleted successfully', type: 'success' });
-      
-      // Clean up popup
-      setTimeout(() => setMessage(null), 3000);
-    } catch (error) {
-      setMessage({ message: 'Failed to delete exam', type: 'error' });
-    }
-    
     // Close the modal
     setExamToDelete(null); 
   };
@@ -138,8 +117,8 @@ export default function ExamsPage() {
   const filteredExams = exams.filter((exam) => {
     const searchTerm = searchQuery.toLowerCase();
     return (
-      exam.name.toLowerCase().includes(searchTerm) ||
-      exam.topics.toLowerCase().includes(searchTerm)
+      exam.title.toLowerCase().includes(searchTerm) ||
+      (exam.topics ?? '').toLowerCase().includes(searchTerm)
     );
   });
 
@@ -168,7 +147,7 @@ export default function ExamsPage() {
       </div> */}
       <DashboardPageHeader
         title="Exams"
-        buttonText="+ Add Exam"
+        buttonText="+ Create Exam"
         onButtonClick={() => setIsCreateOpen(true)}
       />
       
@@ -207,16 +186,34 @@ export default function ExamsPage() {
             setIsCreateOpen(false);
             setExamToEdit(null);
           }}
-          onSave={(data) => {
-            console.log(data);
-            if (examToEdit) {
-              handleUpdateExam(examToEdit.id, data);
-            } else {
-              handleCreateExam(data);
-            }
-            setIsCreateOpen(false);
-            setExamToEdit(null);
-          }} 
+          onSave={async (data) => {
+    try {
+      // transform form data to the IDs your backend expects
+      const payload = {
+        title: data.title,
+        durationMins: data.durationMins,
+        questionIds: data.questions.map((q: any) => q.id)
+      };
+
+      if (examToEdit) {
+        // 1. Call PATCH /api/exams/{id}
+       // const updated = await examService.updateExam(examToEdit.id, payload);
+        //setExams(prev => prev.map(e => e.id === examToEdit.id ? updated : e));
+        //setMessage({ message: 'Exam updated in database!', type: 'success' });
+      } else {
+        // 2. Call POST /api/exams
+        const created = await createExam(payload);
+        setExams(prev => [...prev, created]);
+        setMessage({ message: 'Exam saved to database!', type: 'success' });
+      }
+    } catch (error) {
+      setMessage({ message: 'Sync failed. Ensure dummy question IDs exist.', type: 'error' });
+    } finally {
+      setIsCreateOpen(false);
+      setExamToEdit(null);
+      setTimeout(() => setMessage(null), 3000);
+    }
+  }}
         />
       )}
 
@@ -235,7 +232,7 @@ export default function ExamsPage() {
       )}
       {examToDelete && (
   <ConfirmDeleteModal 
-    title={examToDelete.name}
+    title={examToDelete.title}
     onCancel={() => setExamToDelete(null)}
     onConfirm={confirmDelete}
     text="Are you sure you want to delete this exam?"

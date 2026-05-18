@@ -9,7 +9,7 @@ export interface Candidate {
   lastName: string;
   email: string;
   phoneNumber: string;
-  status: number | null;
+  status: number | string | null;
   score: number | null;
   invitedAt: string | null;
   startedAt: string | null;

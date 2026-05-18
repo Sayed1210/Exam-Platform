@@ -243,6 +243,8 @@ const saveQuestion = (question: Question) => {
   <ConfirmDeleteModal
     onConfirm={confirmDelete}
     onCancel={cancelDelete}
+    title="Delete Question"
+    text="Are you sure you want to delete this question? This action cannot be undone."
   />
 )}
 

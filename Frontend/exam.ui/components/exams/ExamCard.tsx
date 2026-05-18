@@ -8,14 +8,8 @@ import {
   PencilSquareIcon, 
   TrashIcon 
 } from '@heroicons/react/24/outline'; 
-// Define interface to sync with AssignModal and your .NET backend
-interface Exam {
-  id: number;
-  name: string;
-  topics: string;
-  durationMinutes: number;
-  totalQuestions: number;
-}
+import { Exam } from '@/types/exam';
+
 interface ExamCardProps {
   exam: Exam;
   onAssign: (exam: Exam) => void; 
@@ -30,19 +24,23 @@ export default function ExamCard({ exam,onAssign,onView,onEdit,onDelete}: ExamCa
       
       {/* Name & Topics - Using your custom text classes */}
       <div className="mb-4">
-        <h3 className="text-subtitle mb-2">{exam.name}</h3>
-        <p className="text-muted mb-6 line-clamp-2">{exam.topics}</p>
+        <h3 className="text-subtitle mb-2">{exam.title}</h3>
+        <p className="text-muted mb-6 line-clamp-2">{exam.questions && exam.questions.length > 0
+      ? Array.from(new Set(exam.questions.map(q => q.topicTitle)))
+          .filter(Boolean) // This removes any null/undefined values
+          .join(', ')
+      : 'No topics assigned'}</p>
       </div>
 
       {/* Duration & Questions - Icons use your --muted color */}
       <div className="flex gap-5 py-4 border-t border-slate-50">
         <div className="flex items-center gap-1.5 text-muted">
           <ClockIcon className="w-5 h-5 opacity-70" />
-          <span className="text-sm">{exam.durationMinutes} mins</span>
+          <span className="text-sm">{exam.durationMins} mins</span>
         </div>
         <div className="flex items-center gap-1.5 text-muted">
           <ClipboardDocumentListIcon className="w-5 h-5 opacity-70" />
-          <span className="text-sm">{exam.totalQuestions} Questions</span>
+          <span className="text-sm">{exam.totalQuestions} Question(s)</span>
         </div>
       </div>
 
