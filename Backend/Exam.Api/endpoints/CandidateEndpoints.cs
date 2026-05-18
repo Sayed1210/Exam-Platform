@@ -11,17 +11,17 @@ public static class CandidateEndpoints
         var candidates = app.MapGroup("/candidates");
 
        
-candidates.MapGet("/", async (
-    ICandidateService service,
-    int page = 1,
-    int pageSize = 8,
-    string? search = null,
-    int? status = null,
-    bool noStatus = false) =>
-{
-    var result = await service.GetAllCandidates(page, pageSize, search, status, noStatus);
-    return Results.Ok(result);
-});
+        candidates.MapGet("/", async (
+            ICandidateService service,
+            int page = 1,
+            int pageSize = 8,
+            string? search = null,
+            int? status = null,
+            bool noStatus = false) =>
+        {
+            var result = await service.GetAllCandidates(page, pageSize, search, status, noStatus);
+            return Results.Ok(result);
+        });
 
         candidates.MapGet("/{id}", async (int id, ICandidateService service) =>
         {
@@ -51,20 +51,28 @@ candidates.MapGet("/", async (
 
             return Results.Ok(new { message = "Candidate added successfully" });
         });
-        candidates.MapGet("/{id:int}/details", async (int id, ICandidateService svc) =>
-{
 
-    var result = await svc.GetDetailAsync(id);
-    return result is null
-        ? Results.NotFound(new { message = $"Candidate {id} not found." })
-        : Results.Ok(result);
-})
-.WithName("GetCandidateDetail")
-.WithSummary("Get candidate full details")
-.WithDescription("Returns candidate info with all exam attempts and answers. Returns empty exams array if not assigned to any exam.")
-.Produces<CandidateDetailResponse>(200)
-.Produces(404)
-.ProducesValidationProblem();
+        candidates.MapGet("/{id:int}/details", async (int id, ICandidateService svc) =>
+        {
+
+            var result = await svc.GetDetailAsync(id);
+            return result is null
+                ? Results.NotFound(new { message = $"Candidate {id} not found." })
+                : Results.Ok(result);
+        })
+        .WithName("GetCandidateDetail")
+        .WithSummary("Get candidate full details")
+        .WithDescription("Returns candidate info with all exam attempts and answers. Returns empty exams array if not assigned to any exam.")
+        .Produces<CandidateDetailResponse>(200)
+        .Produces(404)
+        .ProducesValidationProblem();
+
+        candidates.MapGet("/unassigned", async (ICandidateService service) =>
+        {
+            var result = await service.GetUnassignedCandidates();
+
+            return Results.Ok(result); // recommended: always return 200 even if empty
+        });
 
         candidates.MapDelete("/{id}", async (int id, ICandidateService service) =>
         {

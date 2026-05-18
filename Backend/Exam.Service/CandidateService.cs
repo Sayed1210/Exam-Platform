@@ -11,44 +11,44 @@ public class CandidateService(ICandidateRepository candidateRepository) : ICandi
 
 public async Task<PagedResponse<CandidateResponse>> GetAllCandidates(
     int page, int pageSize, string? search, int? status, bool noStatus)
-{
-    var totalCount = await _candidateRepository.CountAsync(search, status,noStatus);
-    var candidates = await _candidateRepository.GetPagedAsync(page, pageSize, search, status, noStatus);
-
-    var items = candidates.Select(c => {
-        var latestExam = c.CandidateExams?
-            .OrderByDescending(e => e.InvitedAt)
-            .FirstOrDefault();
-
-        return new CandidateResponse
-        {
-            Id = c.Id,
-            Email = c.Email,
-            FirstName = c.FirstName,
-            LastName = c.LastName,
-            Phone = c.Phone,
-            Score = latestExam?.Score,
-            Status = latestExam?.Status,
-            InvitedAt = latestExam?.InvitedAt,
-            StartedAt = latestExam?.JoinedAt
-        };
-    }).ToList();
-
-    return new PagedResponse<CandidateResponse>
     {
-        Items = items,
-        TotalCount = totalCount,
-        Page = page,
-        PageSize = pageSize
-    };
-}
+        var totalCount = await _candidateRepository.CountAsync(search, status,noStatus);
+        var candidates = await _candidateRepository.GetPagedAsync(page, pageSize, search, status, noStatus);
+
+        var items = candidates.Select(c => {
+            var latestExam = c.CandidateExams?
+                .OrderByDescending(e => e.InvitedAt)
+                .FirstOrDefault();
+
+            return new CandidateResponse
+            {
+                Id = c.Id,
+                Email = c.Email,
+                FirstName = c.FirstName,
+                LastName = c.LastName,
+                Phone = c.Phone,
+                Score = latestExam?.Score,
+                Status = latestExam?.Status,
+                InvitedAt = latestExam?.InvitedAt,
+                StartedAt = latestExam?.JoinedAt
+            };
+        }).ToList();
+
+        return new PagedResponse<CandidateResponse>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
     public async Task<CandidateResponse?> GetCandidateById(int id)
     {
         // Ask repository for entity from database
         var candidate = await _candidateRepository.GetByIdAsync(id);
 
         if (candidate == null)
-            return null; // throw new Exception($"Candidate with id {id} not found");
+            return null; 
 
         // Map Entity → DTO
         return new CandidateResponse
@@ -66,7 +66,7 @@ public async Task<PagedResponse<CandidateResponse>> GetAllCandidates(
         var candidate = await _candidateRepository.GetCandidateByExamIdAsync(examId);
 
         if (candidate == null)
-            return null; // throw new Exception($"Candidate with exam id {examId} not found");
+            return null; 
 
         return new CandidateResponse
         {
@@ -84,7 +84,7 @@ public async Task<PagedResponse<CandidateResponse>> GetAllCandidates(
         var existingCandidate = await _candidateRepository.GetByEmailAsync(dto.Email);
 
         if (existingCandidate != null)
-            return false; // throw new Exception("Candidate already exists");
+            return false; 
         
         // Map DTO → Entity
         var candidate = new Candidate
@@ -99,36 +99,51 @@ public async Task<PagedResponse<CandidateResponse>> GetAllCandidates(
         await _candidateRepository.AddAsync(candidate);
         return true;
     }
-    public async Task<CandidateDetailResponse?> GetDetailAsync(int candidateId)
-{
-    var candidate = await _candidateRepository.GetWithExamsAndAnswersAsync(candidateId);
-    if (candidate is null) return null;
 
-    return new CandidateDetailResponse
+    public async Task<CandidateDetailResponse?> GetDetailAsync(int candidateId)
     {
-        Id = candidate.Id,
-        Name = candidate.FirstName + " " + candidate.LastName,
-        Email = candidate.Email,
-        Phone= candidate.Phone,
-        Exams = candidate.CandidateExams?.Select(ce => new CandidateExamDetailResponse
+        var candidate = await _candidateRepository.GetWithExamsAndAnswersAsync(candidateId);
+        if (candidate is null) return null;
+
+        return new CandidateDetailResponse
         {
-           
-            ExamTitle = ce.Exam?.Title ?? string.Empty,
-            InvitedAt = ce.InvitedAt,
-            StartedAt = ce.JoinedAt,
-            Status = ce.Status,
-            Score = ce.Score,
-            Answers = candidate.CandidateAnswers?
-                .Where(ca => ca.ExamId == ce.ExamId)
-                .Select(ca => new CandidateAnswerDetail
-                {
-                    QuestionText = ca.Question?.Text ?? string.Empty,
-                    ChoiceText = ca.Choice?.Text ?? string.Empty
-                
-                }).ToList() ?? []
-        }).ToList() ?? []
-    };
-}
+            Id = candidate.Id,
+            Name = candidate.FirstName + " " + candidate.LastName,
+            Email = candidate.Email,
+            Phone= candidate.Phone ?? "N/A",
+            Exams = candidate.CandidateExams?.Select(ce => new CandidateExamDetailResponse
+            {
+            
+                ExamTitle = ce.Exam?.Title ?? string.Empty,
+                InvitedAt = ce.InvitedAt,
+                StartedAt = ce.JoinedAt,
+                Status = ce.Status,
+                Score = ce.Score,
+                Answers = candidate.CandidateAnswers?
+                    .Where(ca => ca.ExamId == ce.ExamId)
+                    .Select(ca => new CandidateAnswerDetail
+                    {
+                        QuestionText = ca.Question?.Text ?? string.Empty,
+                        ChoiceText = ca.Choice?.Text ?? string.Empty
+                    
+                    }).ToList() ?? []
+            }).ToList() ?? []
+        };
+    }
+
+    public async Task<List<CandidateResponse>> GetUnassignedCandidates()
+    {
+        var candidates = await _candidateRepository.GetUnassignedCandidatesAsync();
+
+        return candidates.Select(c => new CandidateResponse
+        {
+            Id = c.Id,
+            Email = c.Email,
+            FirstName = c.FirstName,
+            LastName = c.LastName,
+            Phone = c.Phone
+        }).ToList();
+    }
 
     public async Task<bool> DeleteCandidate(int id)
     {
@@ -136,7 +151,7 @@ public async Task<PagedResponse<CandidateResponse>> GetAllCandidates(
         var candidate = await _candidateRepository.GetByIdAsync(id);
 
         if (candidate == null)
-            return false; // throw new Exception($"Candidate with id {id} not found");
+            return false; 
 
         // Delegate deletion to repository
         await _candidateRepository.DeleteAsync(id);

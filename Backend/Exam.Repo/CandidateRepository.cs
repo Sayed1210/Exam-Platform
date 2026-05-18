@@ -111,6 +111,12 @@ public async Task<List<Candidate>> GetPagedAsync(
             .ThenInclude(ca => ca.Choice)
         .FirstOrDefaultAsync(c => c.Id == candidateId);
 
+    public async Task<List<Candidate>> GetUnassignedCandidatesAsync()
+    {
+        return await _context.Candidates
+            .Where(c => !c.CandidateExams.Any())
+            .ToListAsync();
+    }
 
     public async Task DeleteAsync(int id)
     {

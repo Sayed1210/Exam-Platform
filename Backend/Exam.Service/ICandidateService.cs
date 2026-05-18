@@ -12,5 +12,6 @@ public interface ICandidateService
     
     Task<bool> AddCandidate(CreateCandidateRequest candidate);
     Task<CandidateDetailResponse?> GetDetailAsync(int candidateId);
+    Task<List<CandidateResponse>> GetUnassignedCandidates();
     Task<bool> DeleteCandidate(int id);
 }
