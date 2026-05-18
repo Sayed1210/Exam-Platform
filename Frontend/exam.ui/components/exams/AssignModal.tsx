@@ -18,7 +18,7 @@ import { assignExamSchema } from '@/schemas/requests/assign-exam-request';
 interface AssignModalProps {
   exam: Exam;
   onClose: () => void;
-  onConfirm: (payload: { examId: number; candidateIds: number[]; deadline: string }) => void;
+  onConfirm: (payload: { examId: number; candidateIds: number[]; deadline: string }) => Promise<void>;
 }
 
 type CandidateSummary = {
@@ -40,7 +40,9 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
   const [searchQuery, setSearchQuery] = useState('');
   const [candidates, setCandidates] = useState<CandidateSummary[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const loadCandidates = async () => {
@@ -78,7 +80,7 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
   const isValid = validation.success && !isLoading;
 
   return (
-    <ExamModal onClose={onClose} title="Assign to Candidate">
+    <ExamModal onClose={onClose} title="Assign to Candidate" disableClose={isSubmitting}>
       {/* Metrics Header */}
       <div className="px-7 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center gap-4 text-slate-500 text-sm shrink-0">
         <span className="flex items-center gap-1.5"><ClockIcon className="w-4 h-4" /> {exam.durationMins} min</span>
@@ -171,6 +173,12 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
            <p className="text-red-500 text-xs italic font-medium">{validationErrors.deadline}</p>
         )}
 
+        {submissionError && (
+          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-2xl text-sm">
+            {submissionError}
+          </div>
+        )}
+
         <div className="bg-blue-50 border border-blue-100 text-blue-600 p-4 rounded-2xl flex items-start gap-3.5 text-xs font-medium">
           <InformationCircleIcon className="w-5 h-5 shrink-0" />
           <p>A unique exam link will be emailed to all {selectedIds.length} chosen candidates.</p>
@@ -186,24 +194,35 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
         )}
         <Button 
           text="Cancel"
-          onClick={onClose} // Fixed: was onClose={onClose} which caused TS error
-          className="btn-secondary px-6" 
+          onClick={isSubmitting ? undefined : onClose}
+          className={`btn-secondary px-6 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`} 
+          disabled={isSubmitting}
         />
         <Button 
-          text="Assign Exam"
-          className={`btn-primary px-8 ${!isValid ? "opacity-50" : ""}`}
-          disabled={!isValid}
-          onClick={() => {
-            if (isValid) {
-              onConfirm({
+          text={isSubmitting ? 'Sending...' : 'Assign Exam'}
+          className={`btn-primary px-8 ${(!isValid || isSubmitting) ? 'opacity-50' : ''}`}
+          disabled={!isValid || isSubmitting}
+          onClick={async () => {
+            if (!isValid || isSubmitting) return;
+
+            setSubmissionError(null);
+            setIsSubmitting(true);
+
+            const localDateTimeString = `${deadlineDate}T${selectedHour}:00`;
+            try {
+              await onConfirm({
                 examId: exam.id,
                 candidateIds: selectedIds
                   .map((id) => Number(id))
                   .filter((id) => !Number.isNaN(id)),
-                deadline: `${deadlineDate}T${selectedHour}:00`,
+                deadline: localDateTimeString,
               });
+            } catch (error: any) {
+              setSubmissionError(error?.message || 'Failed to send invitations.');
+            } finally {
+              setIsSubmitting(false);
             }
-          }}
+          }}  
         />
       </div>
     </ExamModal>

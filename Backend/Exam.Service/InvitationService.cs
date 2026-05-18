@@ -4,12 +4,14 @@ namespace Exam.Service;
 using System.Net.Sockets;
 using System.Net.Mail;
 using System;
+using System.Runtime.InteropServices;
 
 public class InvitationService(ICandidateExamRepository repository, IEmailService emailService) : IInvitationService
 {
     public async Task<InvitationStatusResponse> SendInvitationAsync(SendInvitationRequest request)
     {
         var nowUtc = DateTime.UtcNow;
+        var expiryUtc = DateTime.SpecifyKind(request.InvitationExpiryDate, DateTimeKind.Utc);
         using var transaction = await repository.BeginTransactionAsync();
         
         try
@@ -19,16 +21,18 @@ public class InvitationService(ICandidateExamRepository repository, IEmailServic
                 // Safe to use '!' because the Validator service already verified existence
                 var candidate = await repository.GetCandidateAsync(candidateId);
                 var invitationToken = Guid.NewGuid().ToString();
-                string candidateTimezoneId = "Egypt Standard Time"; 
+                string candidateTimezoneId = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                    ? "Egypt Standard Time"
+                    : "Africa/Cairo";
                 TimeZoneInfo candidateZone = TimeZoneInfo.FindSystemTimeZoneById(candidateTimezoneId);
-                DateTime candidateLocalTime = TimeZoneInfo.ConvertTimeFromUtc(request.InvitationExpiryDate, candidateZone);
+                DateTime candidateLocalTime = TimeZoneInfo.ConvertTimeFromUtc(expiryUtc, candidateZone);
                 var invitation = new CandidateExam
                 {
                     CandidateId = candidate!.Id,
                     ExamId = request.ExamId,
                     InvitationToken = invitationToken,
                     InvitedAt = nowUtc,
-                    ExpiryDate = request.InvitationExpiryDate,
+                    ExpiryDate = expiryUtc,
                     Status = ExamStatus.PENDING
                 };
 
