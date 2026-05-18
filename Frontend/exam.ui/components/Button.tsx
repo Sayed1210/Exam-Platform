@@ -8,15 +8,18 @@ export default function Button({
   className="",
   loading = false,
   loadingText,
+  disabled = false
 }: any) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={` 
         flex items-center justify-center gap-2 mt-3
         transition-all duration-200
         disabled:opacity-70
         disabled:cursor-not-allowed ${className}`}
+      disabled={disabled}
     >
       {loading && (
         <Loader2 className="w-4 h-4 animate-spin" />

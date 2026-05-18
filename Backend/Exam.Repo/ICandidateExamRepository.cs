@@ -3,7 +3,7 @@ using Exam.Models;
 namespace Exam.Repo;
 public interface ICandidateExamRepository
 {
-    Task<Candidate?> GetCandidateByEmailAsync(string email);
+    Task<Candidate?> GetCandidateAsync(int id);
     Task AddInvitationAsync(CandidateExam invitation);
     Task<IDbContextTransaction> BeginTransactionAsync();
     Task<bool> ExamExistsAsync(int examId);

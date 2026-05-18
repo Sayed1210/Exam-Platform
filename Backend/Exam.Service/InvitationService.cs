@@ -3,73 +3,92 @@ using Exam.Repo;
 namespace Exam.Service;
 using System.Net.Sockets;
 using System.Net.Mail;
+using System;
+using System.Runtime.InteropServices;
+
 public class InvitationService(ICandidateExamRepository repository, IEmailService emailService) : IInvitationService
 {
     public async Task<InvitationStatusResponse> SendInvitationAsync(SendInvitationRequest request)
     {
         var nowUtc = DateTime.UtcNow;
-        var examExists = await repository.ExamExistsAsync(request.ExamId);
-        if (!examExists)
-        {
-            return new InvitationStatusResponse(false, $"Exam with ID {request.ExamId} does not exist.", nowUtc);
-        }
-        var candidate = await repository.GetCandidateByEmailAsync(request.Email);
-        if (candidate == null)
-        {
-            return new InvitationStatusResponse(false, "Candidate with this email not found", nowUtc);
-        }
-        var existingInvitation = await repository.GetAsync(candidate.Id, request.ExamId);
-        if (existingInvitation != null)
-        {
-            return new InvitationStatusResponse(false, "This candidate has already been invited to this exam.", nowUtc);
-        }
+        var expiryUtc = DateTime.SpecifyKind(request.InvitationExpiryDate, DateTimeKind.Utc);
         using var transaction = await repository.BeginTransactionAsync();
+        
         try
         {
-            var invitationToken=Guid.NewGuid().ToString();
-            var invitation = new CandidateExam
+            foreach (var candidateId in request.CandidateIds)
             {
-                CandidateId = candidate.Id,
-                ExamId = request.ExamId,
-                InvitationToken = invitationToken,
-                InvitedAt = nowUtc,
-                ExpiryDate = nowUtc.AddDays(3),
-                Status = ExamStatus.PENDING
-            };
+                // Safe to use '!' because the Validator service already verified existence
+                var candidate = await repository.GetCandidateAsync(candidateId);
+                var invitationToken = Guid.NewGuid().ToString();
+                string candidateTimezoneId = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                    ? "Egypt Standard Time"
+                    : "Africa/Cairo";
+                TimeZoneInfo candidateZone = TimeZoneInfo.FindSystemTimeZoneById(candidateTimezoneId);
+                DateTime candidateLocalTime = TimeZoneInfo.ConvertTimeFromUtc(expiryUtc, candidateZone);
+                var invitation = new CandidateExam
+                {
+                    CandidateId = candidate!.Id,
+                    ExamId = request.ExamId,
+                    InvitationToken = invitationToken,
+                    InvitedAt = nowUtc,
+                    ExpiryDate = expiryUtc,
+                    Status = ExamStatus.PENDING
+                };
 
-            await repository.AddInvitationAsync(invitation);
+                await repository.AddInvitationAsync(invitation);
+                
+                // Send the beautifully styled email template with the dynamic deadline
+                string formattedDeadline = candidateLocalTime.ToString("MMMM dd, yyyy 'at' hh:mm tt ") + (candidateZone.IsDaylightSavingTime(candidateLocalTime) ? "EEST" : "EET");
+                await SendInvitationEmail(candidate.Email, invitationToken, formattedDeadline);
+            }
+
             await repository.SaveChangesAsync();
-            try{
-            var invitationLink=$"http://localhost:3000/start-exam?token={invitationToken}";
-            string subject="Invitation to Enozom Examination";
-            string body = $@"
-                <div style='font-family: sans-serif; line-height: 1.6;'>
-                    <h1>Hello!</h1>
-                    <p>You have been invited to take an exam on the <b>Enozom</b> platform.</p>
-                    <p>Please click the button below to begin your session:</p>
-                    <p style='margin: 20px 0;'>
-                        <a href='{invitationLink}' 
-                           style='background: #2c3e50; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px;'>
-                           Start Exam
-                        </a>
-                    </p>
-                    <p><b>Note:</b> This link will expire in 3 days.</p>
-                </div>";
-            await emailService.SendEmailAsync(request.Email, subject,body);
-            }
-            catch(Exception ex)when(ex is SmtpException || ex is SocketException || ex is InvalidOperationException)
-            {
-                await transaction.RollbackAsync();
-                return new InvitationStatusResponse(false, "The invitation server is currently unavailable. Please try again later.", nowUtc);
-            }
             await transaction.CommitAsync();
-            return new InvitationStatusResponse(true, "Invitation sent successfully.", nowUtc);
+            return new InvitationStatusResponse(true, "Invitations sent successfully.", nowUtc);
         }
         catch (Exception)
         {
-
             await transaction.RollbackAsync();
-            return new InvitationStatusResponse(false, "Failed to send invitation. Internal error occured. Changes rolled back.", nowUtc);
+            return new InvitationStatusResponse(false, "Failed to complete invitation processing. Internal error occurred.", nowUtc);
         }
+    }
+
+    private async Task SendInvitationEmail(string email, string token, string deadlineStr)
+    {
+        var invitationLink = $"http://localhost:5173/join-exam?token={token}";
+        string subject = "Action Required: Your Enozom Examination Invitation";
+        string body = $@"
+            <div style='background-color: #f4f4f7; padding: 30px; font-family: sans-serif;'>
+                <div style='max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e1e1e1;'>
+                    <div style='background-color: #2c3e50; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;'>
+                        <h1 style='color: #ffffff; margin: 0; font-size: 22px;'>Examination Invitation</h1>
+                    </div>
+                    <div style='padding: 30px;'>
+                        <p style='font-size: 16px; color: #333;'>Hello,</p>
+                        <p style='font-size: 16px; color: #555; line-height: 1.5;'>
+                            You have been invited to complete an assessment on the <b>Enozom</b> platform. 
+                        </p>
+                        <div style='background-color: #fff5f5; border-left: 4px solid #c0392b; padding: 15px; margin: 20px 0;'>
+                            <p style='margin: 0; color: #c0392b; font-weight: bold; font-size: 14px;'>
+                                DEADLINE: {deadlineStr}
+                            </p>
+                            <p style='margin: 5px 0 0 0; color: #7f8c8d; font-size: 13px;'>
+                                Please ensure you start the exam before this date, as your link will expire.
+                            </p>
+                        </div>
+                        <div style='text-align: center; margin: 30px 0;'>
+                            <a href='{invitationLink}' style='background-color: #2c3e50; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;'>
+                                Begin Examination
+                            </a>
+                        </div>
+                    </div>
+                    <div style='padding: 20px; background-color: #f9f9f9; text-align: center; font-size: 12px; color: #999;'>
+                        This is an automated message. Please do not reply.
+                    </div>
+                </div>
+            </div>";
+
+        await emailService.SendEmailAsync(email, subject, body);
     }
 }

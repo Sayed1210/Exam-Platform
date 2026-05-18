@@ -219,7 +219,17 @@ const handleSaveQuestion = async (data: any) => {
         />
       )}
 
-  <TopicModal
+
+  {questionToDelete && (
+  <ConfirmDeleteModal
+    onConfirm={confirmDelete}
+    onCancel={cancelDelete}
+    title="Delete Question"
+    text="Are you sure you want to delete this question? This action cannot be undone."
+  />
+)}
+
+<TopicModal
   isOpen={isTopicModalOpen}
   onClose={closeTopicModal}
   onSave={handleAddTopic}

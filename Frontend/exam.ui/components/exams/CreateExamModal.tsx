@@ -9,6 +9,9 @@ import SearchIcon from "../SearchIcon";
 import Button from '../Button';
 import { SearchBar } from './SearchBar';
 import ExamModal from './ExamModal';
+import { createExamSchema, createExamStepOneSchema, CreateExamFormData } from '@/schemas/requests/create-exam-request';
+import { FormValidation } from '@/schemas/form-validation';
+
 interface Option {
   text: string;
   isCorrect: boolean;
@@ -23,10 +26,10 @@ interface Question {
 }
 interface CreateExamModalProps {
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: CreateExamFormData) => void;
   initialData?: any | null; // Added this line
 }
-export default function CreateExamModal({ onClose, onSave, initialData }: { onClose: () => void, onSave: (data: any) => void,initialData?:any|null }) {
+export default function CreateExamModal({ onClose, onSave, initialData }: { onClose: () => void, onSave: (data: CreateExamFormData) => void,initialData?:any|null }) {
   const [step, setStep] = useState(1);
   const [activeTab, setActiveTab] = useState<'bank' | 'manual'>('bank');
   //const [searchQuery, setSearchQuery] = useState('');
@@ -46,11 +49,41 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
     }
   ]);
 
-  const [formData, setFormData] = useState({
-    title: initialData?.name || '',
-    durationMins: initialData?.durationMinutes || 60,
-    questions: (initialData?.questions as Question[]) || []
+  const [formData, setFormData] = useState<CreateExamFormData>({
+    title: initialData?.title || '',
+    durationMins: initialData?.durationMins || 60,
+    questions: (initialData?.questions as any) || []
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const getError = (path: string) => errors[path] || "";
+
+  const handleNextStep = () => {
+    const result = FormValidation(createExamStepOneSchema, {
+      title: formData.title,
+      durationMins: formData.durationMins,
+    });
+
+    if (!result.success) {
+      setErrors(result.errors);
+      return;
+    }
+
+    setErrors({});
+    setStep(2);
+  };
+
+  const handleSaveExam = () => {
+    const result = FormValidation(createExamSchema, formData);
+
+    if (!result.success) {
+      setErrors(result.errors);
+      return;
+    }
+
+    setErrors({});
+    onSave(result.data);
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, target: { qIdx: number, oIdx?: number }) => {
     const file = e.target.files?.[0];
@@ -119,7 +152,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
   };
 
   return (
-    <ExamModal onClose={onClose} title={initialData ? `Edit Exam: ${initialData.name}` : "Create Exam"}>
+    <ExamModal onClose={onClose} title={initialData ? `Edit Exam: ${initialData.title}` : "Create Exam"}>
       {/* Stepper */}
       <div className="px-12 py-6 flex items-center justify-center gap-4 sticky top-0 bg-white z-10">
         <div className="flex items-center gap-2">
@@ -142,10 +175,12 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
             <div>
               <label className="block mb-2 font-medium text-label">Exam Title <span className="text-primary">*</span></label>
               <input type="text" className="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:border-primary shadow-sm" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} placeholder="e.g. React Developer Test"/>
+              {getError('title') && <p className="text-red-500 text-xs mt-1">{getError('title')}</p>}
             </div>
             <div>
               <label className="block mb-2 font-medium text-label">Duration (minutes) <span className="text-primary">*</span></label>
               <input type="number" className="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:border-primary shadow-sm" value={formData.durationMins} onChange={(e) => setFormData({...formData, durationMins: parseInt(e.target.value) || 0})}/>
+              {getError('durationMins') && <p className="text-red-500 text-xs mt-1">{getError('durationMins')}</p>}
             </div>
           </div>
         ) : (
@@ -183,6 +218,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
   )}
                 </div>
                 <div className="space-y-3">
+                  {getError('questions') && <p className="text-red-500 text-xs">{getError('questions')}</p>}
                   {bankQuestions
                     .filter(q => {
                       const matchesSearch = q.text.toLowerCase().includes(bankSearch.toLowerCase());
@@ -214,13 +250,17 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
               </div>
             ) : (
               <div className="space-y-6">
+                 {getError('questions') && <p className="text-red-500 text-xs">{getError('questions')}</p>}
                  {formData.questions.map((q, qIdx) => (
                    <div key={qIdx} className="p-6 border border-slate-100 rounded-3xl bg-slate-50/30 relative shadow-sm">
                       <div className="flex justify-between items-center mb-4">
-                        <select className="text-xs font-bold p-2 bg-white border border-slate-200 rounded-lg outline-none focus:border-primary text-slate-500" value={q.topic} onChange={(e) => { const updated = [...formData.questions]; updated[qIdx].topic = e.target.value; setFormData({...formData, questions: updated}); }}>
-                          <option value="">Select Topic</option>
-                          {availableTopics.map(t => <option key={t} value={t}>{t}</option>)}
-                        </select>
+                        <div className="flex-1">
+                          <select className="text-xs font-bold p-2 bg-white border border-slate-200 rounded-lg outline-none focus:border-primary text-slate-500 w-full" value={q.topic} onChange={(e) => { const updated = [...formData.questions]; updated[qIdx].topic = e.target.value; setFormData({...formData, questions: updated}); }}>
+                            <option value="">Select Topic</option>
+                            {availableTopics.map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                          {getError(`questions.${qIdx}.topic`) && <p className="text-red-500 text-xs mt-1">{getError(`questions.${qIdx}.topic`)}</p>}
+                        </div>
                         <div className="flex items-center gap-2">
                             <input type="file" id={`question-image-${qIdx}`} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, { qIdx })}/>
                             <label htmlFor={`question-image-${qIdx}`} className="text-slate-400 hover:text-slate-600 cursor-pointer p-1.5 rounded-lg border border-slate-100 bg-white">
@@ -233,6 +273,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
                       </div>
                       <div className="mb-4 space-y-2">
                           <textarea placeholder="Enter question text..." className="w-full p-4 bg-white border border-slate-100 rounded-2xl outline-none focus:border-primary text-sm shadow-sm" value={q.text} onChange={(e) => { const updated = [...formData.questions]; updated[qIdx].text = e.target.value; setFormData({...formData, questions: updated}); }}/>
+                          {getError(`questions.${qIdx}.text`) && <p className="text-red-500 text-xs mt-1">{getError(`questions.${qIdx}.text`)}</p>}
                           {q.imageUrl && (
                             <div className="relative group w-fit">
                               <img src={q.imageUrl} alt="Question" className="w-auto max-h-40 rounded-xl border border-slate-100 bg-white" />
@@ -250,6 +291,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
                             <input type="radio" name={`correct-${qIdx}`} checked={opt.isCorrect} onChange={() => { const updated = [...formData.questions]; updated[qIdx].options = updated[qIdx].options.map((o, i) => ({...o, isCorrect: i === oIdx})); setFormData({...formData, questions: updated}); }} className="accent-primary w-4 h-4 cursor-pointer mt-3" />
                             <div className="flex-1 space-y-1.5">
                                 <input placeholder={`Option ${oIdx + 1}`} className="w-full p-3 border border-slate-100 rounded-xl text-sm outline-none focus:border-primary bg-white shadow-sm" value={opt.text} onChange={(e) => { const updated = [...formData.questions]; updated[qIdx].options[oIdx].text = e.target.value; setFormData({...formData, questions: updated}); }}/>
+                                {getError(`questions.${qIdx}.options.${oIdx}.text`) && <p className="text-red-500 text-xs mt-1">{getError(`questions.${qIdx}.options.${oIdx}.text`)}</p>}
                                 {opt.imageUrl && (
                                   <div className="relative group w-fit">
                                     <img src={opt.imageUrl} alt={`Option ${oIdx + 1}`} className="w-auto max-h-32 rounded-xl border border-slate-100 bg-white" />
@@ -272,6 +314,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
                             </div>
                           </div>
                         ))}
+                        {getError(`questions.${qIdx}.options`) && <p className="text-red-500 text-xs mt-1">{getError(`questions.${qIdx}.options`)}</p>}
                         <button onClick={() => addOption(qIdx)} className="flex items-center gap-1 text-xs font-bold text-primary hover:opacity-80 transition-opacity"> <PlusIcon className="w-3 h-3 stroke-[3px]" /> Add Choice </button>
                       </div>
                    </div>
@@ -298,7 +341,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
           <Button 
             text={step === 1 ? "Next Step" : "Save Exam"} 
             className="btn-primary !mt-0 px-8" 
-            onClick={() => step === 1 ? setStep(2) : onSave(formData)} 
+            onClick={() => step === 1 ? handleNextStep() : handleSaveExam()} 
             disabled={step === 1 && !formData.title}
           />
         </div>

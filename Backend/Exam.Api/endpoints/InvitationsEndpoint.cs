@@ -12,8 +12,17 @@ public static class InvitationsEndpoint
     {
         var group = app.MapGroup("/api/invitations");
 
-        group.MapPost("/send", async (SendInvitationRequest request, IInvitationService service) =>
+        group.MapPost("/send", async (SendInvitationRequest request, IInvitationValidator validator,IInvitationService service) =>
         {
+            var validationResult = await validator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                return Results.BadRequest(new InvitationStatusResponse(
+                    false, 
+                    validationResult.Message, 
+                    DateTime.UtcNow
+                ));
+            }
             var response = await service.SendInvitationAsync(request);
             
             return response.IsSuccess 

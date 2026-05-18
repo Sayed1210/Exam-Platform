@@ -6,9 +6,9 @@ namespace Exam.Repo;
 public class CandidateExamRepository(ApiContext context) : ICandidateExamRepository
 {
     private readonly ApiContext _context = context;
-    public async Task<Candidate?> GetCandidateByEmailAsync(string email)
+    public async Task<Candidate?> GetCandidateAsync(int id)
     {
-        return await _context.Candidates.AsNoTracking().FirstOrDefaultAsync(c => c.Email == email);
+        return await _context.Candidates.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
     }
 
     public async Task AddInvitationAsync(CandidateExam invitation)
