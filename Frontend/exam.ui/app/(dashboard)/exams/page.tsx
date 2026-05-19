@@ -1,8 +1,8 @@
 'use client';
 import { useState } from 'react'; 
 import { useEffect } from 'react';
-import { createExamBackendSchema } from '@/schemas/requests/create-exam-request';
-import { getExams, deleteExam, createExam } from '@/services/examService';
+import { getExams, deleteExam, createExam, updateExam, getExamById } from '@/services/examService';
+import { createQuestion, updateQuestion } from '@/services/questionService';
 import { Exam } from '@/types/exam';
 import ExamCard from '@/components/exams/ExamCard';
 import AssignModal from '@/components/exams/AssignModal';
@@ -65,41 +65,83 @@ export default function ExamsPage() {
 
   // --- NEW: Missing Handler Functions ---
 
+  const resolveQuestionIds = async (questions: any[]) => {
+    const ids: number[] = [];
+
+    for (const question of questions) {
+      const normalizedTopicId = Number(question.topicId ?? question.topicId);
+      const payload = {
+        text: question.text,
+        imageUrl: question.imageUrl,
+        choices: question.options.map((option: any) => ({
+          text: option.text,
+          imageUrl: option.imageUrl,
+          isCorrect: option.isCorrect,
+        })),
+      };
+
+      if (question.id && Number(question.id) > 0) {
+        if (!normalizedTopicId) {
+          throw new Error(`Missing topic id for existing question: ${question.text}`);
+        }
+
+        await updateQuestion(Number(question.id), {
+          topicId: normalizedTopicId,
+          ...payload,
+        });
+        ids.push(Number(question.id));
+        continue;
+      }
+
+      if (!normalizedTopicId) {
+        throw new Error(`Missing topic id for new question: ${question.text}`);
+      }
+
+      const createdQuestion = await createQuestion({
+        topicId: normalizedTopicId,
+        ...payload,
+      });
+
+      ids.push(Number(createdQuestion.id));
+    }
+
+    return ids;
+  };
+
   const handleCreateExam = async (newData: any) => {
-   const newExam: Exam = {
-    id: Date.now(), 
-    title: newData.title,
-    topics: Array.from(new Set(newData.questions.map((q: any) => q.topic))).join(', '),
-    durationMins: newData.durationMins,
-    totalQuestions: newData.questions.length,
-    createdAt: new Date().toISOString(),
-    questions: newData.questions};
-    setExams(prev => [...prev, newExam]);
-    setMessage({ message: 'Exam created with ' + newExam.totalQuestions + ' questions', type: 'success' });
-    setTimeout(() => {
-      setMessage(null);
-    }, 3000);
-    };
+    try {
+      const questionIds = await resolveQuestionIds(newData.questions);
+      const created = await createExam({
+        title: newData.title,
+        durationMins: newData.durationMins,
+        questionIds,
+      });
+
+      setExams((prev) => [...prev, created]);
+      setMessage({ message: 'Exam created successfully.', type: 'success' });
+    } catch (error: any) {
+      setMessage({ message: error?.message || 'Failed to create exam.', type: 'error' });
+    } finally {
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
 
   const handleUpdateExam = async (id: number, updatedData: any) => {
-    setExams((prevExams) => 
-    prevExams.map((exam) => 
-      exam.id === id 
-        ? { 
-            ...exam, 
-            title: updatedData.title, 
-            durationMins: updatedData.durationMins,
-            questions: updatedData.questions, 
-            totalQuestions: updatedData.questions.length,
-            topics: Array.from(new Set(updatedData.questions.map((q: any) => q.topic))).join(', ')
-          } 
-        : exam
-    )
-  );
-  setMessage({ message: 'Changes saved!', type: 'success' });
-  setTimeout(() => {
-    setMessage(null);
-  }, 3000);
+    try {
+      const questionIds = await resolveQuestionIds(updatedData.questions);
+      const updated = await updateExam(id, {
+        title: updatedData.title,
+        durationMins: updatedData.durationMins,
+        questionIds,
+      });
+
+      setExams((prevExams) => prevExams.map((exam) => (exam.id === updated.id ? updated : exam)));
+      setMessage({ message: 'Exam updated successfully.', type: 'success' });
+    } catch (error: any) {
+      setMessage({ message: error?.message || 'Failed to update exam.', type: 'error' });
+    } finally {
+      setTimeout(() => setMessage(null), 3000);
+    }
   };
   const confirmDelete = async() => {
     if (!examToDelete) return;
@@ -124,13 +166,26 @@ export default function ExamsPage() {
   });
 
   const handleViewExam = async (exam: Exam) => {
-    // Find the most up-to-date version of this exam from our state
-  const currentExam = exams.find(e => e.id === exam.id);
-  
-  if (currentExam) {
-    setFullExamData(currentExam); // This now contains the REAL questions
-    setExamToView(currentExam);
-  }
+    setIsLoadingView(true);
+    try {
+      const details = await getExamById(exam.id);
+      setFullExamData(details);
+      setExamToView(details);
+    } catch (error) {
+      setMessage({ message: 'Unable to load exam details.', type: 'error' });
+    } finally {
+      setIsLoadingView(false);
+    }
+  };
+
+  const handleEditExam = async (exam: Exam) => {
+    try {
+      const details = await getExamById(exam.id);
+      setExamToEdit(details);
+    } catch (error) {
+      setMessage({ message: 'Unable to load exam for editing.', type: 'error' });
+      setTimeout(() => setMessage(null), 3000);
+    }
   };
 
  const handleAssignment = async (data: { examId: number; candidateIds: number[]; deadline: string }): Promise<void> => {
@@ -193,7 +248,7 @@ export default function ExamsPage() {
             exam={exam}
             onAssign={(e) => setExamToAssign(e)}
             onView={() => handleViewExam(exam)}
-            onEdit={((clickedExam) => setExamToEdit(clickedExam))}
+            onEdit={(clickedExam) => handleEditExam(clickedExam)}
             onDelete={(id) => setExamToDelete(exam)}
           />
         ))}
@@ -209,26 +264,13 @@ export default function ExamsPage() {
           }}
           onSave={async (data) => {
     try {
-      // transform form data to the IDs your backend expects
-      const payload = {
-        title: data.title,
-        durationMins: data.durationMins,
-        questionIds: data.questions.map((q: any) => q.id)
-      };
-
       if (examToEdit) {
-        // 1. Call PATCH /api/exams/{id}
-       // const updated = await examService.updateExam(examToEdit.id, payload);
-        //setExams(prev => prev.map(e => e.id === examToEdit.id ? updated : e));
-        //setMessage({ message: 'Exam updated in database!', type: 'success' });
+        await handleUpdateExam(examToEdit.id, data);
       } else {
-        // 2. Call POST /api/exams
-        const created = await createExam(payload);
-        setExams(prev => [...prev, created]);
-        setMessage({ message: 'Exam saved to database!', type: 'success' });
+        await handleCreateExam(data);
       }
     } catch (error) {
-      setMessage({ message: 'Sync failed. Ensure dummy question IDs exist.', type: 'error' });
+      setMessage({ message: 'Sync failed. Ensure the exam questions are valid.', type: 'error' });
     } finally {
       setIsCreateOpen(false);
       setExamToEdit(null);

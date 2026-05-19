@@ -2,36 +2,23 @@
 import Button from '../Button';
 import ExamModal from './ExamModal';
 
-// Mock data to use until the database integration is complete
-const MOCK_QUESTIONS = [
-  {
-    text: "Which CSS property is used to create a flexible layout?",
-    options: [
-      { text: "grid-layout", isCorrect: false },
-      { text: "flexbox", isCorrect: true },
-      { text: "display: flex", isCorrect: false },
-      { text: "align-items", isCorrect: false },
-    ]
-  },
-  {
-    text: "What does 'hoisting' mean in JavaScript?",
-    options: [
-      { text: "Moving code to the top", isCorrect: true },
-      { text: "Deleting unused variables", isCorrect: false },
-      { text: "Compiling JavaScript", isCorrect: false },
-      { text: "Running async code", isCorrect: false },
-    ]
-  }
-];
-
 interface Option {
   text: string;
   isCorrect: boolean;
+  imageUrl?: string | null;
 }
 
 interface Question {
   text: string;
+  imageUrl?: string | null;
   options: Option[];
+}
+
+interface RemoteQuestion {
+  id: number;
+  text: string;
+  imageUrl?: string | null;
+  choices: Option[];
 }
 
 interface ViewExamModalProps {
@@ -41,18 +28,19 @@ interface ViewExamModalProps {
     title: string;
     durationMins: number;
     totalQuestions: number;
-    questions?: Question[]; // Made optional for the transition period
+    questions?: RemoteQuestion[];
   };
   onClose: () => void;
   onEdit: (exam: any) => void;
 }
 
 export default function ViewExamModal({ exam, isLoading, onClose, onEdit }: ViewExamModalProps) {
-  
-  // Logic: Use real questions if they exist, otherwise use mock data for now
-  const questionsToDisplay = exam.questions && exam.questions.length > 0 
-    ? exam.questions 
-    : MOCK_QUESTIONS;
+  const questionsToDisplay: Question[] =
+    exam.questions?.map((question) => ({
+      text: question.text,
+      options: question.choices ?? [],
+      imageUrl: question.imageUrl,
+    })) ?? [];
 
   return (
     <ExamModal onClose={onClose} title={exam.title}>
@@ -78,6 +66,10 @@ export default function ViewExamModal({ exam, isLoading, onClose, onEdit }: View
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
             <p className="text-slate-400 text-sm italic font-medium">Fetching exam from database...</p>
           </div>
+        ) : questionsToDisplay.length === 0 ? (
+          <div className="text-center py-20 text-slate-500 text-sm">
+            No questions were returned by the database for this exam.
+          </div>
         ) : (
           questionsToDisplay.map((q, idx) => (
             <div key={idx} className="space-y-4">
@@ -86,9 +78,16 @@ export default function ViewExamModal({ exam, isLoading, onClose, onEdit }: View
                 <span className="bg-primary/10 text-primary text-[10px] font-black px-2 py-1 rounded-lg mt-0.5">
                   Q{idx + 1}
                 </span>
-                <p className="text-sm font-bold text-slate-800 leading-relaxed">
-                  {q.text}
-                </p>
+                <div>
+                  <p className="text-sm font-bold text-slate-800 leading-relaxed">
+                    {q.text}
+                  </p>
+                  {q.imageUrl && (
+                    <div className="mt-3">
+                      <img src={q.imageUrl} alt={`Question ${idx + 1}`} className="w-full max-h-56 rounded-3xl border border-slate-100 bg-white object-contain" />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Options Grid */}
@@ -102,8 +101,15 @@ export default function ViewExamModal({ exam, isLoading, onClose, onEdit }: View
                         : 'border-slate-100 bg-white text-slate-500'
                     }`}
                   >
-                    <span className="mr-2 opacity-50">{String.fromCharCode(65 + oIdx)}.</span>
-                    {opt.text}
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="opacity-50">{String.fromCharCode(65 + oIdx)}.</span>
+                      <span className="font-semibold">{opt.isCorrect ? 'Correct' : 'Choice'}</span>
+                    </div>
+                    {opt.imageUrl ? (
+                      <img src={opt.imageUrl} alt={`Option ${oIdx + 1}`} className="w-full max-h-44 rounded-2xl object-contain" />
+                    ) : (
+                      <p>{opt.text}</p>
+                    )}
                   </div>
                 ))}
               </div>

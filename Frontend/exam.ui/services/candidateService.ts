@@ -17,7 +17,7 @@ export const getCandidates = (
 };
 
 export const getCandidateById = (id: number) => apiFetch(`/candidates/${id}`);
-
+export const getUnassignedCandidates = () => apiFetch(`/candidates/unassigned`);
 export const addCandidate = (data: { firstName: string; lastName: 
                       string; email: string; phoneNumber: string }) =>
   apiFetch("/candidates", {

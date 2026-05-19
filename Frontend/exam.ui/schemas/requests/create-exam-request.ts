@@ -8,11 +8,24 @@ const optionalImageUrlSchema = z.preprocess(
   z.string().trim().url("Image URL must be valid.").optional()
 );
 
-const examOptionSchema = z.object({
-  text: z.string().trim().min(1, "Answer option text is required."),
-  isCorrect: z.boolean(),
-  imageUrl: optionalImageUrlSchema,
-});
+const examOptionSchema = z
+  .object({
+    text: z.string().trim().optional(),
+    imageUrl: optionalImageUrlSchema,
+    isCorrect: z.boolean(),
+  })
+  .superRefine((option, ctx) => {
+    const hasText = typeof option.text === 'string' && option.text.trim().length > 0;
+    const hasImage = Boolean(option.imageUrl);
+
+    if (hasText === hasImage) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'A choice must include exactly one of text or imageUrl.',
+        path: ['text'],
+      });
+    }
+  });
 
 const examQuestionSchema = z
   .object({
