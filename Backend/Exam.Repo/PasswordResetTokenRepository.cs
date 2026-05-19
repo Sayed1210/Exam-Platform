@@ -3,6 +3,7 @@ namespace Exam.Repo;
 using Exam.Data;
 using Exam.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 public interface IPasswordResetTokenRepository
 {
@@ -15,16 +16,25 @@ public interface IPasswordResetTokenRepository
 public class PasswordResetTokenRepository : IPasswordResetTokenRepository
 {
     private readonly ApiContext _context;
+    private readonly ILogger<PasswordResetTokenRepository> _logger;
 
-    public PasswordResetTokenRepository(ApiContext context)
+    public PasswordResetTokenRepository(ApiContext context, ILogger<PasswordResetTokenRepository> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task AddPasswordResetTokenAsync(PasswordResetToken resetToken, CancellationToken cancellationToken)
     {
-        await _context.PasswordResetTokens.AddAsync(resetToken, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.PasswordResetTokens.AddAsync(resetToken, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AddPasswordResetTokenAsync failed — UserId={UserId}", resetToken.UserId);
+        }
     }
 
     public Task<PasswordResetToken?> GetActivePasswordResetTokenAsync(
@@ -46,13 +56,27 @@ public class PasswordResetTokenRepository : IPasswordResetTokenRepository
         DateTime utcNow,
         CancellationToken cancellationToken)
     {
-        resetToken.UsedAt = utcNow;
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            resetToken.UsedAt = utcNow;
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "MarkPasswordResetTokenUsedAsync failed — UserId={UserId}", resetToken.UserId);
+        }
     }
 
     public async Task DeletePasswordResetTokenAsync(PasswordResetToken resetToken, CancellationToken cancellationToken)
     {
-        _context.PasswordResetTokens.Remove(resetToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            _context.PasswordResetTokens.Remove(resetToken);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "DeletePasswordResetTokenAsync failed — UserId={UserId}", resetToken.UserId);
+        }
     }
 }
