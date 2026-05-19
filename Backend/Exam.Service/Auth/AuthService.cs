@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Exam.Models;
 using Exam.Repo;
+using Exam.Service.EmailTemplates;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 
@@ -90,12 +91,7 @@ public class AuthService : IAuthService
         };
 
         var resetLink = BuildResetLink(token);
-        var htmlBody = $"""
-            <p>Hello {System.Net.WebUtility.HtmlEncode(user.FirstName)},</p>
-            <p>Use the link below to reset your password. This link expires in 1 hour.</p>
-            <p><a href="{System.Net.WebUtility.HtmlEncode(resetLink)}">Reset password</a></p>
-            <p>If you did not request a password reset, you can ignore this email.</p>
-            """;
+        var htmlBody = EmailTemplateBuilder.BuildPasswordReset(resetLink, user.FirstName);
 
         await _passwordResetTokenRepository.AddPasswordResetTokenAsync(resetToken, cancellationToken);
 
