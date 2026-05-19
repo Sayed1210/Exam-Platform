@@ -14,8 +14,10 @@
     public class QuestionInExamResponse
     {
         public int Id { get; set; }
+        public int TopicId { get; set; }
         public string Text { get; set; } = string.Empty;
         public string? ImageUrl { get; set; }
+        public string TopicTitle { get; set; } = string.Empty;
         public List<ChoiceInExamResponse> Choices { get; set; } = [];
     }
 

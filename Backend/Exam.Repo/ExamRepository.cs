@@ -21,6 +21,9 @@ namespace Exam.Repo
         .Include(e => e.ExamQuestions)
             .ThenInclude(eq => eq.Question)
                 .ThenInclude(q => q!.Choices)
+        .Include(e => e.ExamQuestions)
+            .ThenInclude(eq => eq.Question)
+                .ThenInclude(q => q!.Topic)
         .ToListAsync();
 
         public async Task<IEnumerable<ExamEntity>> GetAllAsync() =>
@@ -38,6 +41,9 @@ namespace Exam.Repo
                 .Include(e => e.ExamQuestions)
                     .ThenInclude(eq => eq.Question)
                         .ThenInclude(q => q!.Choices)
+                .Include(e => e.ExamQuestions)
+                    .ThenInclude(eq => eq.Question)
+                        .ThenInclude(q => q!.Topic)
                 .FirstOrDefaultAsync(e => e.Id == id);
 
         public async Task UpdateAsync(ExamEntity exam, List<int>? questionIds)
