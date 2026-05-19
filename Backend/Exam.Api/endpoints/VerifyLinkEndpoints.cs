@@ -1,5 +1,5 @@
 using Exam.Service;
-
+namespace Exam.Api;
 public static class VerifyLinkEndpoints
 {
     public static void MapVerifyLinkEndpoints(this IEndpointRouteBuilder app)

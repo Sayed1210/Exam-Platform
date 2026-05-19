@@ -3,7 +3,7 @@ using Exam.Repo;
 using Exam.Service;
 using System.ComponentModel.DataAnnotations;
 
-namespace Exam.Api.endpoints;
+namespace Exam.Api;
 
 public static class ExamEndpoints
 {

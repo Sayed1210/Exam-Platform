@@ -57,6 +57,9 @@ body {
   .text-error {
     @apply text-xs font-medium text-red-500 overflow-hidden transition-all duration-300 ease-in-out;
   }
+  .nav-section-label {
+    @apply text-[11px] font-semibold tracking-widest text-gray-600 px-2 mb-2;
+  }
 }
 
 /* Layout Styles */

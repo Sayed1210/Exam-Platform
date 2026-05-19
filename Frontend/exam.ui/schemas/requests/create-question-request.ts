@@ -2,10 +2,16 @@ import { z } from "zod";
 
 const optionalImageUrlSchema = z.preprocess(
   (value) =>
-    typeof value === "string" && value.trim() === ""
+    typeof value === "string" &&
+    value.trim() === ""
       ? undefined
       : value,
-  z.string().trim().url("Image URL must be valid.").optional()
+  z.string()
+    .trim()
+    .startsWith("/", {
+      message: "Invalid image path.",
+    })
+    .optional()
 );
 
 const textChoiceRequestSchema = z.object({
@@ -16,7 +22,12 @@ const textChoiceRequestSchema = z.object({
 
 const imageChoiceRequestSchema = z.object({
   text: z.undefined().optional(),
-  imageUrl: z.string().trim().url("Choice image URL must be valid."),
+  imageUrl: z.string()
+    .trim()
+    .startsWith("/", {
+      message: "Invalid image path.",
+    })
+    .optional(),
   isCorrect: z.boolean(),
 });
 

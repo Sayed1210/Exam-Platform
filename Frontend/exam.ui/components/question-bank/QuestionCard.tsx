@@ -4,6 +4,7 @@ import ChoiceItem from "./ChoiceItem";
 import TrashIcon from "../TrashIcon";
 import EditIcon from "../EditIcon";
 import type { Question } from "@/types/question";
+import {getImageUrl} from "@/lib/api";
 
 export type QuestionCardProps = {
   question: APIQuestion;
@@ -34,7 +35,7 @@ export default function QuestionCard({ question, onEdit, onDelete }: QuestionCar
       <h3 className="mb-3 text-body font-semibold text-gray-900">{question.text}</h3>
 
       {question.imageUrl && (
-        <img src={question.imageUrl} alt="Question image" className="mb-4 max-h-37 w-full object-contain rounded" />
+        <img src={getImageUrl(question.imageUrl)} alt="Question image" className="mb-4 max-h-37 w-full object-contain rounded" />
       )}
 
       <ul className="space-y-1">
@@ -50,7 +51,7 @@ export default function QuestionCard({ question, onEdit, onDelete }: QuestionCar
             />
             <span className="min-w-0 flex-1">
               {choice.imageUrl ? (
-                <img src={choice.imageUrl} alt="Choice" className="max-h-16 object-contain" />
+                <img src={getImageUrl(choice.imageUrl)} alt="Choice" className="max-h-16 object-contain" />
               ) : (
                 <span>{choice.text}</span>
               )}

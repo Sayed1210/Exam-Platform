@@ -80,7 +80,7 @@ const handleSubmit = () => {
         <div className="modal-body px-6 py-5 flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-label">
                 First Name
               </label>
 
@@ -98,7 +98,7 @@ const handleSubmit = () => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-label">
                 Last Name
               </label>
 
@@ -118,7 +118,7 @@ const handleSubmit = () => {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-gray-700">
+            <label className="text-label">
               Email
             </label>
 
@@ -144,7 +144,7 @@ const handleSubmit = () => {
 
           {/* Phone Number */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-gray-700">
+            <label className="text-label">
               Phone Number
             </label>
 
@@ -166,14 +166,14 @@ const handleSubmit = () => {
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 border-t border-slate-100 px-6 py-5">
           <button
-            className="bg-white border border-gray-300 rounded-lg px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+            className="btn-secondary"
             onClick={onClose}
           >
             Cancel
           </button>
 
           <button
-            className="bg-primary text-white font-semibold px-6 py-2.5 rounded-full hover:brightness-90 transition cursor-pointer"
+            className="btn-primary px-6 py-2.5"
             onClick={handleSubmit}
           >
             Add Candidate
