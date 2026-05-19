@@ -6,13 +6,7 @@ using Exam.Models;
 using Exam.Repo;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
-
-// public interface IAuthService
-// {
-//     Task ForgetPasswordAsync(ForgetPasswordRequest request, CancellationToken cancellationToken);
-//     Task<bool> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken);
-// }
-
+using Microsoft.Extensions.Logging;
 public class AuthService : IAuthService
 {
     private static readonly TimeSpan ResetTokenLifetime = TimeSpan.FromHours(1);
@@ -22,6 +16,7 @@ public class AuthService : IAuthService
     private readonly IConfiguration _configuration;
     private readonly IPasswordHasher<User> _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly ILogger<AuthService> _logger;
 
 
     public AuthService(
@@ -30,7 +25,8 @@ public class AuthService : IAuthService
         IEmailService emailService,
         IConfiguration configuration,
         IPasswordHasher<User> passwordHasher,
-        IJwtTokenGenerator jwtTokenGenerator)
+        IJwtTokenGenerator jwtTokenGenerator,
+        ILogger<AuthService> logger)
     {
         _userRepository = userRepository;
         _passwordResetTokenRepository = passwordResetTokenRepository;
@@ -38,6 +34,7 @@ public class AuthService : IAuthService
         _configuration = configuration;
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
+        _logger = logger;
     }
 
 
@@ -103,10 +100,10 @@ public class AuthService : IAuthService
         {
             await _emailService.SendEmailAsync(user.Email, "Reset your password", htmlBody);
         }
-        catch
+      catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to send password reset email — UserId={UserId}", user.Id);
             await _passwordResetTokenRepository.DeletePasswordResetTokenAsync(resetToken, cancellationToken);
-            
         }
     }
 
@@ -131,10 +128,11 @@ public class AuthService : IAuthService
 
     private string BuildResetLink(string token)
     {
-        var resetPasswordUrl = _configuration["Auth:ResetPasswordUrl"] ?? "http://localhost:3000/reset-password";
+        var baseUrl = _configuration["Frontend:BaseUrl"];
+        var resetPasswordUrl = $"{baseUrl}/reset-password";
         var separator = resetPasswordUrl.Contains('?') ? "&" : "?";
 
-        return $"{resetPasswordUrl}{separator}token={Uri.EscapeDataString(token)}";
+    return $"{resetPasswordUrl}{separator}token={Uri.EscapeDataString(token)}";
     }
 
     private static string HashToken(string token)

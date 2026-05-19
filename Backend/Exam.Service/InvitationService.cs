@@ -5,8 +5,9 @@ using System.Net.Sockets;
 using System.Net.Mail;
 using System;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Configuration;
 
-public class InvitationService(ICandidateExamRepository repository, IEmailService emailService) : IInvitationService
+public class InvitationService(ICandidateExamRepository repository, IEmailService emailService,  IConfiguration _configuration) : IInvitationService
 {
     public async Task<InvitationStatusResponse> SendInvitationAsync(SendInvitationRequest request)
     {
@@ -56,7 +57,8 @@ public class InvitationService(ICandidateExamRepository repository, IEmailServic
 
     private async Task SendInvitationEmail(string email, string token, string deadlineStr)
     {
-        var invitationLink = $"http://localhost:5173/join-exam?token={token}";
+        var baseUrl = _configuration["Frontend:BaseUrl"];
+        var invitationLink = $"{baseUrl}/join-exam?token={token}"; 
         string subject = "Action Required: Your Enozom Examination Invitation";
         string body = $@"
             <div style='background-color: #f4f4f7; padding: 30px; font-family: sans-serif;'>

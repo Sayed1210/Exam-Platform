@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Exam.Models;
 using Exam.Service;
+using Exam.Api.Validation;
 namespace Exam.Api;
 
 public static class AuthEndpoints
@@ -51,7 +52,7 @@ public static class AuthEndpoints
         HttpContext httpContext,
         CancellationToken cancellationToken)
     {
-        var validationProblem = Validate(request);
+        var validationProblem = EndpointValidation.Request(request);
         if (validationProblem is not null)
         {
             return validationProblem;
@@ -81,7 +82,7 @@ public static class AuthEndpoints
         [FromServices] IAuthService authService,
         CancellationToken cancellationToken)
     {
-        var validationProblem = Validate(request);
+       var validationProblem = EndpointValidation.Request(request);
         if (validationProblem is not null)
         {
             return validationProblem;
@@ -99,7 +100,7 @@ public static class AuthEndpoints
         [FromServices] IAuthService authService,
         CancellationToken cancellationToken)
     {
-        var validationProblem = Validate(request);
+        var validationProblem = EndpointValidation.Request(request);
         if (validationProblem is not null)
         {
             return validationProblem;
@@ -112,24 +113,5 @@ public static class AuthEndpoints
         }
 
         return Results.Ok(new MessageResponse("Password reset successfully."));
-    }
-
-    private static IResult? Validate<TRequest>(TRequest request)
-    {
-        var results = new List<ValidationResult>();
-        var context = new ValidationContext(request!);
-
-        if (Validator.TryValidateObject(request!, context, results, validateAllProperties: true))
-        {
-            return null;
-        }
-
-        var errors = results
-            .GroupBy(result => result.MemberNames.FirstOrDefault() ?? string.Empty)
-            .ToDictionary(
-                group => group.Key,
-                group => group.Select(result => result.ErrorMessage ?? "Invalid value.").ToArray());
-
-        return Results.ValidationProblem(errors);
     }
 }

@@ -2,6 +2,8 @@ using Exam.Models;
 using Exam.Repo;
 using Exam.Service;
 using System.ComponentModel.DataAnnotations;
+using Exam.Api.Validation;
+
 
 namespace Exam.Api;
 
@@ -20,7 +22,7 @@ public static class TopicEndpoints
 
         group.MapGet("/{id:int}", async (int id, ITopicService service) =>
         {
-            var validation = ValidatePositiveNumber(nameof(id), id);
+            var validation = EndpointValidation.PositiveNumber(nameof(id), id);
             if (validation is not null) return validation;
 
             var topic = await service.GetTopicByIdAsync(id);
@@ -75,7 +77,7 @@ public static class TopicEndpoints
 
         group.MapDelete("/{id:int}", async (int id, ITopicService service) =>
         {
-            var validation = ValidatePositiveNumber(nameof(id), id);
+            var validation = EndpointValidation.PositiveNumber(nameof(id), id);
             if (validation is not null) return validation;
 
             var result = await service.DeleteTopicAsync(id);
@@ -92,36 +94,12 @@ public static class TopicEndpoints
     }
 
     // Validation helpers
-    private static IResult? ValidatePositiveNumber(string fieldName, int value)
-    {
-        if (value > 0) return null;
-        return Results.ValidationProblem(new Dictionary<string, string[]>
-        {
-            [fieldName] = [$"{fieldName} must be a positive number."]
-        });
-    }
-
-    private static IResult? Validate<TRequest>(TRequest request)
-    {
-        var results = new List<ValidationResult>();
-        var context = new ValidationContext(request!);
-        if (Validator.TryValidateObject(request!, context, results, validateAllProperties: true))
-            return null;
-
-        var errors = results
-            .GroupBy(result => result.MemberNames.FirstOrDefault() ?? string.Empty)
-            .ToDictionary(
-                group => group.Key,
-                group => group.Select(result => result.ErrorMessage ?? "Invalid value.").ToArray());
-
-        return Results.ValidationProblem(errors);
-    }
 
     private static async Task<IResult?> ValidateCreateAsync(
         TopicRequest request,
         ITopicRepository topicRepository)
     {
-        var requestValidation = Validate(request);
+        var requestValidation = EndpointValidation.Request(request);
         if (requestValidation is not null) return requestValidation;
 
         return await ValidateDuplicateTitleAsync(request.Title, topicRepository);
@@ -132,10 +110,10 @@ public static class TopicEndpoints
         TopicRequest request,
         ITopicRepository topicRepository)
     {
-        var idValidation = ValidatePositiveNumber(nameof(id), id);
+        var idValidation = EndpointValidation.PositiveNumber(nameof(id), id);
         if (idValidation is not null) return idValidation;
 
-        var requestValidation = Validate(request);
+        var requestValidation = EndpointValidation.Request(request);
         if (requestValidation is not null) return requestValidation;
 
         return await ValidateDuplicateTitleAsync(request.Title, topicRepository, id);

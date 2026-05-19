@@ -2,6 +2,7 @@ using Exam.Models;
 using Exam.Repo;
 using Exam.Service;
 using System.ComponentModel.DataAnnotations;
+using Exam.Api.Validation;
 
 namespace Exam.Api;
 
@@ -39,13 +40,13 @@ public static class ExamEndpoints
 
 
         group.MapMethods("/{id:int}", ["PATCH"], async (
-     int id,
+        int id,
      UpdateExamRequest request,
      IExamService svc,
      IQuestionRepository questionRepo) =>
         {
-            var validation = ValidatePositiveNumber(nameof(id), id)
-                ?? Validate(request)
+            var validation = EndpointValidation.PositiveNumber(nameof(id), id)
+                ?? EndpointValidation.Request(request)
                 ?? await ValidateQuestionIdsExistAsync(
                     request.QuestionIds ?? [],
                     nameof(request.QuestionIds),
@@ -66,7 +67,7 @@ public static class ExamEndpoints
 
         group.MapDelete("/{id:int}", async (int id, IExamService svc) =>
         {
-            var validation = ValidatePositiveNumber(nameof(id), id);
+            var validation = EndpointValidation.PositiveNumber(nameof(id), id);
             if (validation is not null) return validation;
 
             var result = await svc.DeleteExamAsync(id);
@@ -83,7 +84,7 @@ public static class ExamEndpoints
 
         group.MapGet("/{id:int}/questions", async (int id, IExamService svc) =>
         {
-            var validation = ValidatePositiveNumber(nameof(id), id);
+            var validation = EndpointValidation.PositiveNumber(nameof(id), id);
             if (validation is not null) return validation;
 
             var result = await svc.GetExamWithQuestionsAsync(id);
@@ -104,7 +105,7 @@ public static class ExamEndpoints
             IExamService svc,
             IQuestionRepository questionRepo) =>
         {
-            var examIdValidation = ValidatePositiveNumber(nameof(examId), examId);
+            var examIdValidation = EndpointValidation.PositiveNumber(nameof(examId), examId);
             if (examIdValidation is not null) return examIdValidation;
 
             var requestValidation = await ValidateAssignQuestionsAsync(request, questionRepo);
@@ -125,10 +126,10 @@ public static class ExamEndpoints
             int questionId,
             IExamService svc) =>
         {
-            var examIdValidation = ValidatePositiveNumber(nameof(examId), examId);
+            var examIdValidation = EndpointValidation.PositiveNumber(nameof(examId), examId);
             if (examIdValidation is not null) return examIdValidation;
 
-            var questionIdValidation = ValidatePositiveNumber(nameof(questionId), questionId);
+            var questionIdValidation = EndpointValidation.PositiveNumber(nameof(questionId), questionId);
             if (questionIdValidation is not null) return questionIdValidation;
 
             var result = await svc.RemoveQuestionAsync(examId, questionId);
@@ -136,7 +137,7 @@ public static class ExamEndpoints
                 ? Results.NotFound(new { message = $"Exam {examId} not found." })
                 : Results.NoContent();
         })
-                .WithName("RemoveQuestionFromExam")
+        .WithName("RemoveQuestionFromExam")
         .WithSummary("Remove a question from an exam")
         .WithDescription("Unlinks a question from an exam. The question itself is not deleted.")
         .Produces(204)
@@ -145,36 +146,12 @@ public static class ExamEndpoints
     }
 
     // Validation helpers
-    private static IResult? ValidatePositiveNumber(string fieldName, int value)
-    {
-        if (value > 0) return null;
-        return Results.ValidationProblem(new Dictionary<string, string[]>
-        {
-            [fieldName] = [$"{fieldName} must be a positive number."]
-        });
-    }
-
-    private static IResult? Validate<TRequest>(TRequest request)
-    {
-        var results = new List<ValidationResult>();
-        var context = new ValidationContext(request!);
-        if (Validator.TryValidateObject(request!, context, results, validateAllProperties: true))
-            return null;
-
-        var errors = results
-            .GroupBy(result => result.MemberNames.FirstOrDefault() ?? string.Empty)
-            .ToDictionary(
-                group => group.Key,
-                group => group.Select(result => result.ErrorMessage ?? "Invalid value.").ToArray());
-
-        return Results.ValidationProblem(errors);
-    }
 
     private static async Task<IResult?> ValidateCreateOrUpdateAsync(
         CreateExamRequest request,
         IQuestionRepository questionRepo)
     {
-        var requestValidation = Validate(request);
+        var requestValidation = EndpointValidation.Request(request);
         if (requestValidation is not null) return requestValidation;
 
         return await ValidateQuestionIdsExistAsync(request.QuestionIds, nameof(request.QuestionIds), questionRepo);
@@ -184,7 +161,7 @@ public static class ExamEndpoints
         AssignQuestionsRequest request,
         IQuestionRepository questionRepo)
     {
-        var requestValidation = Validate(request);
+        var requestValidation = EndpointValidation.Request(request);
         if (requestValidation is not null) return requestValidation;
 
         return await ValidateQuestionIdsExistAsync(request.QuestionIds, nameof(request.QuestionIds), questionRepo);
