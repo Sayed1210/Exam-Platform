@@ -1,54 +1,56 @@
-// Service responsible for handling exam submission logic
-// (saving answers, calculating score & updating status to done)
 using Exam.Repo;
 using Exam.Models;
-namespace Exam.Service;
+using Microsoft.Extensions.Logging;
 
+namespace Exam.Service;
 
 public class ExamSubmissionService(
     ICandidateAnswerRepository answerRepo,
-    ICandidateExamRepository examRepo) : IExamSubmissionService
+    ICandidateExamRepository examRepo,
+    ILogger<ExamSubmissionService> logger) : IExamSubmissionService
 {
     private readonly ICandidateAnswerRepository _answerRepo = answerRepo;
     private readonly ICandidateExamRepository _examRepo = examRepo;
+    private readonly ILogger<ExamSubmissionService> _logger = logger;
 
-    // Main workflow: candidate submits exam
     public async Task<(bool Success, string? Error)> SubmitExam(int examId, SubmitExamRequest request)
     {
-        // Retrieve CandidateExam (ensures candidate is assigned to this exam)
-        var candidateExam = await _examRepo.GetAsync(request.CandidateId, examId);
-        if (candidateExam is null)
-            return (false, "Candidate is not assigned to this exam");
-
-        // Prevent double submission
-        if (candidateExam.Status == ExamStatus.DONE)
-            return (false, "Exam already submitted");
-
-        // Map request answers → CandidateAnswer entities
-        var answers = request.Answers.Select(a => new CandidateAnswer
+        try
         {
-            CandidateId = request.CandidateId,
-            ExamId = examId,
-            QuestionId = a.QuestionId,
-            ChoiceId = a.ChoiceId
-        }).ToList();
+            var candidateExam = await _examRepo.GetAsync(request.CandidateId, examId);
+            if (candidateExam is null)
+                return (false, "Candidate is not assigned to this exam");
 
-        // Save answers via repository to EF change tracker
-        await _answerRepo.AddRangeAsync(answers);
+            if (candidateExam.Status == ExamStatus.DONE)
+                return (false, "Exam already submitted");
 
-        // Fetch all correct choices in ONE query instead of N queries
-        var questionIds = request.Answers.Select(a => a.QuestionId).ToList();
-        var correctChoiceIds = await _answerRepo.GetCorrectChoiceIdsAsync(questionIds);
+            var answers = request.Answers.Select(a => new CandidateAnswer
+            {
+                CandidateId = request.CandidateId,
+                ExamId = examId,
+                QuestionId = a.QuestionId,
+                ChoiceId = a.ChoiceId
+            }).ToList();
 
-        // Calculate score against the in-memory lookup
-        int score = request.Answers.Count(a => correctChoiceIds.Contains(a.ChoiceId));
+            await _answerRepo.AddRangeAsync(answers);
 
-        // Update CandidateExam result
-        candidateExam.Score = score;
-        candidateExam.Status = ExamStatus.DONE;
+            var questionIds = request.Answers.Select(a => a.QuestionId).ToList();
+            var correctChoiceIds = await _answerRepo.GetCorrectChoiceIdsAsync(questionIds);
 
-        // Save all changes in one transaction
-        await _examRepo.SaveAsync(candidateExam);
-        return (true, null);
+            int score = request.Answers.Count(a => correctChoiceIds.Contains(a.ChoiceId));
+
+            candidateExam.Score = score;
+            candidateExam.Status = ExamStatus.DONE;
+
+            await _examRepo.SaveAsync(candidateExam);
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "SubmitExam failed — ExamId={ExamId} CandidateId={CandidateId}",
+                examId, request.CandidateId);
+            return (false, "An unexpected error occurred");
+        }
     }
 }

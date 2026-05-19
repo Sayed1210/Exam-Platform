@@ -11,9 +11,26 @@ public static class DependencyInjection
     {
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
-        services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+
+        // Exam
+        services.AddScoped<IExamService, ExamService>();
+        services.AddScoped<IQuestionService, QuestionService>();
+        services.AddScoped<ITopicService, TopicService>();
+
+        // Invitation
+        services.AddScoped<IInvitationService, InvitationService>();
+        services.AddScoped<IInvitationValidator, InvitationValidator>();
+
+        // Exam Flow
+        services.AddScoped<IStartExamService, StartExamService>();
+        services.AddScoped<IBeforeStartExamService, BeforeStartExamService>();
+        services.AddScoped<IExamSubmissionService, ExamSubmissionService>();
+        services.AddScoped<IVerifyInvitationService, VerifyInvitationService>();
+
+        // Candidate
+        services.AddScoped<ICandidateService, CandidateService>();
 
         return services;
     }

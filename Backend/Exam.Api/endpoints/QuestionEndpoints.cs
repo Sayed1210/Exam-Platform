@@ -2,6 +2,7 @@
 using Exam.Repo;
 using Exam.Service;
 using System.ComponentModel.DataAnnotations;
+using Exam.Api.Validation;
 
 namespace Exam.Api;
 
@@ -30,7 +31,7 @@ group.MapGet("/", async (
 
         group.MapGet("/{id:int}", async (int id, IQuestionService svc) =>
         {
-            var idValidation = ValidatePositiveNumber(nameof(id), id);
+            var idValidation = EndpointValidation.PositiveNumber(nameof(id), id);
             if (idValidation is not null) return idValidation;
 
             var question = await svc.GetByIdAsync(id);
@@ -47,7 +48,7 @@ group.MapGet("/", async (
 
         group.MapGet("/by-topic/{topicId:int}", async (int topicId, IQuestionService svc) =>
         {
-            var idValidation = ValidatePositiveNumber(nameof(topicId), topicId);
+            var idValidation = EndpointValidation.PositiveNumber(nameof(topicId), topicId);
             if (idValidation is not null) return idValidation;
 
             return Results.Ok(await svc.GetByTopicIdAsync(topicId));
@@ -84,9 +85,9 @@ group.MapGet("/", async (
             ChoiceRequest request,
             IQuestionService svc) =>
         {
-            var validation = ValidatePositiveNumber(nameof(questionId), questionId)
-                ?? ValidatePositiveNumber(nameof(choiceId), choiceId)
-                ?? Validate(request);
+            var validation = EndpointValidation.PositiveNumber(nameof(questionId), questionId)
+                ?? EndpointValidation.PositiveNumber(nameof(choiceId), choiceId)
+                ?? EndpointValidation.Request(request);
             if (validation is not null) return validation;
 
             var question = await svc.UpdateChoiceAsync(questionId, choiceId, request);
@@ -109,8 +110,8 @@ group.MapGet("/", async (
             UpdateQuestionRequest request,
             IQuestionService svc) =>
         {
-            var validation = ValidatePositiveNumber(nameof(id), id)
-                ?? Validate(request)
+            var validation = EndpointValidation.PositiveNumber(nameof(id), id)
+                ?? EndpointValidation.Request(request)
                 ?? ValidateChoices(request.Choices);
             if (validation is not null) return validation;
 
@@ -128,7 +129,7 @@ group.MapGet("/", async (
 
         group.MapDelete("/{id:int}", async (int id, IQuestionService svc) =>
         {
-            var idValidation = ValidatePositiveNumber(nameof(id), id);
+            var idValidation = EndpointValidation.PositiveNumber(nameof(id), id);
             if (idValidation is not null) return idValidation;
 
             var deleted = await svc.DeleteAsync(id);
@@ -145,51 +146,12 @@ group.MapGet("/", async (
     }
 
     // ── VALIDATION HELPERS ────────────────────────────────────────────
-    private static IResult? ValidatePositiveNumber(string fieldName, int value)
-    {
-        if (value > 0) return null;
-        return Results.ValidationProblem(new Dictionary<string, string[]>
-        {
-            [fieldName] = [$"{fieldName} must be a positive number."]
-        });
-    }
-
-    private static IResult? Validate<TRequest>(TRequest request)
-    {
-        var results = new List<ValidationResult>();
-        var context = new ValidationContext(request!);
-        if (Validator.TryValidateObject(request!, context, results, validateAllProperties: true))
-            return null;
-
-        var errors = results
-            .GroupBy(r => r.MemberNames.FirstOrDefault() ?? string.Empty)
-            .ToDictionary(
-                g => g.Key,
-                g => g.Select(r => r.ErrorMessage ?? "Invalid value.").ToArray());
-
-        return Results.ValidationProblem(errors);
-    }
-
-    private static IResult? ValidatePagination(PaginationRequest pagination)
-    {
-        var errors = new Dictionary<string, string[]>();
-
-        if (pagination.Page <= 0)
-            errors["Page"] = ["Page must be a positive number."];
-
-        if (pagination.PageSize <= 0 || pagination.PageSize > 100)
-            errors["PageSize"] = ["PageSize must be between 1 and 100."];
-
-        return errors.Count > 0
-            ? Results.ValidationProblem(errors)
-            : null;
-    }
 
     private static async Task<IResult?> ValidateCreateAsync(
         QuestionRequest request,
         ITopicRepository topicRepo)
     {
-        var requestValidation = Validate(request);
+        var requestValidation = EndpointValidation.Request(request);
         if (requestValidation is not null) return requestValidation;
 
         var choicesValidation = ValidateChoices(request.Choices);
