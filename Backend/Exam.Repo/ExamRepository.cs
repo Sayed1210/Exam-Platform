@@ -1,31 +1,32 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Exam.Data;
 using Exam.Models;
-using ExamEntity = Exam.Models.Exam;  
+using Microsoft.Extensions.Logging;
+using ExamEntity = Exam.Models.Exam;
 
 namespace Exam.Repo
 {
     public class ExamRepository : IExamRepository
     {
         private readonly ApiContext _context;
+        private readonly ILogger<ExamRepository> _logger;
 
-        public ExamRepository(ApiContext context) => _context = context;
-
-        public async Task AddAsync(ExamEntity exam)
+        public ExamRepository(ApiContext context, ILogger<ExamRepository> logger)
         {
-            await _context.Exams.AddAsync(exam);
-            await _context.SaveChangesAsync();
+            _context = context;
+            _logger = logger;
         }
-        public async Task<IEnumerable<Exam.Models.Exam>> GetAllWithQuestionsAndChoicesAsync() =>
-           await _context.Exams
-        .Include(e => e.ExamQuestions)
-            .ThenInclude(eq => eq.Question)
-                .ThenInclude(q => q!.Choices)
-        .ToListAsync();
 
         public async Task<IEnumerable<ExamEntity>> GetAllAsync() =>
             await _context.Exams
                 .Include(e => e.ExamQuestions)
+                .ToListAsync();
+
+        public async Task<IEnumerable<ExamEntity>> GetAllWithQuestionsAndChoicesAsync() =>
+            await _context.Exams
+                .Include(e => e.ExamQuestions)
+                    .ThenInclude(eq => eq.Question)
+                        .ThenInclude(q => q!.Choices)
                 .ToListAsync();
 
         public async Task<ExamEntity?> GetByIdAsync(int id) =>
@@ -40,54 +41,98 @@ namespace Exam.Repo
                         .ThenInclude(q => q!.Choices)
                 .FirstOrDefaultAsync(e => e.Id == id);
 
+        public async Task<bool> ExistsAsync(int id) =>
+            await _context.Exams.AnyAsync(e => e.Id == id);
+
+        public async Task AddAsync(ExamEntity exam)
+        {
+            try
+            {
+                await _context.Exams.AddAsync(exam);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "AddAsync failed — Title={Title}", exam.Title);
+            }
+        }
+
         public async Task UpdateAsync(ExamEntity exam, List<int>? questionIds)
         {
-            _context.Exams.Update(exam);
-
-            // Only touch questions if questionIds was explicitly provided
-            if (questionIds is not null)
+            try
             {
-                var oldAssignments = await _context.ExamQuestions
-                    .Where(eq => eq.ExamId == exam.Id)
-                    .ToListAsync();
-                _context.ExamQuestions.RemoveRange(oldAssignments);
+                _context.Exams.Update(exam);
 
-                if (questionIds.Count > 0)
+                if (questionIds is not null)
                 {
-                    var newAssignments = questionIds.Select(qId => new Models.ExamQuestion
-                    {
-                        ExamId = exam.Id,
-                        QuestionId = qId
-                    }).ToList();
-                    await _context.ExamQuestions.AddRangeAsync(newAssignments);
-                }
-            }
+                    var oldAssignments = await _context.ExamQuestions
+                        .Where(eq => eq.ExamId == exam.Id)
+                        .ToListAsync();
+                    _context.ExamQuestions.RemoveRange(oldAssignments);
 
-            await _context.SaveChangesAsync();
+                    if (questionIds.Count > 0)
+                    {
+                        var newAssignments = questionIds.Select(qId => new ExamQuestion
+                        {
+                            ExamId = exam.Id,
+                            QuestionId = qId
+                        }).ToList();
+                        await _context.ExamQuestions.AddRangeAsync(newAssignments);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "UpdateAsync failed — ExamId={ExamId}", exam.Id);
+            }
         }
 
         public async Task DeleteAsync(ExamEntity exam)
         {
-            _context.Exams.Remove(exam);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Exams.Remove(exam);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "DeleteAsync failed — ExamId={ExamId}", exam.Id);
+            }
         }
 
         public async Task AssignQuestionsAsync(List<ExamQuestion> examQuestions)
         {
-            _context.ExamQuestions.AddRange(examQuestions);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.ExamQuestions.AddRange(examQuestions);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "AssignQuestionsAsync failed — ExamId={ExamId}",
+                    examQuestions.FirstOrDefault()?.ExamId);
+            }
         }
 
         public async Task RemoveQuestionAsync(int examId, int questionId)
         {
-            var eq = await _context.ExamQuestions
-                .FirstOrDefaultAsync(eq => eq.ExamId == examId && eq.QuestionId == questionId);
-            if (eq is null) return;
-            _context.ExamQuestions.Remove(eq);
-            await _context.SaveChangesAsync();
-        }
+            try
+            {
+                var eq = await _context.ExamQuestions
+                    .FirstOrDefaultAsync(eq => eq.ExamId == examId && eq.QuestionId == questionId);
+                if (eq is null) return;
 
-        public async Task<bool> ExistsAsync(int id) =>
-            await _context.Exams.AnyAsync(e => e.Id == id);
+                _context.ExamQuestions.Remove(eq);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "RemoveQuestionAsync failed — ExamId={ExamId} QuestionId={QuestionId}",
+                    examId, questionId);
+            }
+        }
     }
 }

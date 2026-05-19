@@ -1,43 +1,51 @@
 using Exam.Models;
 using Exam.Repo;
-using System.Text;
+using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
+using System.Text;
+
 namespace Exam.Service;
 
-public class VerifyInvitationService :  IVerifyInvitationService
+public class VerifyInvitationService : IVerifyInvitationService
 {
     private readonly ICandidateExamRepository _repo;
-    public VerifyInvitationService(ICandidateExamRepository repo)
+    private readonly ILogger<VerifyInvitationService> _logger;
+
+    public VerifyInvitationService(ICandidateExamRepository repo, ILogger<VerifyInvitationService> logger)
     {
         _repo = repo;
+        _logger = logger;
     }
 
     public async Task<VerifyInvitationResponse?> VerifyInvitation(string token)
     {
-
-        var tokenBytes = Encoding.UTF8.GetBytes(token);
-        var hashBytes = SHA256.HashData(tokenBytes);
-        var tokenHash = Convert.ToHexString(hashBytes);
-        
-        var candidateExam = await _repo.GetByInvitationTokenAsync(tokenHash);
-
-        if (candidateExam == null)
-            return null;
-
-        // Check if invitation expired
-        if (candidateExam.ExpiryDate < DateTime.UtcNow
-            || candidateExam.Status == ExamStatus.DONE
-            || candidateExam.JoinedAt.HasValue)
+        try
         {
+            var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));
+            var tokenHash = Convert.ToHexString(hashBytes);
+
+            var candidateExam = await _repo.GetByInvitationTokenAsync(tokenHash);
+
+            if (candidateExam is null)
                 return null;
-        }
 
-        return new VerifyInvitationResponse
+            if (candidateExam.ExpiryDate < DateTime.UtcNow
+                || candidateExam.Status == ExamStatus.DONE
+                || candidateExam.JoinedAt.HasValue)
+                return null;
+
+            return new VerifyInvitationResponse
+            {
+                CandidateId = candidateExam.CandidateId,
+                ExamId = candidateExam.ExamId,
+                CandidateName = candidateExam.Candidate!.FirstName + " " + candidateExam.Candidate!.LastName,
+                Email = candidateExam.Candidate!.Email
+            };
+        }
+        catch (Exception ex)
         {
-            CandidateId = candidateExam.CandidateId,
-            ExamId = candidateExam.ExamId,
-            CandidateName = candidateExam.Candidate!.FirstName + " " + candidateExam.Candidate!.LastName,
-            Email = candidateExam.Candidate!.Email
-        };
+            _logger.LogError(ex, "VerifyInvitation failed — Token={Token}", token);
+            return null;
+        }
     }
 }

@@ -1,47 +1,87 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using Exam.Data;
 using Exam.Models;
+
 namespace Exam.Repo;
-public class CandidateExamRepository(ApiContext context) : ICandidateExamRepository
+
+public class CandidateExamRepository(
+    ApiContext context,
+    ILogger<CandidateExamRepository> logger
+) : ICandidateExamRepository
 {
     private readonly ApiContext _context = context;
+    private readonly ILogger<CandidateExamRepository> _logger = logger;
+
     public async Task<Candidate?> GetCandidateAsync(int id)
     {
-        return await _context.Candidates.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+        return await _context.Candidates
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == id);
     }
 
     public async Task AddInvitationAsync(CandidateExam invitation)
     {
-        await _context.CandidateExams.AddAsync(invitation);
+        try
+        {
+            await _context.CandidateExams.AddAsync(invitation);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "AddInvitationAsync failed — CandidateId={CandidateId}, ExamId={ExamId}",
+                invitation.CandidateId,
+                invitation.ExamId);
+        }
     }
 
     public async Task<IDbContextTransaction> BeginTransactionAsync()
     {
         return await _context.Database.BeginTransactionAsync();
     }
+
     public async Task<bool> ExamExistsAsync(int examId)
-{
-    return await _context.Exams.AnyAsync(e => e.Id == examId);
-}
+    {
+        return await _context.Exams
+            .AnyAsync(e => e.Id == examId);
+    }
+
     public async Task SaveChangesAsync()
     {
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "SaveChangesAsync failed in CandidateExamRepository");
+        }
     }
 
     public async Task<CandidateExam?> GetAsync(int candidateId, int examId)
     {
-        // Get a CandidateExam from DB by [CandidateId + ExamId]
         return await _context.CandidateExams
-            .FirstOrDefaultAsync(x => x.CandidateId == candidateId && x.ExamId == examId);
+            .FirstOrDefaultAsync(x =>
+                x.CandidateId == candidateId &&
+                x.ExamId == examId);
     }
 
     public async Task SaveAsync(CandidateExam candidateExam)
     {
-        // Save all pending changes tracked by EF Core to db in one transaction
-        // await _context.SaveChangesAsync();
-        _context.CandidateExams.Update(candidateExam);
-        await _context.SaveChangesAsync();
+        try
+        {
+            _context.CandidateExams.Update(candidateExam);
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "SaveAsync failed — CandidateId={CandidateId}, ExamId={ExamId}",
+                candidateExam.CandidateId,
+                candidateExam.ExamId);
+        }
     }
 
     public async Task<CandidateExam?> GetByInvitationTokenAsync(string token)
