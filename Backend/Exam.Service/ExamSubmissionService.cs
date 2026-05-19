@@ -24,6 +24,9 @@ public class ExamSubmissionService(
             if (candidateExam.Status == ExamStatus.DONE)
                 return (false, "Exam already submitted");
 
+            if (!await AnswersBelongToExamAsync(examId, request.Answers))
+                return (false, "One or more questions do not belong to this exam");
+
             var answers = request.Answers.Select(a => new CandidateAnswer
             {
                 CandidateId = request.CandidateId,
@@ -52,5 +55,18 @@ public class ExamSubmissionService(
                 examId, request.CandidateId);
             return (false, "An unexpected error occurred");
         }
+    }
+
+    private async Task<bool> AnswersBelongToExamAsync(int examId, List<AnswerRequest> answers)
+    {
+        var submittedQuestionIds = answers
+            .Select(a => a.QuestionId)
+            .Distinct()
+            .ToList();
+
+        var examQuestionIds = await _examRepo.GetExamQuestionIdsAsync(examId);
+        var examQuestionIdSet = examQuestionIds.ToHashSet();
+
+        return submittedQuestionIds.All(examQuestionIdSet.Contains);
     }
 }

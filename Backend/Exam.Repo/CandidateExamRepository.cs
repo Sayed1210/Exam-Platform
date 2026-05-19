@@ -47,6 +47,14 @@ public class CandidateExamRepository(
             .AnyAsync(e => e.Id == examId);
     }
 
+
+    public async Task<List<int>> GetExamQuestionIdsAsync(int examId)
+    {
+        return await _context.ExamQuestions
+            .Where(q => q.ExamId == examId)
+            .Select(q => q.QuestionId)
+            .ToListAsync();
+    }
     public async Task SaveChangesAsync()
     {
         try

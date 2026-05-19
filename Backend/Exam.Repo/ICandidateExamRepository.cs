@@ -7,6 +7,7 @@ public interface ICandidateExamRepository
     Task AddInvitationAsync(CandidateExam invitation);
     Task<IDbContextTransaction> BeginTransactionAsync();
     Task<bool> ExamExistsAsync(int examId);
+    Task<List<int>> GetExamQuestionIdsAsync(int examId);
     Task SaveChangesAsync();
     Task<CandidateExam?> GetAsync(int candidateId, int examId);
     Task SaveAsync(CandidateExam candidateExam);
