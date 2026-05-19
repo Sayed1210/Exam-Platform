@@ -1,54 +1,27 @@
 using Exam.Models;
 using Exam.Repo;
-namespace Exam.Service;
+using Exam.Service.EmailTemplates;
+using Microsoft.EntityFrameworkCore.Storage;
 using System;
+using System.Security.Cryptography;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Configuration;
 using System.Text;
-using System.Security.Cryptography;
+
+namespace Exam.Service;
 
 public class InvitationService(ICandidateExamRepository repository, IEmailService emailService,  IConfiguration _configuration) : IInvitationService
 {
     public async Task<InvitationStatusResponse> SendInvitationAsync(SendInvitationRequest request)
     {
         var nowUtc = DateTime.UtcNow;
-        var expiryUtc = DateTime.SpecifyKind(request.InvitationExpiryDate, DateTimeKind.Utc);
+        var expiryUtc = GetUtcExpiryDate(request.InvitationExpiryDate);
         using var transaction = await repository.BeginTransactionAsync();
         
         try
         {
-            foreach (var candidateId in request.CandidateIds)
-            {
-                // Safe to use '!' because the Validator service already verified existence
-                var candidate = await repository.GetCandidateAsync(candidateId);
-                var rawToken   = Guid.NewGuid().ToString();
-                var tokenBytes = Encoding.UTF8.GetBytes(rawToken);
-                var hashBytes  = SHA256.HashData(tokenBytes);
-                var tokenHash  = Convert.ToHexString(hashBytes);
-                string candidateTimezoneId = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                    ? "Egypt Standard Time"
-                    : "Africa/Cairo";
-                TimeZoneInfo candidateZone = TimeZoneInfo.FindSystemTimeZoneById(candidateTimezoneId);
-                DateTime candidateLocalTime = TimeZoneInfo.ConvertTimeFromUtc(expiryUtc, candidateZone);
-                var invitation = new CandidateExam
-                {
-                    CandidateId = candidate!.Id,
-                    ExamId = request.ExamId,
-                    InvitationToken = tokenHash,
-                    InvitedAt = nowUtc,
-                    ExpiryDate = expiryUtc,
-                    Status = ExamStatus.PENDING
-                };
-
-                await repository.AddInvitationAsync(invitation);
-                
-                // Send the beautifully styled email template with the dynamic deadline
-                string formattedDeadline = candidateLocalTime.ToString("MMMM dd, yyyy 'at' hh:mm tt ") + (candidateZone.IsDaylightSavingTime(candidateLocalTime) ? "EEST" : "EET");
-                await SendInvitationEmail(candidate.Email, rawToken, formattedDeadline);
-            }
-
-            await repository.SaveChangesAsync();
-            await transaction.CommitAsync();
+            await CreateInvitationsAsync(request, nowUtc, expiryUtc);
+            await SaveAndCommitAsync(transaction);
             return new InvitationStatusResponse(true, "Invitations sent successfully.", nowUtc);
         }
         catch (Exception)
@@ -58,42 +31,98 @@ public class InvitationService(ICandidateExamRepository repository, IEmailServic
         }
     }
 
+    private async Task CreateInvitationsAsync(SendInvitationRequest request, DateTime nowUtc, DateTime expiryUtc)
+    {
+        foreach (var candidateId in request.CandidateIds)
+        {
+            await CreateInvitationForCandidateAsync(candidateId, request.ExamId, nowUtc, expiryUtc);
+        }
+    }
+
+    private async Task CreateInvitationForCandidateAsync(int candidateId, int examId, DateTime nowUtc, DateTime expiryUtc)
+    {
+        var candidate = await GetCandidateAsync(candidateId);
+        var token = GenerateInvitationToken();
+        var invitation = CreateCandidateExam(candidate.Id, examId, token.Hash, nowUtc, expiryUtc);
+
+        await repository.AddInvitationAsync(invitation);
+
+        var deadline = FormatCandidateDeadline(expiryUtc);
+        await SendInvitationEmail(candidate.Email, token.Raw, deadline);
+    }
+
+    private async Task<Candidate> GetCandidateAsync(int candidateId)
+    {
+        // Safe to use '!' because the Validator service already verified existence.
+        return (await repository.GetCandidateAsync(candidateId))!;
+    }
+
+    private static CandidateExam CreateCandidateExam(
+        int candidateId,
+        int examId,
+        string tokenHash,
+        DateTime nowUtc,
+        DateTime expiryUtc)
+    {
+        return new CandidateExam
+        {
+            CandidateId = candidateId,
+            ExamId = examId,
+            InvitationToken = tokenHash,
+            InvitedAt = nowUtc,
+            ExpiryDate = expiryUtc,
+            Status = ExamStatus.PENDING
+        };
+    }
+
+    private static InvitationToken GenerateInvitationToken()
+    {
+        var rawToken = Guid.NewGuid().ToString();
+        var tokenBytes = Encoding.UTF8.GetBytes(rawToken);
+        var hashBytes = SHA256.HashData(tokenBytes);
+        var tokenHash = Convert.ToHexString(hashBytes);
+
+        return new InvitationToken(rawToken, tokenHash);
+    }
+
+    private static DateTime GetUtcExpiryDate(DateTime invitationExpiryDate)
+    {
+        return DateTime.SpecifyKind(invitationExpiryDate, DateTimeKind.Utc);
+    }
+
+    private static string FormatCandidateDeadline(DateTime expiryUtc)
+    {
+        var candidateZone = GetCandidateTimeZone();
+        var candidateLocalTime = TimeZoneInfo.ConvertTimeFromUtc(expiryUtc, candidateZone);
+        var timezoneAbbreviation = candidateZone.IsDaylightSavingTime(candidateLocalTime) ? "EEST" : "EET";
+
+        return candidateLocalTime.ToString("MMMM dd, yyyy 'at' hh:mm tt ") + timezoneAbbreviation;
+    }
+
+    private static TimeZoneInfo GetCandidateTimeZone()
+    {
+        string candidateTimezoneId = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? "Egypt Standard Time"
+            : "Africa/Cairo";
+
+        return TimeZoneInfo.FindSystemTimeZoneById(candidateTimezoneId);
+    }
+
+    private async Task SaveAndCommitAsync(IDbContextTransaction transaction)
+    {
+        await repository.SaveChangesAsync();
+        await transaction.CommitAsync();
+    }
+
     private async Task SendInvitationEmail(string email, string token, string deadlineStr)
     {
         var baseUrl = _configuration["Frontend:BaseUrl"];
         var invitationLink = $"{baseUrl}/join-exam?token={token}"; 
         string subject = "Action Required: Your Enozom Examination Invitation";
-        string body = $@"
-            <div style='background-color: #f4f4f7; padding: 30px; font-family: sans-serif;'>
-                <div style='max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e1e1e1;'>
-                    <div style='background-color: #2c3e50; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;'>
-                        <h1 style='color: #ffffff; margin: 0; font-size: 22px;'>Examination Invitation</h1>
-                    </div>
-                    <div style='padding: 30px;'>
-                        <p style='font-size: 16px; color: #333;'>Hello,</p>
-                        <p style='font-size: 16px; color: #555; line-height: 1.5;'>
-                            You have been invited to complete an assessment on the <b>Enozom</b> platform. 
-                        </p>
-                        <div style='background-color: #fff5f5; border-left: 4px solid #c0392b; padding: 15px; margin: 20px 0;'>
-                            <p style='margin: 0; color: #c0392b; font-weight: bold; font-size: 14px;'>
-                                DEADLINE: {deadlineStr}
-                            </p>
-                            <p style='margin: 5px 0 0 0; color: #7f8c8d; font-size: 13px;'>
-                                Please ensure you start the exam before this date, as your link will expire.
-                            </p>
-                        </div>
-                        <div style='text-align: center; margin: 30px 0;'>
-                            <a href='{invitationLink}' style='background-color: #2c3e50; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;'>
-                                Begin Examination
-                            </a>
-                        </div>
-                    </div>
-                    <div style='padding: 20px; background-color: #f9f9f9; text-align: center; font-size: 12px; color: #999;'>
-                        This is an automated message. Please do not reply.
-                    </div>
-                </div>
-            </div>";
+        string body = EmailTemplateBuilder.BuildExamInvitation(invitationLink, deadlineStr);
 
         await emailService.SendEmailAsync(email, subject, body);
     }
+
+    private sealed record InvitationToken(string Raw, string Hash);
 }
