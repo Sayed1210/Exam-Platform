@@ -11,7 +11,7 @@ import { SearchBar } from './SearchBar';
 import ExamModal from './ExamModal';
 import { Exam } from '@/types/exam';
 import type { Candidate } from '@/types/candidate';
-import { getCandidates } from '@/services/candidateService';
+import { getUnassignedCandidates } from '@/services/candidateService';
 import { FormValidation } from '@/schemas/form-validation';
 import { assignExamSchema } from '@/schemas/requests/assign-exam-request';
 
@@ -47,8 +47,8 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
   useEffect(() => {
     const loadCandidates = async () => {
       try {
-        const data = (await getCandidates()) as CandidateSummary[];
-        setCandidates(data);
+        const data = (await getUnassignedCandidates()) as CandidateSummary[];
+        setCandidates(Array.isArray(data) ? data : []);
       } catch (error) {
         setLoadError('Unable to load candidates. Please try again.');
       } finally {

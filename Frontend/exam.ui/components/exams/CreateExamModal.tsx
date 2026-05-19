@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { 
   PlusIcon, CheckIcon, 
   ArrowLeftIcon, PhotoIcon, XMarkIcon
@@ -11,6 +11,8 @@ import { SearchBar } from './SearchBar';
 import ExamModal from './ExamModal';
 import { createExamSchema, createExamStepOneSchema, CreateExamFormData } from '@/schemas/requests/create-exam-request';
 import { FormValidation } from '@/schemas/form-validation';
+import { getQuestions, getTopics } from '@/services/questionService';
+import type { APIQuestion, APITopic } from '@/types/question';
 
 interface Option {
   text: string;
@@ -18,45 +20,155 @@ interface Option {
   imageUrl?: string;
 }
 
-interface Question {
-  text: string;
+interface QuestionForm {
+  id?: number;
+  topicId?: number;
   topic: string;
+  text: string;
   imageUrl?: string;
   options: Option[];
+  tempId?: string;
 }
+
+type CreateExamFormValues = {
+  title: string;
+  durationMins: number;
+  questions: QuestionForm[];
+};
+
 interface CreateExamModalProps {
   onClose: () => void;
-  onSave: (data: CreateExamFormData) => void;
-  initialData?: any | null; // Added this line
+  onSave: (data: CreateExamFormValues) => void;
+  initialData?: any | null;
 }
-export default function CreateExamModal({ onClose, onSave, initialData }: { onClose: () => void, onSave: (data: CreateExamFormData) => void,initialData?:any|null }) {
+
+const buildQuestionForm = (question: any): QuestionForm => ({
+  id: question.id,
+  topicId: question.topicId,
+  topic: question.topic || question.topicTitle || '',
+  text: question.text || '',
+  imageUrl: question.imageUrl || undefined,
+  options: (question.options || question.choices || []).map((choice: any) => ({
+    text: choice.text || '',
+    imageUrl: choice.imageUrl || undefined,
+    isCorrect: choice.isCorrect || false,
+  })),
+  tempId: question.id ? undefined : `${Date.now()}-${Math.random()}`,
+});
+
+const buildQuestions = (questions: any[] = []): QuestionForm[] =>
+  questions.map(buildQuestionForm);
+
+export default function CreateExamModal({ onClose, onSave, initialData }: CreateExamModalProps) {
   const [step, setStep] = useState(1);
   const [activeTab, setActiveTab] = useState<'bank' | 'manual'>('bank');
-  //const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'chosen' | 'unchosen'>('all');
   const [selectedTopicFilter, setSelectedTopicFilter] = useState<string>('All Topics');
-  const [availableTopics] = useState<string[]>(["React", "Node.js", "SQL", "Algorithms", "General"]);
   const [bankSearch, setBankSearch] = useState("");
-  const [bankQuestions] = useState<Question[]>([
-    { text: "Which IQ shape pattern comes next?", topic: "General", options: [{ text: "", isCorrect: true, imageUrl: "base64_url" }, { text: "", isCorrect: false, imageUrl: "base64_url" }]},
-    { text: "What is the capital of France?", topic: "General", options: [{ text: "Paris", isCorrect: true }, { text: "London", isCorrect: false }]},
-    { text: "Which SQL JOIN returns all rows when there is a match in one of the tables?", 
-  topic: "SQL", 
-  options: [{ text: "INNER JOIN", isCorrect: false }, 
-    { text: "FULL OUTER JOIN", isCorrect: true },
-    { text: "LEFT JOIN", isCorrect: false },
-    { text: "CROSS JOIN", isCorrect: false }]
-    }
-  ]);
+  const [bankQuestions, setBankQuestions] = useState<QuestionForm[]>([]);
+  const [topics, setTopics] = useState<APITopic[]>([]);
+  const [isLoadingBank, setIsLoadingBank] = useState(true);
+  const [bankError, setBankError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<CreateExamFormData>({
+  const topicOptions = topics.length > 0 ? topics.map((topic) => topic.title) : ["React", "Node.js", "SQL", "Algorithms", "General"];
+
+  const [formData, setFormData] = useState<CreateExamFormValues>({
     title: initialData?.title || '',
     durationMins: initialData?.durationMins || 60,
-    questions: (initialData?.questions as any) || []
+    questions: buildQuestions(initialData?.questions || initialData?.Questions || []),
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const getError = (path: string) => errors[path] || "";
+
+  useEffect(() => {
+    if (!initialData) return;
+
+    setFormData({
+      title: initialData.title || '',
+      durationMins: initialData.durationMins || 60,
+      questions: buildQuestions(initialData.questions || initialData.Questions || []),
+    });
+  }, [initialData]);
+
+  useEffect(() => {
+    const existingQuestions = initialData?.questions || initialData?.Questions;
+    if (!existingQuestions || bankQuestions.length === 0) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      questions: prev.questions.map((question) => {
+        if (question.topic) return question;
+        const matched = bankQuestions.find((bankQuestion) => bankQuestion.id === question.id);
+        return matched
+          ? { ...question, topic: matched.topic, topicId: matched.topicId }
+          : question;
+      }),
+    }));
+  }, [initialData?.questions, initialData?.Questions, bankQuestions]);
+
+  useEffect(() => {
+    const loadBankData = async () => {
+      try {
+        setIsLoadingBank(true);
+        const [questionsResponse, topicsResponse] = await Promise.all([
+          getQuestions(1, 50),
+          getTopics(),
+        ]);
+
+        const availableQuestions = (questionsResponse.items || questionsResponse.questions || []) as APIQuestion[];
+        setBankQuestions(
+          availableQuestions.map((question) => ({
+            id: question.id,
+            topicId: question.topicId,
+            topic: question.topicTitle,
+            text: question.text,
+            imageUrl: question.imageUrl || undefined,
+            options: question.choices.map((choice) => ({
+              text: choice.text,
+              imageUrl: choice.imageUrl || undefined,
+              isCorrect: choice.isCorrect,
+            })),
+          }))
+        );
+
+        setTopics(topicsResponse || []);
+        setBankError(null);
+      } catch (error) {
+        setBankError('Unable to load question bank. Please try again.');
+      } finally {
+        setIsLoadingBank(false);
+      }
+    };
+
+    loadBankData();
+  }, []);
+
+  const getQuestionKey = (question: QuestionForm) =>
+    question.id ? String(question.id) : question.tempId ?? `${question.text}-${Math.random()}`;
+
+  const toggleBankQuestion = (q: QuestionForm) => {
+    const isSelected = formData.questions.some(
+      (item) =>
+        item.id !== undefined && q.id !== undefined
+          ? item.id === q.id
+          : item.tempId === q.tempId
+    );
+
+    if (isSelected) {
+      setFormData({
+        ...formData,
+        questions: formData.questions.filter(
+          (item) =>
+            item.id !== undefined && q.id !== undefined
+              ? item.id !== q.id
+              : item.tempId !== q.tempId
+        ),
+      });
+    } else {
+      setFormData({ ...formData, questions: [...formData.questions, q] });
+    }
+  };
 
   const handleNextStep = () => {
     const result = FormValidation(createExamStepOneSchema, {
@@ -82,7 +194,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
     }
 
     setErrors({});
-    onSave(result.data);
+    onSave(formData);
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, target: { qIdx: number, oIdx?: number }) => {
@@ -94,9 +206,16 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
       const base64String = reader.result as string;
       const updated = [...formData.questions];
       if (target.oIdx !== undefined) {
-        updated[target.qIdx].options[target.oIdx].imageUrl = base64String;
+        updated[target.qIdx].options[target.oIdx] = {
+          ...updated[target.qIdx].options[target.oIdx],
+          imageUrl: base64String,
+          text: '',
+        };
       } else {
-        updated[target.qIdx].imageUrl = base64String;
+        updated[target.qIdx] = {
+          ...updated[target.qIdx],
+          imageUrl: base64String,
+        };
       }
       setFormData({ ...formData, questions: updated });
     };
@@ -105,30 +224,28 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
   const removeImage = (qIdx: number, oIdx?: number) => {
     const updated = [...formData.questions];
     if (oIdx !== undefined) {
-      delete updated[qIdx].options[oIdx].imageUrl;
+      updated[qIdx].options[oIdx] = {
+        ...updated[qIdx].options[oIdx],
+        imageUrl: undefined,
+      };
     } else {
-      delete updated[qIdx].imageUrl;
+      updated[qIdx] = {
+        ...updated[qIdx],
+        imageUrl: undefined,
+      };
     }
     setFormData({ ...formData, questions: updated });
   };
 
-  const toggleBankQuestion = (q: Question) => {
-    const isSelected = formData.questions.some(item => item.text === q.text);
-    if (isSelected) {
-      setFormData({ ...formData, questions: formData.questions.filter(item => item.text !== q.text) });
-    } else {
-      setFormData({ ...formData, questions: [...formData.questions, q] });
-    }
-  };
-
   const addManualQuestion = () => {
-    const newQuestion: Question = {
+    const newQuestion: QuestionForm = {
+      tempId: `${Date.now()}-${Math.random()}`,
+      topic: '',
       text: '',
-      topic: '', // Now correctly initialized
       options: [
         { text: '', isCorrect: true },
-        { text: '', isCorrect: false }
-      ]
+        { text: '', isCorrect: false },
+      ],
     };
     setFormData({ ...formData, questions: [...formData.questions, newQuestion] });
   };
@@ -203,7 +320,9 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
                   </div>
                   <select className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:border-primary text-sm text-slate-600 appearance-none cursor-pointer shadow-sm" value={selectedTopicFilter} onChange={(e) => setSelectedTopicFilter(e.target.value)}>
                     <option>All Topics</option>
-                    {availableTopics.map(t => <option key={t} value={t}>{t}</option>)}
+                    {(topics.length > 0 ? topics.map((topic) => topic.title) : ["React", "Node.js", "SQL", "Algorithms", "General"]).map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
                   </select>
                   {initialData && (
     <select 
@@ -219,33 +338,51 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
                 </div>
                 <div className="space-y-3">
                   {getError('questions') && <p className="text-red-500 text-xs">{getError('questions')}</p>}
-                  {bankQuestions
-                    .filter(q => {
-                      const matchesSearch = q.text.toLowerCase().includes(bankSearch.toLowerCase());
-                      const matchesTopic = selectedTopicFilter === 'All Topics' || q.topic === selectedTopicFilter;
-                      const isChosen = formData.questions.some(fq => fq.text === q.text);
-                      const matchesStatus = !initialData || filterStatus === 'all' 
-    ? true 
-    : filterStatus === 'chosen' ? isChosen : !isChosen;
-                      return matchesSearch && matchesTopic &&matchesStatus;
-                    })
-                    .map((bq, idx) => {
-                      const selected = formData.questions.some(q => q.text === bq.text);
-                      return (
-                        <div key={idx} onClick={() => toggleBankQuestion(bq)} className={`p-5 border rounded-3xl cursor-pointer transition-all flex items-start gap-4 ${selected ? 'border-primary bg-red-50/10' : 'border-slate-100 bg-white hover:border-slate-200 shadow-sm'}`}>
-                          <div className={`mt-1 w-5 h-5 rounded flex items-center justify-center border ${selected ? 'bg-primary border-primary' : 'border-slate-300'}`}>
-                            {selected && <CheckIcon className="w-4 h-4 text-white stroke-[3px]" />}
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-bold text-slate-800 mb-1">{bq.text}</p>
-                            <div className="flex gap-2">
-                              <span className="text-[10px] px-2 py-0.5 bg-slate-100 rounded-full font-bold text-slate-500 uppercase">{bq.topic}</span>
-                              <span className="text-[10px] text-slate-400 font-medium">{bq.options.length} options</span>
+                  {isLoadingBank ? (
+                    <div className="text-slate-500 text-sm py-10 text-center">Loading question bank…</div>
+                  ) : bankError ? (
+                    <div className="text-red-500 text-sm py-10 text-center">{bankError}</div>
+                  ) : (
+                    bankQuestions
+                      .filter((q) => {
+                        const matchesSearch = q.text.toLowerCase().includes(bankSearch.toLowerCase());
+                        const matchesTopic = selectedTopicFilter === 'All Topics' || q.topic === selectedTopicFilter;
+                        const isChosen = formData.questions.some((fq) =>
+                          fq.id !== undefined && q.id !== undefined
+                            ? fq.id === q.id
+                            : fq.tempId === q.tempId
+                        );
+                        const matchesStatus = !initialData || filterStatus === 'all'
+                          ? true
+                          : filterStatus === 'chosen'
+                          ? isChosen
+                          : !isChosen;
+                        return matchesSearch && matchesTopic && matchesStatus;
+                      })
+                      .map((bq) => {
+                        const selected = formData.questions.some((q) =>
+                          q.id !== undefined && bq.id !== undefined ? q.id === bq.id : q.tempId === bq.tempId
+                        );
+                        return (
+                          <div
+                            key={getQuestionKey(bq)}
+                            onClick={() => toggleBankQuestion(bq)}
+                            className={`p-5 border rounded-3xl cursor-pointer transition-all flex items-start gap-4 ${selected ? 'border-primary bg-red-50/10' : 'border-slate-100 bg-white hover:border-slate-200 shadow-sm'}`}
+                          >
+                            <div className={`mt-1 w-5 h-5 rounded flex items-center justify-center border ${selected ? 'bg-primary border-primary' : 'border-slate-300'}`}>
+                              {selected && <CheckIcon className="w-4 h-4 text-white stroke-[3px]" />}
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-bold text-slate-800 mb-1">{bq.text}</p>
+                              <div className="flex gap-2">
+                                <span className="text-[10px] px-2 py-0.5 bg-slate-100 rounded-full font-bold text-slate-500 uppercase">{bq.topic}</span>
+                                <span className="text-[10px] text-slate-400 font-medium">{bq.options.length} options</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                  )}
                 </div>
               </div>
             ) : (
@@ -255,9 +392,9 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
                    <div key={qIdx} className="p-6 border border-slate-100 rounded-3xl bg-slate-50/30 relative shadow-sm">
                       <div className="flex justify-between items-center mb-4">
                         <div className="flex-1">
-                          <select className="text-xs font-bold p-2 bg-white border border-slate-200 rounded-lg outline-none focus:border-primary text-slate-500 w-full" value={q.topic} onChange={(e) => { const updated = [...formData.questions]; updated[qIdx].topic = e.target.value; setFormData({...formData, questions: updated}); }}>
+                          <select className="text-xs font-bold p-2 bg-white border border-slate-200 rounded-lg outline-none focus:border-primary text-slate-500 w-full" value={q.topic} onChange={(e) => { const updated = [...formData.questions]; const selectedTopic = topics.find((topic) => topic.title === e.target.value); updated[qIdx].topic = e.target.value; updated[qIdx].topicId = selectedTopic?.id; setFormData({...formData, questions: updated}); }}>
                             <option value="">Select Topic</option>
-                            {availableTopics.map(t => <option key={t} value={t}>{t}</option>)}
+                            {topicOptions.map(t => <option key={t} value={t}>{t}</option>)}
                           </select>
                           {getError(`questions.${qIdx}.topic`) && <p className="text-red-500 text-xs mt-1">{getError(`questions.${qIdx}.topic`)}</p>}
                         </div>
@@ -290,7 +427,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: { onCl
                           <div key={oIdx} className="flex items-start gap-3 group">
                             <input type="radio" name={`correct-${qIdx}`} checked={opt.isCorrect} onChange={() => { const updated = [...formData.questions]; updated[qIdx].options = updated[qIdx].options.map((o, i) => ({...o, isCorrect: i === oIdx})); setFormData({...formData, questions: updated}); }} className="accent-primary w-4 h-4 cursor-pointer mt-3" />
                             <div className="flex-1 space-y-1.5">
-                                <input placeholder={`Option ${oIdx + 1}`} className="w-full p-3 border border-slate-100 rounded-xl text-sm outline-none focus:border-primary bg-white shadow-sm" value={opt.text} onChange={(e) => { const updated = [...formData.questions]; updated[qIdx].options[oIdx].text = e.target.value; setFormData({...formData, questions: updated}); }}/>
+                                <input placeholder={`Option ${oIdx + 1}`} className="w-full p-3 border border-slate-100 rounded-xl text-sm outline-none focus:border-primary bg-white shadow-sm" value={opt.text ?? ''} onChange={(e) => { const updated = [...formData.questions]; updated[qIdx].options[oIdx] = { ...updated[qIdx].options[oIdx], text: e.target.value, imageUrl: e.target.value.trim() ? undefined : updated[qIdx].options[oIdx].imageUrl }; setFormData({...formData, questions: updated}); }}/>
                                 {getError(`questions.${qIdx}.options.${oIdx}.text`) && <p className="text-red-500 text-xs mt-1">{getError(`questions.${qIdx}.options.${oIdx}.text`)}</p>}
                                 {opt.imageUrl && (
                                   <div className="relative group w-fit">

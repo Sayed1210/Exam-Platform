@@ -47,9 +47,9 @@ const questionResponseSchema = z
   });
 
 export const getQuestionsResponseSchema = z.object({
-  questions: z.array(questionResponseSchema),
+  items: z.array(questionResponseSchema),
   page: z.number().int().min(1),
-  pageSize: z.literal(20),
+  pageSize: z.number().int().min(1),
   totalCount: z.number().int().min(0),
   totalPages: z.number().int().min(0),
 });

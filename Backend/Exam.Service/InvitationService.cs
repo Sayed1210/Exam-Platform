@@ -1,11 +1,11 @@
 using Exam.Models;
 using Exam.Repo;
 namespace Exam.Service;
-using System.Net.Sockets;
-using System.Net.Mail;
 using System;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Configuration;
+using System.Text;
+using System.Security.Cryptography;
 
 public class InvitationService(ICandidateExamRepository repository, IEmailService emailService,  IConfiguration _configuration) : IInvitationService
 {
@@ -21,7 +21,10 @@ public class InvitationService(ICandidateExamRepository repository, IEmailServic
             {
                 // Safe to use '!' because the Validator service already verified existence
                 var candidate = await repository.GetCandidateAsync(candidateId);
-                var invitationToken = Guid.NewGuid().ToString();
+                var rawToken   = Guid.NewGuid().ToString();
+                var tokenBytes = Encoding.UTF8.GetBytes(rawToken);
+                var hashBytes  = SHA256.HashData(tokenBytes);
+                var tokenHash  = Convert.ToHexString(hashBytes);
                 string candidateTimezoneId = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                     ? "Egypt Standard Time"
                     : "Africa/Cairo";
@@ -31,7 +34,7 @@ public class InvitationService(ICandidateExamRepository repository, IEmailServic
                 {
                     CandidateId = candidate!.Id,
                     ExamId = request.ExamId,
-                    InvitationToken = invitationToken,
+                    InvitationToken = tokenHash,
                     InvitedAt = nowUtc,
                     ExpiryDate = expiryUtc,
                     Status = ExamStatus.PENDING
@@ -41,7 +44,7 @@ public class InvitationService(ICandidateExamRepository repository, IEmailServic
                 
                 // Send the beautifully styled email template with the dynamic deadline
                 string formattedDeadline = candidateLocalTime.ToString("MMMM dd, yyyy 'at' hh:mm tt ") + (candidateZone.IsDaylightSavingTime(candidateLocalTime) ? "EEST" : "EET");
-                await SendInvitationEmail(candidate.Email, invitationToken, formattedDeadline);
+                await SendInvitationEmail(candidate.Email, rawToken, formattedDeadline);
             }
 
             await repository.SaveChangesAsync();
