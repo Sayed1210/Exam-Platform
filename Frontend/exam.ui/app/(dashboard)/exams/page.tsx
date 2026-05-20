@@ -4,15 +4,16 @@ import { useEffect } from 'react';
 import { getExams, deleteExam, createExam, updateExam, getExamById } from '@/services/examService';
 import { createQuestion, updateQuestion } from '@/services/questionService';
 import { Exam } from '@/types/exam';
-import ExamCard from '@/components/exams/ExamCard';
+import ExamsActionBar from '@/components/exams/ExamsActionBar';
+import ExamsGrid from '@/components/exams/ExamsGrid';
 import AssignModal from '@/components/exams/AssignModal';
 import Message from '@/components/Message'; 
 import CreateExamModal from '@/components/exams/CreateExamModal';
-import { SearchBar } from '@/components/exams/SearchBar';
 import ViewExamModal from '@/components/exams/ViewExamModal';
 import DashboardPageHeader from '@/components/common/DashboardHeader';
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal';
 import { invitationService } from '@/services/invitationService';
+import SearchInput from '@/components/question-bank/SearchInput';
 // Interfaces remain the same
 
 export default function ExamsPage() {
@@ -41,27 +42,6 @@ export default function ExamsPage() {
     };
     loadExams();
   },[]);
-//   { 
-//     id: 1, 
-//     name: "Frontend Developer Test", 
-//     topics: "React, TypeScript", 
-//     durationMinutes: 60, 
-//     totalQuestions: 1,
-//     // Add the actual question data here
-//     questions: [
-//       { 
-//         text: "What is a Hook in React?", 
-//         topic: "React", 
-//         options: [
-//           { text: "A function", isCorrect: true },
-//           { text: "A CSS property", isCorrect: false }
-//         ] 
-//       }
-//     ] 
-//   },
-//   // ... do the same for other mock exams
-// ]);
-
 
   // --- NEW: Missing Handler Functions ---
 
@@ -150,8 +130,14 @@ export default function ExamsPage() {
       await deleteExam(examToDelete.id);
       setExams(prev => prev.filter(e => e.id !== examToDelete.id));
       setMessage({ message: 'Exam deleted successfully', type: 'success' });
+      setTimeout(() => {
+      setMessage(null); // or setMessage({ message: '', type: '' }) depending on your state setup
+    }, 3000);
     } catch (error) {
       setMessage({ message: 'Failed to delete exam', type: 'error' });
+      setTimeout(() => {
+      setMessage(null);
+    }, 3000);
     }
     // Close the modal
     setExamToDelete(null); 
@@ -159,10 +145,13 @@ export default function ExamsPage() {
     // --- Fixed Filter Logic ---
   const filteredExams = exams.filter((exam) => {
     const searchTerm = searchQuery.toLowerCase();
-    return (
-      exam.title.toLowerCase().includes(searchTerm) ||
-      (exam.topics ?? '').toLowerCase().includes(searchTerm)
+    const matchesTitle = exam.title.toLowerCase().includes(searchTerm);
+    const matchesTopics = (exam.topics ?? '').toLowerCase().includes(searchTerm);
+    const matchesQuestionTopics = exam.questions?.some((question) =>
+      (question.topicTitle ?? '').toLowerCase().includes(searchTerm)
     );
+
+    return matchesTitle || matchesTopics || matchesQuestionTopics;
   });
 
   const handleViewExam = async (exam: Exam) => {
@@ -226,33 +215,18 @@ export default function ExamsPage() {
         buttonText="+ Create Exam"
         onButtonClick={() => setIsCreateOpen(true)}
       />
-      
-
-      {/* Action Bar */}
-      <div className="mb-4 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div className="relative flex-1 max-w-md">
-          <SearchBar placeholder="Search exams..." value={searchQuery} onChange={setSearchQuery} />
-        </div>
-        {/* <Button 
-          text={<span className="flex items-center gap-2"><PlusIcon className="w-5 h-5 stroke-[2.5px]" /> Create Exam</span>}
-          onClick={() => setIsCreateOpen(true)}
-          className="btn-primary !w-auto px-8"
-        /> */}
-      </div>
-
-      {/* Grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredExams.map((exam) => (
-          <ExamCard 
-            key={exam.id} 
-            exam={exam}
-            onAssign={(e) => setExamToAssign(e)}
-            onView={() => handleViewExam(exam)}
-            onEdit={(clickedExam) => handleEditExam(clickedExam)}
-            onDelete={(id) => setExamToDelete(exam)}
-          />
-        ))}
-      </div>
+        <SearchInput 
+          placeholder="Search by title or topic..." 
+          value={searchQuery} 
+          onChange={setSearchQuery} 
+        />
+      <ExamsGrid
+        exams={filteredExams}
+        onAssign={(e) => setExamToAssign(e)}
+        onView={(e) => handleViewExam(e)}
+        onEdit={(e) => handleEditExam(e)}
+        onDelete={(e) => setExamToDelete(e)}
+      />
 
       {/* Unified Create/Edit Modal */}
       {(isCreateOpen || examToEdit) && (

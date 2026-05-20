@@ -8,7 +8,7 @@ import type { QuestionChoice, Question, APIQuestion } from "@/types/question";
 import type { APITopic } from "@/types/question";
 import {uploadImage} from "@/services/questionService";
 import { getImageUrl } from "@/lib/api";
-import { ArrowUpTrayIcon } from "@heroicons/react/16/solid";
+import { PhotoIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 type QuestionFormProps = {
   topics: APITopic[];  
@@ -27,13 +27,25 @@ type FormErrors = {
   choicesMessage?: string;
 };
 
-const optionLabels = ["A", "B", "C", "D"];
+const minimumChoices = 2;
+const defaultChoiceCount = 4;
 
 function createBlankChoices(): ChoiceDraft[] {
-  return optionLabels.map(() => ({
+  return Array.from({ length: defaultChoiceCount }, () => ({
     text: "",
     imageUrl: "",
   }));
+}
+
+function createBlankChoice(): ChoiceDraft {
+  return {
+    text: "",
+    imageUrl: "",
+  };
+}
+
+function getOptionLabel(index: number) {
+  return String.fromCharCode(65 + index);
 }
 
 export default function QuestionForm({
@@ -47,10 +59,20 @@ export default function QuestionForm({
       return createBlankChoices();
     }
 
-    return question.choices.map((choice) => ({
+    const questionChoices = question.choices.map((choice) => ({
       text: choice.text ?? "",
       imageUrl: choice.imageUrl ?? "",
     }));
+
+    return questionChoices.length >= minimumChoices
+      ? questionChoices
+      : [
+          ...questionChoices,
+          ...Array.from(
+            { length: minimumChoices - questionChoices.length },
+            createBlankChoice
+          ),
+        ];
   }, [question]);
 
 const [topicId, setTopicId] = useState<number>(
@@ -98,6 +120,47 @@ const [topicId, setTopicId] = useState<number>(
         choicesMessage: undefined,
       };
     });
+  }
+
+  function addChoice() {
+    setChoices((currentChoices) => [
+      ...currentChoices,
+      createBlankChoice(),
+    ]);
+
+    setErrors((currentErrors) => ({
+      ...currentErrors,
+      choicesMessage: undefined,
+    }));
+  }
+
+  function removeChoice(choiceIndex: number) {
+    if (choices.length <= minimumChoices) {
+      return;
+    }
+
+    const nextChoiceCount = choices.length - 1;
+
+    setChoices((currentChoices) =>
+      currentChoices.filter((_, index) => index !== choiceIndex)
+    );
+
+    setCorrectChoiceIndex((currentIndex) => {
+      if (currentIndex === choiceIndex) {
+        return 0;
+      }
+
+      if (currentIndex > choiceIndex) {
+        return currentIndex - 1;
+      }
+
+      return Math.min(currentIndex, nextChoiceCount - 1);
+    });
+
+    setErrors((currentErrors) => ({
+      ...currentErrors,
+      choicesMessage: undefined,
+    }));
   }
 
   function handleSubmit(
@@ -217,81 +280,78 @@ onSubmit({
         ) : null}
       </label>
       {/* Question Image */}
-      <label className="block">
-        <span className="text-label">
-          Question Image
-          <span className="ml-1 text-gray">
-            (optional)
+      <div className="block">
+        <div className="flex items-center gap-2">
+          <span className="text-label">
+            Question Image
+            <span className="ml-1 text-gray">
+              (optional)
+            </span>
           </span>
-        </span>
 
-        {/* upload img */}
-        <div className="mt-3">
+          <input
+            type="file"
+            id="question-image"
+            accept="image/*"
+            className="hidden"
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+
+              if (!file) return;
+
+              setIsUploading(true);
+
+              try {
+                const response = await uploadImage(file);
+                setImageUrl(response.imageUrl);
+              } catch (error) {
+                console.error(error);
+              } finally {
+                setIsUploading(false);
+                event.currentTarget.value = "";
+              }
+            }}
+          />
+
           <label
+            htmlFor="question-image"
             className="
-              flex h-32 w-full cursor-pointer flex-col
-              items-center justify-center gap-2 rounded-2xl
-              border-2 border-dashed border-slate-300
-              bg-slate-50 transition
-              hover:border-red-400 hover:bg-red-50
+              cursor-pointer rounded-lg border border-slate-100
+              bg-white p-1.5 text-slate-400 transition
+              hover:text-slate-600
             "
+            aria-label="Upload question image"
+            title={isUploading ? "Uploading..." : "Upload question image"}
           >
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={async (event) => {
-                const file = event.target.files?.[0];
-
-                if (!file) return;
-
-                setIsUploading(true);
-
-                try {
-                  const response = await uploadImage(file);
-                  setImageUrl(response.imageUrl);
-                } catch (error) {
-                  console.error(error);
-                } finally {
-                  setIsUploading(false);
-                }
-              }}
-            />
-
-            <div
-              className="
-                flex h-12 w-12 items-center justify-center
-                rounded-full bg-white shadow-sm
-              "
-            >
-              <ArrowUpTrayIcon className="icon-big text-slate-500" />
-            </div>
-
-            <div className="text-center">
-              <p className="text-muted">
-                {isUploading
-                  ? "Uploading..."
-                  : "Click to upload an image"}
-              </p>
-
-              <p className="mt-1 text-muted text-xs text-slate-400">
-                PNG, JPG, WEBP
-              </p>
-            </div>
+            <PhotoIcon className="h-4 w-4" />
           </label>
         </div>
-        {/* preview img */}
+
         {imageUrl ? (
-          <img
-            src={getImageUrl(imageUrl)}
-            alt="Question preview"
-            className="
-              mt-4 max-h-56 rounded-xl border
-              border-slate-200 shadow-sm
-            "
-          />
+          <div className="group relative mt-3 w-fit">
+            <img
+              src={getImageUrl(imageUrl)}
+              alt="Question preview"
+              className="
+                max-h-56 rounded-xl border border-slate-200
+                bg-white shadow-sm
+              "
+            />
+            <button
+              type="button"
+              onClick={() => setImageUrl("")}
+              className="
+                absolute right-2 top-2 rounded-full bg-slate-800/70
+                p-1.5 text-white opacity-0 transition-opacity
+                group-hover:opacity-100
+              "
+              aria-label="Remove question image"
+            >
+              <XMarkIcon className="h-4 w-4" />
+            </button>
+          </div>
         ) : null}
-      </label>
+      </div>
 
       {/* Choices */}
       <fieldset>
@@ -310,15 +370,19 @@ onSubmit({
           ) : null}
 
           {choices.map((choice, index) => {
+            const optionLabel = getOptionLabel(index);
             const hasText = Boolean(choice.text.trim());
             const hasImage = Boolean(
               choice.imageUrl.trim()
             );
+            const canRemoveChoice =
+              choices.length > minimumChoices;
 
             return (
               <div
-                key={optionLabels[index]}
+                key={`${optionLabel}-${index}`}
                 className="
+                  group
                   grid grid-cols-[auto_1fr]
                   gap-x-3 gap-y-2
                 "
@@ -334,10 +398,10 @@ onSubmit({
                     setCorrectChoiceIndex(index)
                   }
                   className="mt-3 h-4 w-4 accent-emerald-600 cursor-pointer"
-                  aria-label={`Mark option ${optionLabels[index]} as correct`}
+                  aria-label={`Mark option ${optionLabel} as correct`}
                 />
 
-                <div className="grid gap-2 sm:grid-cols-[1fr_180px]">
+                <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
                   <input
                     value={choice.text}
                     disabled={hasImage}
@@ -348,53 +412,118 @@ onSubmit({
                         event.target.value
                       )
                     }
-                    placeholder={`Option ${optionLabels[index]}`}
+                    placeholder={`Option ${optionLabel}`}
                     className="input"
                   />
 
-                  <label
-    className={`
-      flex h-11 cursor-pointer items-center
-      justify-center rounded-lg border
-      px-4 text-sm font-medium transition
-      ${hasText
-        ? "cursor-not-allowed bg-slate-100 text-slate-400"
-        : "border-slate-200 bg-white hover:border-red-400 hover:bg-red-50"}
-    `}
-  >
-  <input
-    type="file"
-    accept="image/*"
-    disabled={hasText}
-    className="hidden"
-    onChange={async (event) => {
-      const file = event.target.files?.[0];
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      id={`choice-image-${index}`}
+                      accept="image/*"
+                      disabled={hasText}
+                      className="hidden"
+                      onChange={async (event) => {
+                        const file = event.target.files?.[0];
 
-      if (!file) return;
+                        if (!file) return;
 
-      try {
-        const response = await uploadImage(file);
+                        try {
+                          const response = await uploadImage(file);
 
-        updateChoice(
-          index,
-          "imageUrl",
-          response.imageUrl
-        );
-      } catch (error) {
-        console.error(error);
-      }
-    }}
-  />
+                          updateChoice(
+                            index,
+                            "imageUrl",
+                            response.imageUrl
+                          );
+                        } catch (error) {
+                          console.error(error);
+                        } finally {
+                          event.currentTarget.value = "";
+                        }
+                      }}
+                    />
 
-  {choice.imageUrl
-    ? "Image Uploaded"
-    : "Upload Image"}
-</label>
+                    <label
+                      htmlFor={`choice-image-${index}`}
+                      className={`
+                        rounded-lg border border-slate-100 bg-white
+                        p-1.5 text-slate-400 transition
+                        hover:text-slate-600
+                        ${hasText
+                          ? "cursor-not-allowed opacity-50"
+                          : "cursor-pointer"}
+                      `}
+                      aria-label={`Upload image for option ${optionLabel}`}
+                      title={`Upload image for option ${optionLabel}`}
+                    >
+                      <PhotoIcon className="h-4 w-4" />
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={() => removeChoice(index)}
+                      disabled={!canRemoveChoice}
+                      className={`
+                        rounded-lg p-1 text-slate-300 transition-colors
+                        ${canRemoveChoice
+                          ? "hover:text-red-500"
+                          : "cursor-not-allowed opacity-40"}
+                      `}
+                      aria-label={`Remove option ${optionLabel}`}
+                      title={
+                        canRemoveChoice
+                          ? `Remove option ${optionLabel}`
+                          : "A question must have at least 2 choices"
+                      }
+                    >
+                      <XMarkIcon className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
+
+                {choice.imageUrl ? (
+                  <div className="group relative col-start-2 w-fit">
+                    <img
+                      src={getImageUrl(choice.imageUrl)}
+                      alt={`Option ${optionLabel} preview`}
+                      className="
+                        max-h-32 rounded-xl border border-slate-200
+                        bg-white shadow-sm
+                      "
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateChoice(index, "imageUrl", "")
+                      }
+                      className="
+                        absolute right-1.5 top-1.5 rounded-full
+                        bg-slate-800/70 p-1 text-white opacity-0
+                        transition-opacity group-hover:opacity-100
+                      "
+                      aria-label={`Remove image for option ${optionLabel}`}
+                    >
+                      <XMarkIcon className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : null}
 
               </div>
             );
           })}
+
+          <button
+            type="button"
+            onClick={addChoice}
+            className="
+              flex items-center gap-1 text-sm font-semibold
+              text-red-600 transition-colors hover:text-red-700
+            "
+          >
+            <PlusIcon className="h-4 w-4 stroke-[2.5px]" />
+            Add Choice
+          </button>
         </div>
       </fieldset>
 

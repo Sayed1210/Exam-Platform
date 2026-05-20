@@ -7,7 +7,7 @@ import {
   InformationCircleIcon 
 } from '@heroicons/react/24/outline';
 import Button from '../Button';
-import { SearchBar } from './SearchBar';
+import SearchInput from '../question-bank/SearchInput';
 import ExamModal from './ExamModal';
 import { Exam } from '@/types/exam';
 import type { Candidate } from '@/types/candidate';
@@ -94,7 +94,7 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
           <ClipboardDocumentIcon className="w-5 h-5" /> {exam.title}
         </div>
         <div className="mb-4">
-          <SearchBar 
+          <SearchInput 
             placeholder="Search candidates by name or email..." 
             value={searchQuery} 
             onChange={setSearchQuery} 

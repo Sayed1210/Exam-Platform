@@ -174,8 +174,10 @@ namespace Exam.Service
                 .Select(eq => new QuestionInExamResponse
                 {
                     Id = eq.Question!.Id,
+                    TopicId = eq.Question.TopicId,
                     Text = eq.Question.Text,
                     ImageUrl = eq.Question.ImageUrl,
+                    TopicTitle = eq.Question.Topic?.Title ?? string.Empty,
                     Choices = eq.Question.Choices
                         .Select(c => new ChoiceInExamResponse
                         {

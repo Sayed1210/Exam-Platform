@@ -13,9 +13,8 @@ namespace Exam.Models
         public string Text { get; set; } = string.Empty;
 
         public string? ImageUrl { get; set; }
-        [Required(ErrorMessage = "4 choices are required.")]
-        [MinLength(4, ErrorMessage = "4 choices are required.")]
-        [MaxLength(4, ErrorMessage = "A question cannot have more than 4 choices.")]
+        [Required(ErrorMessage ="Atleast 2 choices are required.")]
+        [MinLength(2, ErrorMessage = "Atleast 2 choices are required.")]
         public List<ChoiceRequest> Choices { get; set; } = [];
     }
     public class UpdateQuestionRequest
