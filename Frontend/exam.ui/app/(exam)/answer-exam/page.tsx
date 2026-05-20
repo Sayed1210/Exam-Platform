@@ -2,7 +2,8 @@
 
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
-import PageLoader from "@/components/PageLoader";
+import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
+import PageLoader from "@/components/common/PageLoader";
 import { submitExam } from "@/services/exam-service";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -181,20 +182,17 @@ export default function ExamPage() {
         <Button text="Submit Exam" className="btn-primary w-full" onClick={() => setOpen(true)} />
         
         {/* Submit Modal */}
-        <Modal open={open} onClose={() => setOpen(false)}>
-          {/* Icon */}
+        {/* <Modal open={open} onClose={() => setOpen(false)}>
           <div className="flex justify-center">
             <div className="w-18 h-18 rounded-full bg-yellow-100 flex items-center justify-center">
               <span className="text-4xl text-yellow-500">⚠</span>
             </div>
           </div>
 
-          {/* Title */}
           <h2 className="text-heading text-center">
             Submit your exam?
           </h2>
 
-          {/* Description */}
           <p className="text-center text-muted">
             You answered <span className="font-bold">{answeredCount}</span> of{" "}
             {TOTAL_QUESTIONS} <br></br>This cannot be undone
@@ -203,7 +201,23 @@ export default function ExamPage() {
               <Button text="Submit" onClick={() => handleSubmitExam()} className="btn-primary flex-1" />
               <Button text="Go Back" onClick={() => setOpen(false)} className="btn-secondary flex-1" />
           </div>
-        </Modal>
+        </Modal> */}
+        {open && (<ConfirmDeleteModal 
+          onConfirm={handleSubmitExam}
+          onCancel={() => setOpen(false)}
+          title="Submit your exam?"
+          text={
+            <p className="text-body">
+              You answered <span className="font-bold text-primary">{answeredCount}</span> 
+              {" "} of{" "} {TOTAL_QUESTIONS} questions
+              <br />
+            </p>
+          }
+          yesText="Submit"
+          noText="Go Back"
+        >
+        </ConfirmDeleteModal>
+        )}
       </div>
 
       {/* Main Content */}

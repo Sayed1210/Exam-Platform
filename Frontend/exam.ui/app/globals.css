@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
+/* nav-blue: [#0f1117] */
 :root {
-  --background: #ffffff; /* Light mode background color */
+  --background: #f9fafb; /* Light mode background color */
   --foreground: #171717; /* Light mode foreground color */
   --primary: #da0211; /* Primary color for light mode */
   --black: #111111; 
@@ -34,31 +35,36 @@ body {
     @apply text-2xl font-bold;
   }
 
-  .text-heading {
-    @apply text-xl font-bold text-foreground;
+  .text-subtitle {
+    @apply text-xl font-bold;
   }
 
-  .text-subtitle {
+  .text-heading {
     @apply text-base font-bold text-foreground;
   }
 
   .text-body {
-    @apply text-base font-normal text-foreground;
+    @apply text-sm font-medium text-foreground;
   }
 
   .text-muted {
     @apply text-sm font-medium text-muted;
   }
 
+  .text-gray {
+    @apply text-sm text-gray-500 font-normal
+  }
+
   .text-label {
-    @apply text-sm font-semibold text-foreground;
+    @apply text-sm font-semibold text-foreground ml-1;
   }
 
   .text-error {
     @apply text-xs font-medium text-red-500 overflow-hidden transition-all duration-300 ease-in-out;
   }
+
   .nav-section-label {
-    @apply text-[11px] font-semibold tracking-widest text-gray-600 px-2 mb-2;
+    @apply text-xs font-semibold tracking-widest text-gray-600 mb-2;
   }
 }
 
@@ -99,18 +105,63 @@ body {
 /* Button Styles */
 @layer components {
   .btn-primary {
-  @apply  mt-2 min-w-32 py-2.5 rounded-4xl shadow-md font-semibold text-white bg-primary transition hover:brightness-90;
+  @apply cursor-pointer mt-2 px-8 py-2 rounded-xl shadow-md font-semibold text-white bg-primary transition hover:brightness-90;
   }
 
   .btn-secondary {
-  @apply mt-2 min-w-32 py-3 rounded-4xl shadow-sm font-semibold text-black bg-gray-200 transition hover:brightness-95;
+  @apply cursor-pointer mt-2 px-8 py-2 rounded-xl shadow-sm font-semibold text-black bg-gray-200 transition hover:brightness-95;
+  }
+
+  .btn-nav {
+    @apply flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700;
+  }
+  .btn-nav:not(:disabled):hover {
+    @apply cursor-pointer transition duration-200 bg-gray-50;
+  }
+  .btn-nav:disabled {
+    @apply opacity-50;
   }
 
   .btn-icon-danger {
-    @apply p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors duration-200;
+    @apply cursor-pointer p-2 bg-red-50 text-primary rounded-lg hover:bg-red-100 transition-colors duration-200;
   }
 
   .btn-icon-secondary {
-    @apply p-2 bg-slate-50 text-foreground rounded-lg hover:bg-slate-100 transition-colors duration-200;
+    @apply cursor-pointer p-2 bg-slate-50 text-foreground rounded-lg hover:bg-slate-100 transition-colors duration-200;
   }
 }
+
+/* Icon Sizes */
+@layer components {
+  .icon-big{
+    @apply w-[18px] h-[18px];
+  }
+  .icon-mid{
+    @apply w-[16px] h-[16px];
+  }
+  .icon-small{ 
+    @apply w-[14px] h-[14px];
+  }
+}
+
+/* Input Style */
+@layer components {
+  .input {
+    @apply bg-white border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400;
+  }
+  .input:focus {
+    @apply border-primary ring-1 ring-red-100
+  }
+  
+  .search-input {
+    @apply bg-transparent border-none outline-none text-sm text-gray-700 w-full placeholder:text-gray-400;
+  }
+
+  .select-input {
+    @apply cursor-pointer mt-2 h-11 w-full bg-white border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm text-gray-900 outline-none transition
+  }
+  .select-input:focus {
+    @apply border-primary ring-1 ring-red-100
+  }
+}
+

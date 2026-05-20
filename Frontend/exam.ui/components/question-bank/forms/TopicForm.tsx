@@ -32,39 +32,40 @@ export default function TopicForm({ onSubmit, onCancel }: TopicFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <label className="block">
-        <span className="text-sm font-semibold text-slate-900">Topic Name</span>
-        <input
-          value={topicName}
-          onChange={(event) => {
-            setTopicName(event.target.value);
-            setTopicNameError("");
-          }}
-          className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          placeholder="Enter topic name"
-          autoFocus
-        />
+    <form onSubmit={handleSubmit}>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-label">Topic Name</label>
+          <input
+            value={topicName}
+            onChange={(event) => {
+              setTopicName(event.target.value);
+              setTopicNameError("");
+            }}
+            className="input"
+            placeholder="Enter topic name"
+            autoFocus
+          />
+        </div>
+        
 
         {topicNameError ? (
-          <p className="mt-2 text-sm text-red-600">
+          <p className="mt-1 text-error">
             {topicNameError}
           </p>
         ) : null}
-      </label>
       <div className="flex justify-end gap-3 border-t border-slate-100 pt-5">
         <button
           type="button"
           onClick={onCancel}
-          className="bg-white text-black font-semibold px-6 py-2.5 rounded-full hover:brightness-90 transition"
+          className="btn-secondary"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="bg-primary text-white font-semibold px-6 py-2.5 rounded-full hover:brightness-90 transition"
+          className="btn-primary"
         >
-          Save Topic
+          Save
         </button>
       </div>
     </form>

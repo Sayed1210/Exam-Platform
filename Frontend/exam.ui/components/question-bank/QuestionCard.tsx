@@ -1,10 +1,10 @@
 
 import type { APIQuestion } from "@/types/question";
-import ChoiceItem from "./ChoiceItem";
-import TrashIcon from "../TrashIcon";
-import EditIcon from "../EditIcon";
+import { TrashIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
+
 import type { Question } from "@/types/question";
 import {getImageUrl} from "@/lib/api";
+import QuestionTag from "../common/QuestionTag";
 
 export type QuestionCardProps = {
   question: APIQuestion;
@@ -15,24 +15,20 @@ export type QuestionCardProps = {
 export default function QuestionCard({ question, onEdit, onDelete }: QuestionCardProps) {
   return (
     <div className="card p-4">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-            {question.topicTitle}
-          </span>
-        </div>
+      <div className="flex items-start justify-between gap-4">
+        <QuestionTag title={question.topicTitle} />
 
         <div className="flex items-center gap-3 text-gray-500">
-          <button type="button" onClick={() => onEdit(question)} aria-label="Edit question"className="btn-icon-secondary">
-  <EditIcon className="text-gray-400 transition group-hover:text-blue-500" />
-</button>
+          <button type="button" onClick={() => onEdit(question)} aria-label="Edit question" className="btn-icon-secondary">
+            <PencilSquareIcon className="icon-mid"/>
+          </button>
           <button type="button" onClick={() => onDelete(question.id)} aria-label="Delete question" className="btn-icon-danger">
-            <TrashIcon className="text-gray-400 transition group-hover:text-red-500"/>
+            <TrashIcon className="icon-mid"/>
           </button>
         </div>
       </div>
 
-      <h3 className="mb-3 text-body font-semibold text-gray-900">{question.text}</h3>
+      <h3 className="mb-2 text-heading">{question.text}</h3>
 
       {question.imageUrl && (
         <img src={getImageUrl(question.imageUrl)} alt="Question image" className="mb-4 max-h-37 w-full object-contain rounded" />
@@ -42,11 +38,11 @@ export default function QuestionCard({ question, onEdit, onDelete }: QuestionCar
         {question.choices.map((choice, i) => (
           <li
             key={i}
-            className={`flex items-start gap-2 text-sm ${choice.isCorrect ? "text-emerald-600" : "text-gray-500"}`}
+            className={`flex items-start gap-2 ${choice.isCorrect ? "text-body text-emerald-600" : "text-muted"}`}
           >
             <span
               className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border ${
-                choice.isCorrect ? "border-emerald-500 bg-emerald-500" : "border-gray-300 bg-white"
+                choice.isCorrect ? "border-emerald-500 bg-emerald-500" : "border-gray-400 bg-white"
               }`}
             />
             <span className="min-w-0 flex-1">

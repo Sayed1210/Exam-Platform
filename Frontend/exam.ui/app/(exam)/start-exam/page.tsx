@@ -8,6 +8,7 @@ import { useSearchParams } from "next/navigation";
 import { beforeStartExam, startExam } from "@/services/exam-service";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
 
 export default function StartExamPage() {
   const router = useRouter();
@@ -114,23 +115,15 @@ export default function StartExamPage() {
         {/* Start Button */}
         <Button text="Start Exam" onClick={() => setOpen(true)} className="btn-primary w-full"/>
         {/* Popup Window */}
-        <Modal open={open} onClose={() => setOpen(false)}>
-            <div className="flex flex-col gap-2 text-center">
-                <h3 className="text-heading mb-2">Are you sure you want to proceed?</h3>
-                <p className="text-muted">The timer will start immediately and <br></br> cannot be paused once exam begins</p>
-            </div>
-            
-            <div className="flex justify-center gap-3 w-full mt-2">  
-                <Button 
-                text="Proceed" 
-                onClick={handleStartExam}
-                className="btn-primary flex-1"
-                // loading={loading}
-                // loadingText="Opening..." 
-                />
-                <Button text="Cancel" onClick={() => setOpen(false)} className="btn-secondary flex-1" />
-            </div>
-        </Modal>    
+        {open && (<ConfirmDeleteModal 
+          onConfirm={handleStartExam}
+          onCancel={() => setOpen(false)}
+          title="Are you sure you want to proceed?"
+          // text="The timer will start immediately"
+          yesText="Proceed"
+        >
+        </ConfirmDeleteModal>
+        )}
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-400 mt-4">

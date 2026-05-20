@@ -8,6 +8,7 @@ import type { QuestionChoice, Question, APIQuestion } from "@/types/question";
 import type { APITopic } from "@/types/question";
 import {uploadImage} from "@/services/questionService";
 import { getImageUrl } from "@/lib/api";
+import { ArrowUpTrayIcon } from "@heroicons/react/16/solid";
 
 type QuestionFormProps = {
   topics: APITopic[];  
@@ -170,27 +171,26 @@ onSubmit({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Topic */}
       <label className="block">
-       
-
-<div className="block">
-  <span className="text-sm font-semibold text-slate-900">Topic</span>
-  <select
-    value={topicId}
-    onChange={(e) => setTopicId(Number(e.target.value))}
-    className="mt-2 h-11 w-full rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-  >
-    {topics.map((t) => (
-      <option key={t.id} value={t.id}>
-        {t.title}
-      </option>
-    ))}
-  </select>
-</div>
+        <div className="block">
+          <span className="text-label">Topic</span>
+          <select
+            value={topicId}
+            onChange={(e) => setTopicId(Number(e.target.value))}
+            className="select-input"
+          >
+            {topics.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.title}
+              </option>
+            ))}
+          </select>
+        </div>
       </label>
-
+      {/* Question */}
       <label className="block">
-        <span className="text-sm font-semibold text-slate-900">
+        <span className="text-label">
           Question Statement
         </span>
 
@@ -203,123 +203,108 @@ onSubmit({
               text: undefined,
             }));
           }}
-          placeholder="Enter the question..."
+          placeholder="Enter question..."
           className="
-            mt-2 min-h-24 w-full resize-y rounded-lg
-            border border-slate-200 px-4 py-3 text-sm
-            text-slate-900 outline-none transition
-            placeholder:text-slate-400
-            focus:border-blue-500 focus:ring-2
-            focus:ring-blue-100
+            mt-2 min-h-24 w-full resize-y
+            input
           "
         />
 
         {errors.text ? (
-          <p className="mt-2 text-sm text-red-600">
+          <p className="mt-1 text-error">
             {errors.text}
           </p>
         ) : null}
       </label>
+      {/* Question Image */}
+      <label className="block">
+        <span className="text-label">
+          Question Image
+          <span className="ml-1 text-gray">
+            (optional)
+          </span>
+        </span>
 
-     <label className="block">
-  <span className="text-sm font-semibold text-slate-900">
-    Question Image
-    <span className="ml-1 font-medium text-slate-400">
-      (optional)
-    </span>
-  </span>
+        {/* upload img */}
+        <div className="mt-3">
+          <label
+            className="
+              flex h-32 w-full cursor-pointer flex-col
+              items-center justify-center gap-2 rounded-2xl
+              border-2 border-dashed border-slate-300
+              bg-slate-50 transition
+              hover:border-red-400 hover:bg-red-50
+            "
+          >
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (event) => {
+                const file = event.target.files?.[0];
 
-  <div className="mt-3">
-    <label
-      className="
-        flex h-32 w-full cursor-pointer flex-col
-        items-center justify-center gap-2 rounded-2xl
-        border-2 border-dashed border-slate-300
-        bg-slate-50 transition
-        hover:border-blue-400 hover:bg-blue-50
-      "
-    >
-      <input
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={async (event) => {
-          const file = event.target.files?.[0];
+                if (!file) return;
 
-          if (!file) return;
+                setIsUploading(true);
 
-          setIsUploading(true);
+                try {
+                  const response = await uploadImage(file);
+                  setImageUrl(response.imageUrl);
+                } catch (error) {
+                  console.error(error);
+                } finally {
+                  setIsUploading(false);
+                }
+              }}
+            />
 
-          try {
-            const response = await uploadImage(file);
-            setImageUrl(response.imageUrl);
-          } catch (error) {
-            console.error(error);
-          } finally {
-            setIsUploading(false);
-          }
-        }}
-      />
+            <div
+              className="
+                flex h-12 w-12 items-center justify-center
+                rounded-full bg-white shadow-sm
+              "
+            >
+              <ArrowUpTrayIcon className="icon-big text-slate-500" />
+            </div>
 
-      <div
-        className="
-          flex h-12 w-12 items-center justify-center
-          rounded-full bg-white shadow-sm
-        "
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6 text-slate-500"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M3 15a4 4 0 014-4h1m4-4l4 4m0 0l4-4m-4 4V3"
+            <div className="text-center">
+              <p className="text-muted">
+                {isUploading
+                  ? "Uploading..."
+                  : "Click to upload an image"}
+              </p>
+
+              <p className="mt-1 text-muted text-xs text-slate-400">
+                PNG, JPG, WEBP
+              </p>
+            </div>
+          </label>
+        </div>
+        {/* preview img */}
+        {imageUrl ? (
+          <img
+            src={getImageUrl(imageUrl)}
+            alt="Question preview"
+            className="
+              mt-4 max-h-56 rounded-xl border
+              border-slate-200 shadow-sm
+            "
           />
-        </svg>
-      </div>
+        ) : null}
+      </label>
 
-      <div className="text-center">
-        <p className="text-sm font-medium text-slate-700">
-          {isUploading
-            ? "Uploading..."
-            : "Click to upload an image"}
-        </p>
-
-        <p className="mt-1 text-xs text-slate-400">
-          PNG, JPG, WEBP
-        </p>
-      </div>
-    </label>
-  </div>
-
-  {imageUrl ? (
-    <img
-      src={getImageUrl(imageUrl)}
-      alt="Question preview"
-      className="
-        mt-4 max-h-56 rounded-xl border
-        border-slate-200 shadow-sm
-      "
-    />
-  ) : null}
-</label>
-
+      {/* Choices */}
       <fieldset>
-        <legend className="text-sm font-semibold text-slate-900">
+        <legend className="text-label">
           Options{" "}
-          <span className="font-medium text-slate-400">
+          <span className="text-gray">
             (select the correct answer)
           </span>
         </legend>
 
         <div className="mt-3 space-y-3">
           {errors.choicesMessage ? (
-            <p className="text-sm text-red-600">
+            <p className="text-error">
               {errors.choicesMessage}
             </p>
           ) : null}
@@ -338,6 +323,7 @@ onSubmit({
                   gap-x-3 gap-y-2
                 "
               >
+                
                 <input
                   type="radio"
                   name="correctChoice"
@@ -347,7 +333,7 @@ onSubmit({
                   onChange={() =>
                     setCorrectChoiceIndex(index)
                   }
-                  className="mt-3 h-4 w-4 accent-blue-600"
+                  className="mt-3 h-4 w-4 accent-emerald-600 cursor-pointer"
                   aria-label={`Mark option ${optionLabels[index]} as correct`}
                 />
 
@@ -363,28 +349,19 @@ onSubmit({
                       )
                     }
                     placeholder={`Option ${optionLabels[index]}`}
-                    className="
-                      h-11 rounded-lg border border-slate-200
-                      px-4 text-sm text-slate-900 outline-none
-                      transition placeholder:text-slate-400
-                      focus:border-blue-500 focus:ring-2
-                      focus:ring-blue-100
-                      disabled:bg-slate-100
-                      disabled:text-slate-400
-                      disabled:cursor-not-allowed
-                    "
+                    className="input"
                   />
 
                   <label
-  className={`
-    flex h-11 cursor-pointer items-center
-    justify-center rounded-lg border
-    px-4 text-sm font-medium transition
-    ${hasText
-      ? "cursor-not-allowed bg-slate-100 text-slate-400"
-      : "border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50"}
-  `}
->
+    className={`
+      flex h-11 cursor-pointer items-center
+      justify-center rounded-lg border
+      px-4 text-sm font-medium transition
+      ${hasText
+        ? "cursor-not-allowed bg-slate-100 text-slate-400"
+        : "border-slate-200 bg-white hover:border-red-400 hover:bg-red-50"}
+    `}
+  >
   <input
     type="file"
     accept="image/*"
@@ -426,9 +403,7 @@ onSubmit({
           type="button"
           onClick={onCancel}
           className="
-            bg-white text-black font-semibold
-            px-6 py-2.5 rounded-full
-            hover:brightness-90 transition
+            btn-secondary
           "
         >
           Cancel
@@ -437,9 +412,7 @@ onSubmit({
         <button
           type="submit"
           className="
-            bg-primary text-white font-semibold
-            px-6 py-2.5 rounded-full
-            hover:brightness-90 transition
+            btn-primary
           "
           disabled={isUploading}
         >
