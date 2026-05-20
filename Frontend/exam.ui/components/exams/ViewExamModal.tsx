@@ -71,7 +71,7 @@ export default function ViewExamModal({ exam, isLoading, onClose, onEdit }: View
           </div>
         ) : questionsToDisplay.length === 0 ? (
           <div className="text-center py-20 text-slate-500 text-sm">
-            No questions for this exam.
+            No questions in this exam.
           </div>
           ) : (
           questionsToDisplay.map((q, idx) => (

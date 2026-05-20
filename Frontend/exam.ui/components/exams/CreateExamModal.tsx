@@ -67,7 +67,12 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const getError = (path: string) => errors[path] || "";
-
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
   useEffect(() => {
     if (!initialData) return;
 
@@ -196,7 +201,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
         updated[target.qIdx].options[target.oIdx] = {
           ...updated[target.qIdx].options[target.oIdx],
           imageUrl: base64String,
-          text: '',
+          
         };
       } else {
         updated[target.qIdx] = {
@@ -313,16 +318,16 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
                     ))}
                   </select>
                   {initialData && (
-    <select 
-      className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none text-sm font-bold text-primary shadow-sm animate-in fade-in duration-300"
-      value={filterStatus}
-      onChange={(e) => setFilterStatus(e.target.value as any)}
-    >
-      <option value="all">All Status</option>
-      <option value="chosen">Chosen</option>
-      <option value="unchosen">Not Chosen</option>
-    </select>
-  )}
+                  <select 
+                    className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none text-sm font-bold text-primary shadow-sm animate-in fade-in duration-300"
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value as any)}
+                  >
+                    <option value="all">All Status</option>
+                    <option value="chosen">Chosen</option>
+                    <option value="unchosen">Not Chosen</option>
+                  </select>
+                )}
                 </div>
                 <div className="space-y-3">
                   {getError('questions') && <p className="text-red-500 text-xs">{getError('questions')}</p>}
@@ -408,7 +413,18 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
                        updated[qIdx].options = updated[qIdx].options.map((o, i) => ({ ...o, isCorrect: i === oIdx }));
                        setFormData({ ...formData, questions: updated });
                      }}
-                     onOptionImageUpload={(oIdx, event) => handleImageUpload(event, { qIdx, oIdx })}
+                     onOptionImageUpload={(oIdx, event) =>{ 
+                      handleImageUpload(event, { qIdx, oIdx });
+                      setTimeout(() => {
+                      setFormData((prev) => {
+                        const updated = [...prev.questions];
+                        if (updated[qIdx]?.options?.[oIdx]) {
+                          updated[qIdx].options[oIdx].text = '';
+                        }
+                        return { ...prev, questions: updated };
+                      });
+                    }, 50);}
+                    }
                      onOptionRemoveImage={(oIdx) => removeImage(qIdx, oIdx)}
                      onOptionRemove={(oIdx) => removeOption(qIdx, oIdx)}
                    />
