@@ -150,7 +150,7 @@ export default function ExamPage() {
 
               return (
                 <Button key={q.id} text={num.toString()} onClick={() => setCurrent(i)}
-                  className={`h-10 rounded border text-sm hover:brightness-90 transition
+                  className={`cursor-pointer h-10 rounded border text-sm hover:brightness-90 transition
                     ${
                       isCurrent
                         ? "bg-blue-400 text-white border-0 shadow-md"
@@ -180,28 +180,6 @@ export default function ExamPage() {
 
         {/* Submit Button */}
         <Button text="Submit Exam" className="btn-primary w-full" onClick={() => setOpen(true)} />
-        
-        {/* Submit Modal */}
-        {/* <Modal open={open} onClose={() => setOpen(false)}>
-          <div className="flex justify-center">
-            <div className="w-18 h-18 rounded-full bg-yellow-100 flex items-center justify-center">
-              <span className="text-4xl text-yellow-500">⚠</span>
-            </div>
-          </div>
-
-          <h2 className="text-heading text-center">
-            Submit your exam?
-          </h2>
-
-          <p className="text-center text-muted">
-            You answered <span className="font-bold">{answeredCount}</span> of{" "}
-            {TOTAL_QUESTIONS} <br></br>This cannot be undone
-          </p>
-          <div className="flex gap-3">   
-              <Button text="Submit" onClick={() => handleSubmitExam()} className="btn-primary flex-1" />
-              <Button text="Go Back" onClick={() => setOpen(false)} className="btn-secondary flex-1" />
-          </div>
-        </Modal> */}
         {open && (<ConfirmDeleteModal 
           onConfirm={handleSubmitExam}
           onCancel={() => setOpen(false)}
@@ -302,8 +280,8 @@ export default function ExamPage() {
         </div>
         {/* Navigation */}
         <div className="flex justify-end gap-3 mt-2">
-          <Button text="← Previous" onClick={() => setCurrent((p) => Math.max(0, p - 1))} className="btn-secondary" />
-          <Button text="Next →" onClick={() => setCurrent((p) => Math.min(TOTAL_QUESTIONS - 1, p + 1))} className="btn-secondary" />
+          <button onClick={() => setCurrent((p) => Math.max(0, p - 1))} className="btn-secondary">← Previous</button>
+          <button onClick={() => setCurrent((p) => Math.min(TOTAL_QUESTIONS - 1, p + 1))} className="btn-secondary">Next →</button>
         </div>
       </div>
     </div>

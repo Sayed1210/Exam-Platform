@@ -81,7 +81,7 @@ export async function startExam(
   } catch {
     return {
       success: false,
-      message: "Something went wrong",
+      message: "Unable to connect to server",
       data: null,
     };
   }

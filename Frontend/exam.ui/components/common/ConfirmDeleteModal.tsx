@@ -24,9 +24,9 @@ export default function ConfirmDeleteModal({
         <section className="modal-panel max-w-[400px]">
           <div className="modal-body p-6">
             <h2 className="text-subtitle mb-2">{title}</h2>
-            <p className="text-body text-gray-900 mb-2">
+            <div  className="text-body text-gray-900 mb-2">
               {text} 
-            </p>
+            </div >
             <p className="text-muted mb-2">This action cannot be undone.</p>
 
             <div className="flex justify-center gap-2">

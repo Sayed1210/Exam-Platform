@@ -71,7 +71,7 @@ app.MapCandidateEndpoints();
 app.MapSubmitExamEndpoints();
 app.MapStartExamEndpoints();
 app.MapBeforeStartExamEndpoints();
-app.MapVerifyLinkEndpoints();
+// app.MapVerifyLinkEndpoints();
 app.MapInvitationsEndpoints();
 app.MapUploadEndpoints();
 

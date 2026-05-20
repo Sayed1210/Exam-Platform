@@ -206,7 +206,7 @@ public class InvitationService(
             var baseUrl = _configuration["Frontend:BaseUrl"];
 
             var invitationLink =
-                $"{baseUrl}/join-exam?token={token}";
+                $"{baseUrl}/start-exam?token={token}";
 
             string subject =
                 "Action Required: Your Enozom Examination Invitation";

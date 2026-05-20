@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Exam.Models;
 using Exam.Repo;
 using Microsoft.Extensions.Logging;
@@ -19,8 +21,10 @@ public class BeforeStartExamService(
     {
         try
         {
-            var candidateExam =
-                await _candidateExamRepo.GetByInvitationTokenAsync(token);
+            var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));
+            var tokenHash = Convert.ToHexString(hashBytes);
+            
+            var candidateExam = await _candidateExamRepo.GetByInvitationTokenAsync(tokenHash);
 
             if (candidateExam is null)
             {
@@ -35,6 +39,9 @@ public class BeforeStartExamService(
                     candidateExam.ExamId, candidateExam.CandidateId, candidateExam.Status);
                 return (null, "Exam already started or submitted");
             }
+
+            if (candidateExam.ExpiryDate < DateTime.UtcNow || candidateExam.Status == ExamStatus.EXPIRED)
+                return(null, "Exam link expired");
 
             var exam = await _examRepo.GetWithQuestionsAndChoicesAsync(
                 candidateExam.ExamId);
