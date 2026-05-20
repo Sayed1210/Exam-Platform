@@ -1,17 +1,4 @@
-// import Sidebar from "@/components/Sidebar";
-// export default function DashboardLayout({
-//   children,
-// }: {
-//   children: React.ReactNode;
-// }) {
-//     return (
-//     <div style={{ display: "flex", minHeight: "100vh" }}>
-//       <Sidebar />
-//       <main style={{ flex: 1, overflow: "auto" }}>{children}</main>
-//     </div>
-//   );
-// }
-import Sidebar from "@/components/Sidebar";
+import Sidebar from "@/components/common/Sidebar";
 
 export default function DashboardLayout({
   children,
@@ -19,10 +6,10 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-background">
       <Sidebar />
 
-      <main className="flex-1 overflow-auto p-7">
+      <main className="flex-1 min-w-[900px] overflow-auto p-7">
         {children}
       </main>
     </div>

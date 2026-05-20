@@ -6,21 +6,22 @@ import CandidatesTable from "@/components/candidates/CandidatesTable";
 import AddCandidateModal from "@/components/candidates/AddCandidateModal";
 import CandidateDetailsModal from "@/components/candidates/CandidateDetailsModal";
 import { Candidate, CandidateDetail } from "@/types/candidate";
-import DashboardPageHeader from "@/components/DashboardHeader";
+import DashboardPageHeader from "@/components/common/DashboardHeader";
+import { toast } from "sonner";
 
 const ITEMS_PER_PAGE = 8;
 const statusLabelToNumber: Record<string, number | undefined> = {
   "All Status": undefined,
   "No Status": undefined,
-  Pending: 0,
-  Expired: 1,
+  "Pending": 0,
+  "Expired": 1,
   "In Progress": 2,
-  Done: 3,
+  "Done": 3,
 };
 
 export default function CandidatesPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [emailError, setEmailError] = useState("");
+  // const [emailError, setEmailError] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateDetail | null>(null);
   const [search, setSearch] = useState("");
@@ -61,23 +62,36 @@ const fetchCandidates = (page: number, searchVal: string, statusVal: string) => 
     email: string;
     phoneNumber: string;
   }) => {
-    setEmailError("");
+    // setEmailError("");
     try {
       await addCandidate(data);
       fetchCandidates(currentPage, search, statusFilter);
       setShowAddModal(false);
     } catch (err: any) {
       if (err?.status === 409) {
-        setEmailError(err.message);
+        toast.error(err.message);
       } else {
-        setEmailError(err?.message || "Something went wrong");
+        toast.error(err?.message || "Something went wrong");
       }
     }
   };
 
   const handleDelete = async (id: string) => {
     await deleteCandidate(Number(id));
-    fetchCandidates(currentPage, search, statusFilter);
+
+    const isLastItemOnPage = candidates.length === 1;
+
+    if (isLastItemOnPage && currentPage > 1) {
+      const newPage = currentPage - 1;
+
+      setCurrentPage(newPage);
+
+      fetchCandidates(newPage, search, statusFilter);
+    } else {
+      fetchCandidates(currentPage, search, statusFilter);
+    }
+    // await deleteCandidate(Number(id));
+    // fetchCandidates(currentPage, search, statusFilter);
   };
 
   return (
@@ -105,8 +119,8 @@ const fetchCandidates = (page: number, searchVal: string, statusVal: string) => 
         <AddCandidateModal
           onClose={() => setShowAddModal(false)}
           onSubmit={handleAddCandidate}
-          backendError={emailError}
-          clearBackendError={() => setEmailError("")}
+          // backendError={emailError}
+          // clearBackendError={() => setEmailError("")}
         />
       )}
 

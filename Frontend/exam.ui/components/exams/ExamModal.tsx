@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import ModalPortal from '../ModalPortal';
+import ModalPortal from '../common/ModalPortal';
 
 interface ModalProps {
   isOpen?: boolean; // Optional if you control visibility from the parent

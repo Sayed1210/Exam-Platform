@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import ModalPortal from "./ModalPortal";
+import ModalPortal from "./common/ModalPortal";
 
 type ModalProps = {
   open: boolean;

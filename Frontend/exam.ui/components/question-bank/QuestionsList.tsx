@@ -4,14 +4,16 @@ import { useEffect, useState } from "react";
 import { getQuestions, getTopics, deleteQuestion, createQuestion, updateQuestion, createTopic } from "@/services/questionService";
 import type { APIQuestion, APITopic } from "@/types/question";
 
-import ClearFiltersButton from "@/components/ClearFiltersButton";
 import QuestionCard from "./QuestionCard";
-import SearchBar from "./SearchBar";
+import SearchBar from "./SearchInput";
 import TopicFilters from "./TopicFilters";
-import QuestionModal from "./QuestionModal";
-import TopicModal from "./TopicModal";
-import ConfirmDeleteModal from "@/components/ConfirmDeleteModal";
-import DashboardPageHeader from "../DashboardHeader";
+import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
+import DashboardPageHeader from "../common/DashboardHeader";
+import ModalLayout from "../common/ModalLayout";
+import TopicForm from "./forms/TopicForm";
+import QuestionForm from "./forms/QuestionForm";
+import { ChevronLeftIcon, ChevronRightIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid";
+import Pagination from "../common/Pagination";
 
 const PAGE_SIZE = 10;
 
@@ -144,7 +146,7 @@ const handleSaveQuestion = async (data: any) => {
           <SearchBar
             value={search}
             onChange={setSearch}
-            placeholder="Search questions by text or topic..."
+            placeholder="Search questions..."
           />
         </div>
 
@@ -171,78 +173,56 @@ const handleSaveQuestion = async (data: any) => {
           ))
         ) : (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center">
-            <p className="text-lg font-medium text-gray-700">No questions found</p>
-            <p className="mt-2 text-sm text-gray-500">Try adjusting your search or filters.</p>
-            <ClearFiltersButton onClick={clearFilters} />
+            <p className="text-muted text-center mb-4">[ No questions found ]</p>
+            <p className="text-muted py-1">Try adjusting your search or filters</p>
+            {/* <ClearFiltersButton onClick={clearFilters} /> */}
+            <button onClick={clearFilters} className="btn-secondary text-sm">Clear Filters</button>
           </div>
         )}
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between px-1 py-4 mt-4">
-          <p className="text-sm text-gray-500">
-            Page {currentPage} of {totalPages}
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage((p) => p - 1)}
-              disabled={currentPage === 1}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
-            >
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-              Previous
-            </button>
-            <button
-              onClick={() => setCurrentPage((p) => p + 1)}
-              disabled={currentPage === totalPages}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
-            >
-              Next
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
       {/* Modals */}
       {questionToDelete && (
         <ConfirmDeleteModal
-             title="Delete Question"
-             text="Are you sure you want to delete this question? This action cannot be undone."
-             onConfirm={confirmDelete}
-             onCancel={cancelDelete}
+          onConfirm={confirmDelete}
+          onCancel={cancelDelete}
+          title="Delete Question"
+          text="Are you sure you want to delete this question?"
+          yesText="Delete"
         />
       )}
 
+      {isTopicModalOpen && (
+        <ModalLayout
+          title="Add Topic"
+        >
+          <TopicForm 
+            onSubmit={handleAddTopic}
+            onCancel={closeTopicModal}
+          />
+        </ModalLayout>
+      )}
 
-  {questionToDelete && (
-  <ConfirmDeleteModal
-    onConfirm={confirmDelete}
-    onCancel={cancelDelete}
-    title="Delete Question"
-    text="Are you sure you want to delete this question? This action cannot be undone."
-  />
-)}
+      {isQuestionModalOpen && (
+        <ModalLayout
+          title="Question"
+        >
+          <QuestionForm 
+            topics={topics}
+            question={editingQuestion}
+            onSubmit={handleSaveQuestion}
+            onCancel={closeQuestionModal}
+          />
+        </ModalLayout>
+      )}
 
-<TopicModal
-  isOpen={isTopicModalOpen}
-  onClose={closeTopicModal}
-  onSave={handleAddTopic}
-/>
-
-<QuestionModal
-  isOpen={isQuestionModalOpen}
-  topics={topics}
-  question={editingQuestion}
-  onClose={closeQuestionModal}
-  onSave={handleSaveQuestion}
-/>
-</div>
-
+    </div>
   );
 }

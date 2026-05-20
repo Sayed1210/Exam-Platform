@@ -10,8 +10,8 @@ import Message from '@/components/Message';
 import CreateExamModal from '@/components/exams/CreateExamModal';
 import { SearchBar } from '@/components/exams/SearchBar';
 import ViewExamModal from '@/components/exams/ViewExamModal';
-import DashboardPageHeader from '@/components/DashboardHeader';
-import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
+import DashboardPageHeader from '@/components/common/DashboardHeader';
+import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal';
 import { invitationService } from '@/services/invitationService';
 // Interfaces remain the same
 
