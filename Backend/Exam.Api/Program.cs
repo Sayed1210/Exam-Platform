@@ -19,6 +19,7 @@ builder.Services.AddDbContext<ApiContext>(options =>
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(nameof(JwtSettings)));
 builder.Services.AddRepositoryLayer();
 builder.Services.AddServiceLayer();
+builder.Services.AddHostedService<ExamExpiryBackgroundService>();
 
 builder.Services.AddCors(options => {
     options.AddPolicy("AllowFrontend",
@@ -71,7 +72,6 @@ app.MapCandidateEndpoints();
 app.MapSubmitExamEndpoints();
 app.MapStartExamEndpoints();
 app.MapBeforeStartExamEndpoints();
-// app.MapVerifyLinkEndpoints();
 app.MapInvitationsEndpoints();
 app.MapUploadEndpoints();
 

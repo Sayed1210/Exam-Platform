@@ -98,4 +98,24 @@ public class CandidateExamRepository(
             .Include(ce => ce.Candidate)
             .FirstOrDefaultAsync(ce => ce.InvitationToken == token);
     }
+
+    public async Task<int> UpdateExpiredExamsAsync()
+    {
+        var expiredExams = await _context.CandidateExams
+            .Where(ce => ce.ExpiryDate < DateTime.UtcNow && ce.Status == ExamStatus.PENDING)
+            .ToListAsync();
+
+        foreach (var exam in expiredExams)
+        {
+            exam.Status = ExamStatus.EXPIRED;
+        }
+
+        if (expiredExams.Count > 0)
+        {
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("UpdateExpiredExamsAsync — Updated {Count} records", expiredExams.Count);
+        }
+
+        return expiredExams.Count;
+    }
 }
