@@ -296,6 +296,7 @@ onSubmit({
             className="hidden"
             onChange={async (event) => {
               const file = event.target.files?.[0];
+              const input = event.currentTarget;
 
               if (!file) return;
 
@@ -308,7 +309,7 @@ onSubmit({
                 console.error(error);
               } finally {
                 setIsUploading(false);
-                event.currentTarget.value = "";
+                input.value = "";
               }
             }}
           />
@@ -425,7 +426,7 @@ onSubmit({
                       className="hidden"
                       onChange={async (event) => {
                         const file = event.target.files?.[0];
-
+                        const input = event.currentTarget;
                         if (!file) return;
 
                         try {
@@ -439,7 +440,7 @@ onSubmit({
                         } catch (error) {
                           console.error(error);
                         } finally {
-                          event.currentTarget.value = "";
+                          input.value = "";
                         }
                       }}
                     />
