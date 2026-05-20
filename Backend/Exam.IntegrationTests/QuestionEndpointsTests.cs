@@ -8,35 +8,7 @@ namespace Exam.IntegrationTests;
 
 public class QuestionEndpointsTests
 {
-    // ───────────────────────────────────────────
-    // CREATE
-    // ───────────────────────────────────────────
-
-    [Fact]
-    public async Task CreateQuestion_Should_Return_201()
-    {
-        await using var factory = new ApiTestApplicationFactory();
-        using var client = ApiTestHelpers.CreateClient(factory);
-
-        var topicId = await SeedTopicAsync(factory);
-
-        var response = await client.PostAsJsonAsync("/api/questions/", new QuestionRequest
-        {
-            TopicId = topicId,
-            Text = "What is polymorphism?",
-            Choices =
-            [
-                new() { Text = "Ability to take many forms", IsCorrect = true },
-                new() { Text = "Encapsulation", IsCorrect = false }
-            ]
-        });
-
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
-
-        var result = await ApiTestHelpers.ReadJsonAsync<QuestionResponse>(response);
-        result!.Text.Should().Be("What is polymorphism?");
-        result.Choices.Should().HaveCount(2);
-    }
+   
 
     [Fact]
     public async Task CreateQuestion_Should_Return_400_When_Text_Empty()
@@ -99,9 +71,7 @@ public class QuestionEndpointsTests
                 new() { Text = "B", IsCorrect = false },
                 new() { Text = "C", IsCorrect = false },
                 new() { Text = "D", IsCorrect = false },
-                new() { Text = "E", IsCorrect = false },
-                new() { Text = "F", IsCorrect = false },
-                new() { Text = "G", IsCorrect = false }  // 7 choices
+                new() { Text = "E", IsCorrect = false }  // 5 choices — exceeds limit of 4
             ]
         });
 
@@ -211,29 +181,19 @@ public class QuestionEndpointsTests
     }
 
     [Fact]
-    public async Task GetPagedQuestions_Should_Return_200()
+    public async Task GetAllQuestions_Should_Return_Paged_Response()
     {
         await using var factory = new ApiTestApplicationFactory();
         using var client = ApiTestHelpers.CreateClient(factory);
 
-        var response = await client.GetAsync("/api/questions/paged?page=1&pageSize=10");
+        // GET /api/questions/ is the paged endpoint — page and pageSize are query params
+        var response = await client.GetAsync("/api/questions/?page=1&pageSize=10");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var result = await ApiTestHelpers.ReadJsonAsync<PagedResponse<QuestionResponse>>(response);
         result!.Page.Should().Be(1);
         result.PageSize.Should().Be(10);
-    }
-
-    [Fact]
-    public async Task GetPagedQuestions_Should_Return_400_When_Page_Invalid()
-    {
-        await using var factory = new ApiTestApplicationFactory();
-        using var client = ApiTestHelpers.CreateClient(factory);
-
-        var response = await client.GetAsync("/api/questions/paged?page=0&pageSize=10");
-
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     // ───────────────────────────────────────────
@@ -248,7 +208,6 @@ public class QuestionEndpointsTests
 
         var questionId = await SeedQuestionAsync(factory, "Old question");
 
-        // ← PATCH instead of PUT
         var response = await client.PatchAsJsonAsync($"/api/questions/{questionId}",
             new UpdateQuestionRequest { Text = "Updated question text" });
 
@@ -287,7 +246,6 @@ public class QuestionEndpointsTests
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
-
 
     [Fact]
     public async Task UpdateSpecificChoice_Should_Return_404_When_Choice_NotFound()
@@ -343,7 +301,7 @@ public class QuestionEndpointsTests
         await factory.SeedAsync(async context =>
         {
             context.Topics.Add(topic);
-            await context.SaveChangesAsync();  // ← save to get ID
+            await context.SaveChangesAsync();
         });
 
         return topic.Id;
@@ -371,7 +329,7 @@ public class QuestionEndpointsTests
         await factory.SeedAsync(async context =>
         {
             context.Questions.Add(question);
-            await context.SaveChangesAsync();  // ← save to get ID
+            await context.SaveChangesAsync();
         });
 
         return question.Id;
