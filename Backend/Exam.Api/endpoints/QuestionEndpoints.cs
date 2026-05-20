@@ -166,14 +166,14 @@ group.MapGet("/", async (
     if (choices is null || choices.Count == 0)
         return null;
 
-    if (choices.Count > 4)
+    if (choices.Count < 2)
     {
         return Results.ValidationProblem(
             new Dictionary<string, string[]>
             {
                 ["Choices"] =
                 [
-                    "A question cannot have more than 4 choices."
+                    "A question cannot have less than 2 choices."
                 ]
             });
     }
