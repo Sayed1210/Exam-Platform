@@ -14,6 +14,7 @@ import TopicForm from "./forms/TopicForm";
 import QuestionForm from "./forms/QuestionForm";
 import { ChevronLeftIcon, ChevronRightIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import Pagination from "../common/Pagination";
+import { toast } from "sonner";
 
 const PAGE_SIZE = 10;
 
@@ -113,13 +114,15 @@ const handleSaveQuestion = async (data: any) => {
   try {
     if (editingQuestion) {
       await updateQuestion(editingQuestion.id, payload);
+      toast.success("Question Edited");
     } else {
       await createQuestion(payload);
+      toast.success("Question Added");
     }
     fetchQuestions(currentPage, search, selectedTopicId);
     closeQuestionModal();
   } catch (err: any) {
-    console.error("Save question error:", err);
+    toast.error("Save question error:", err);
   }
 };
   const confirmDelete = async () => {
