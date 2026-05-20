@@ -4,10 +4,8 @@ import {
   PlusIcon, CheckIcon, 
   ArrowLeftIcon, PhotoIcon, XMarkIcon
 } from '@heroicons/react/24/outline';
-import TrashIcon from "../TrashIcon";
-import SearchIcon from "../SearchIcon";
 import Button from '../Button';
-import { SearchBar } from './SearchBar';
+import SearchInput from '../question-bank/SearchInput';
 import ExamModal from './ExamModal';
 import { createExamSchema, createExamStepOneSchema, CreateExamFormData } from '@/schemas/requests/create-exam-request';
 import { FormValidation } from '@/schemas/form-validation';
@@ -304,8 +302,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
               <div className="space-y-4">
                 <div className="flex gap-3 mb-6">
                   <div className="relative flex-[2]">
-                    <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <SearchBar 
+                    <SearchInput 
                         placeholder="Search question bank..." 
                         value={bankSearch} 
                         onChange={setBankSearch} 

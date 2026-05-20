@@ -13,6 +13,7 @@ import ViewExamModal from '@/components/exams/ViewExamModal';
 import DashboardPageHeader from '@/components/common/DashboardHeader';
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal';
 import { invitationService } from '@/services/invitationService';
+import SearchInput from '@/components/question-bank/SearchInput';
 // Interfaces remain the same
 
 export default function ExamsPage() {
@@ -129,8 +130,14 @@ export default function ExamsPage() {
       await deleteExam(examToDelete.id);
       setExams(prev => prev.filter(e => e.id !== examToDelete.id));
       setMessage({ message: 'Exam deleted successfully', type: 'success' });
+      setTimeout(() => {
+      setMessage(null); // or setMessage({ message: '', type: '' }) depending on your state setup
+    }, 3000);
     } catch (error) {
       setMessage({ message: 'Failed to delete exam', type: 'error' });
+      setTimeout(() => {
+      setMessage(null);
+    }, 3000);
     }
     // Close the modal
     setExamToDelete(null); 
@@ -208,10 +215,11 @@ export default function ExamsPage() {
         buttonText="+ Create Exam"
         onButtonClick={() => setIsCreateOpen(true)}
       />
-      
-
-      <ExamsActionBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} onCreate={() => setIsCreateOpen(true)} />
-
+        <SearchInput 
+          placeholder="Search by title or topic..." 
+          value={searchQuery} 
+          onChange={setSearchQuery} 
+        />
       <ExamsGrid
         exams={filteredExams}
         onAssign={(e) => setExamToAssign(e)}

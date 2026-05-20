@@ -1,6 +1,6 @@
 'use client';
 
-import { SearchBar } from '@/components/exams/SearchBar';
+import SearchInput from "../question-bank/SearchInput";
 
 interface ExamsActionBarProps {
   searchQuery: string;
@@ -12,7 +12,7 @@ export default function ExamsActionBar({ searchQuery, setSearchQuery, onCreate }
   return (
     <div className="mb-4 flex flex-col justify-between gap-4 md:flex-row md:items-center">
       <div className="relative flex-1 max-w-md">
-        <SearchBar placeholder="Search by title or topic..." value={searchQuery} onChange={setSearchQuery} />
+        <SearchInput placeholder="Search by title or topic..." value={searchQuery} onChange={setSearchQuery} />
       </div>
       {/* keep commented Create button placeholder to preserve UI details */}
       {/* <Button 
