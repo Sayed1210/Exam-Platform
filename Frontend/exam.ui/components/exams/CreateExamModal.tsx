@@ -13,22 +13,9 @@ import { createExamSchema, createExamStepOneSchema, CreateExamFormData } from '@
 import { FormValidation } from '@/schemas/form-validation';
 import { getQuestions, getTopics } from '@/services/questionService';
 import type { APIQuestion, APITopic } from '@/types/question';
-
-interface Option {
-  text: string;
-  isCorrect: boolean;
-  imageUrl?: string;
-}
-
-interface QuestionForm {
-  id?: number;
-  topicId?: number;
-  topic: string;
-  text: string;
-  imageUrl?: string;
-  options: Option[];
-  tempId?: string;
-}
+import type { QuestionForm, Option } from '@/components/exams/types';
+import QuestionBankItem from '@/components/exams/QuestionBankItem';
+import QuestionEditor from '@/components/exams/QuestionEditor';
 
 type CreateExamFormValues = {
   title: string;
@@ -80,7 +67,12 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const getError = (path: string) => errors[path] || "";
-
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
   useEffect(() => {
     if (!initialData) return;
 
@@ -209,7 +201,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
         updated[target.qIdx].options[target.oIdx] = {
           ...updated[target.qIdx].options[target.oIdx],
           imageUrl: base64String,
-          text: '',
+          
         };
       } else {
         updated[target.qIdx] = {
@@ -237,6 +229,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
     setFormData({ ...formData, questions: updated });
   };
 
+  {/* 🚀 Changed to insert at index 0 (Top of array) */}
   const addManualQuestion = () => {
     const newQuestion: QuestionForm = {
       tempId: `${Date.now()}-${Math.random()}`,
@@ -247,7 +240,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
         { text: '', isCorrect: false },
       ],
     };
-    setFormData({ ...formData, questions: [...formData.questions, newQuestion] });
+    setFormData({ ...formData, questions: [newQuestion, ...formData.questions] });
   };
 
   const addOption = (qIdx: number) => {
@@ -285,8 +278,8 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
         </div>
       </div>
 
-      {/* Content Area */}
-      <div className={`p-8 overflow-y-auto custom-scrollbar ${step === 1 ? 'pb-8' : 'h-[600px] max-h-[70vh] pb-36'}`}>
+      {/* 🚀 Adjusted content wrapper layout classes */}
+      <div className={`p-8 overflow-hidden custom-scrollbar ${step === 1 ? 'pb-8' : ''}`}>
         {step === 1 ? (
           <div className="space-y-6">
             <div>
@@ -301,7 +294,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
             </div>
           </div>
         ) : (
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-full min-h-0">
             <div className="flex p-1 bg-slate-100 rounded-2xl mb-6">
               <button onClick={() => setActiveTab('bank')} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'bank' ? 'bg-white shadow-sm text-primary' : 'text-slate-500'}`}>📋 From Bank</button>
               <button onClick={() => setActiveTab('manual')} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'manual' ? 'bg-white shadow-sm text-primary' : 'text-slate-500'}`}>✏️ Create New</button>
@@ -325,16 +318,16 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
                     ))}
                   </select>
                   {initialData && (
-    <select 
-      className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none text-sm font-bold text-primary shadow-sm animate-in fade-in duration-300"
-      value={filterStatus}
-      onChange={(e) => setFilterStatus(e.target.value as any)}
-    >
-      <option value="all">All Status</option>
-      <option value="chosen">Chosen</option>
-      <option value="unchosen">Not Chosen</option>
-    </select>
-  )}
+                  <select 
+                    className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none text-sm font-bold text-primary shadow-sm animate-in fade-in duration-300"
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value as any)}
+                  >
+                    <option value="all">All Status</option>
+                    <option value="chosen">Chosen</option>
+                    <option value="unchosen">Not Chosen</option>
+                  </select>
+                )}
                 </div>
                 <div className="space-y-3">
                   {getError('questions') && <p className="text-red-500 text-xs">{getError('questions')}</p>}
@@ -364,22 +357,12 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
                           q.id !== undefined && bq.id !== undefined ? q.id === bq.id : q.tempId === bq.tempId
                         );
                         return (
-                          <div
+                          <QuestionBankItem
                             key={getQuestionKey(bq)}
-                            onClick={() => toggleBankQuestion(bq)}
-                            className={`p-5 border rounded-3xl cursor-pointer transition-all flex items-start gap-4 ${selected ? 'border-primary bg-red-50/10' : 'border-slate-100 bg-white hover:border-slate-200 shadow-sm'}`}
-                          >
-                            <div className={`mt-1 w-5 h-5 rounded flex items-center justify-center border ${selected ? 'bg-primary border-primary' : 'border-slate-300'}`}>
-                              {selected && <CheckIcon className="w-4 h-4 text-white stroke-[3px]" />}
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-bold text-slate-800 mb-1">{bq.text}</p>
-                              <div className="flex gap-2">
-                                <span className="text-[10px] px-2 py-0.5 bg-slate-100 rounded-full font-bold text-slate-500 uppercase">{bq.topic}</span>
-                                <span className="text-[10px] text-slate-400 font-medium">{bq.options.length} options</span>
-                              </div>
-                            </div>
-                          </div>
+                            question={bq}
+                            selected={selected}
+                            onToggle={() => toggleBankQuestion(bq)}
+                          />
                         );
                       })
                   )}
@@ -388,75 +371,64 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
             ) : (
               <div className="space-y-6">
                  {getError('questions') && <p className="text-red-500 text-xs">{getError('questions')}</p>}
-                 {formData.questions.map((q, qIdx) => (
-                   <div key={qIdx} className="p-6 border border-slate-100 rounded-3xl bg-slate-50/30 relative shadow-sm">
-                      <div className="flex justify-between items-center mb-4">
-                        <div className="flex-1">
-                          <select className="text-xs font-bold p-2 bg-white border border-slate-200 rounded-lg outline-none focus:border-primary text-slate-500 w-full" value={q.topic} onChange={(e) => { const updated = [...formData.questions]; const selectedTopic = topics.find((topic) => topic.title === e.target.value); updated[qIdx].topic = e.target.value; updated[qIdx].topicId = selectedTopic?.id; setFormData({...formData, questions: updated}); }}>
-                            <option value="">Select Topic</option>
-                            {topicOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                          </select>
-                          {getError(`questions.${qIdx}.topic`) && <p className="text-red-500 text-xs mt-1">{getError(`questions.${qIdx}.topic`)}</p>}
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <input type="file" id={`question-image-${qIdx}`} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, { qIdx })}/>
-                            <label htmlFor={`question-image-${qIdx}`} className="text-slate-400 hover:text-slate-600 cursor-pointer p-1.5 rounded-lg border border-slate-100 bg-white">
-                              <PhotoIcon className="w-4 h-4" />
-                            </label>
-                            <button onClick={() => setFormData({...formData, questions: formData.questions.filter((_, i) => i !== qIdx)})} className="text-slate-300 hover:text-red-500 transition-colors">
-                              <TrashIcon className="w-5 h-5" />
-                            </button>
-                        </div>
-                      </div>
-                      <div className="mb-4 space-y-2">
-                          <textarea placeholder="Enter question text..." className="w-full p-4 bg-white border border-slate-100 rounded-2xl outline-none focus:border-primary text-sm shadow-sm" value={q.text} onChange={(e) => { const updated = [...formData.questions]; updated[qIdx].text = e.target.value; setFormData({...formData, questions: updated}); }}/>
-                          {getError(`questions.${qIdx}.text`) && <p className="text-red-500 text-xs mt-1">{getError(`questions.${qIdx}.text`)}</p>}
-                          {q.imageUrl && (
-                            <div className="relative group w-fit">
-                              <img src={q.imageUrl} alt="Question" className="w-auto max-h-40 rounded-xl border border-slate-100 bg-white" />
-                              <button onClick={() => removeImage(qIdx)} className="absolute top-2 right-2 bg-slate-800/70 p-1.5 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <XMarkIcon className="w-4 h-4" />
-                              </button>
-                            </div>
-                          )}
-                      </div>
-
-                      <div className="space-y-3">
-                        {/* Typed 'opt' to fix TS error */}
-                        {q.options.map((opt: Option, oIdx: number) => (
-                          <div key={oIdx} className="flex items-start gap-3 group">
-                            <input type="radio" name={`correct-${qIdx}`} checked={opt.isCorrect} onChange={() => { const updated = [...formData.questions]; updated[qIdx].options = updated[qIdx].options.map((o, i) => ({...o, isCorrect: i === oIdx})); setFormData({...formData, questions: updated}); }} className="accent-primary w-4 h-4 cursor-pointer mt-3" />
-                            <div className="flex-1 space-y-1.5">
-                                <input placeholder={`Option ${oIdx + 1}`} className="w-full p-3 border border-slate-100 rounded-xl text-sm outline-none focus:border-primary bg-white shadow-sm" value={opt.text ?? ''} onChange={(e) => { const updated = [...formData.questions]; updated[qIdx].options[oIdx] = { ...updated[qIdx].options[oIdx], text: e.target.value, imageUrl: e.target.value.trim() ? undefined : updated[qIdx].options[oIdx].imageUrl }; setFormData({...formData, questions: updated}); }}/>
-                                {getError(`questions.${qIdx}.options.${oIdx}.text`) && <p className="text-red-500 text-xs mt-1">{getError(`questions.${qIdx}.options.${oIdx}.text`)}</p>}
-                                {opt.imageUrl && (
-                                  <div className="relative group w-fit">
-                                    <img src={opt.imageUrl} alt={`Option ${oIdx + 1}`} className="w-auto max-h-32 rounded-xl border border-slate-100 bg-white" />
-                                    <button onClick={() => removeImage(qIdx, oIdx)} className="absolute top-1.5 right-1.5 bg-slate-800/70 p-1 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <XMarkIcon className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
-                                )}
-                            </div>
-                            <div className="flex items-center gap-1.5 mt-2.5">
-                                <input type="file" id={`option-image-${qIdx}-${oIdx}`} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, { qIdx, oIdx })}/>
-                                <label htmlFor={`option-image-${qIdx}-${oIdx}`} className="text-slate-300 hover:text-slate-600 cursor-pointer p-1.5 border border-slate-100 bg-white rounded-lg">
-                                  <PhotoIcon className="w-3.5 h-3.5" />
-                                </label>
-                                {q.options.length > 1 && (
-                                  <button onClick={() => removeOption(qIdx, oIdx)} className="text-slate-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all">
-                                    <XMarkIcon className="w-4 h-4" />
-                                  </button>
-                                )}
-                            </div>
-                          </div>
-                        ))}
-                        {getError(`questions.${qIdx}.options`) && <p className="text-red-500 text-xs mt-1">{getError(`questions.${qIdx}.options`)}</p>}
-                        <button onClick={() => addOption(qIdx)} className="flex items-center gap-1 text-xs font-bold text-primary hover:opacity-80 transition-opacity"> <PlusIcon className="w-3 h-3 stroke-[3px]" /> Add Choice </button>
-                      </div>
-                   </div>
-                 ))}
+                 
+                 {/* 🚀 New Question Trigger Button placed above the mapping stack layout */}
                  <button onClick={addManualQuestion} className="w-full py-5 border-2 border-dashed border-slate-200 rounded-3xl text-primary font-bold hover:bg-red-50 hover:border-primary/30 transition-all flex items-center justify-center gap-2"> <PlusIcon className="w-5 h-5" /> Add New Question </button>
+                 
+                 {formData.questions.map((q, qIdx) => (
+                   <QuestionEditor
+                     key={getQuestionKey(q)}
+                     q={q}
+                     qIdx={qIdx}
+                     topicOptions={topicOptions}
+                     topics={topics}
+                     getError={getError}
+                     onTopicChange={(value) => {
+                       const updated = [...formData.questions];
+                       const selectedTopic = topics.find((topic) => topic.title === value);
+                       updated[qIdx].topic = value;
+                       updated[qIdx].topicId = selectedTopic?.id;
+                       setFormData({ ...formData, questions: updated });
+                     }}
+                     onRemoveQuestion={() => setFormData({ ...formData, questions: formData.questions.filter((_, i) => i !== qIdx) })}
+                     onQuestionTextChange={(value) => {
+                       const updated = [...formData.questions];
+                       updated[qIdx].text = value;
+                       setFormData({ ...formData, questions: updated });
+                     }}
+                     onQuestionImageUpload={(event) => handleImageUpload(event, { qIdx })}
+                     onRemoveQuestionImage={() => removeImage(qIdx)}
+                     onOptionAdd={() => addOption(qIdx)}
+                     onOptionTextChange={(oIdx, value) => {
+                       const updated = [...formData.questions];
+                       updated[qIdx].options[oIdx] = {
+                         ...updated[qIdx].options[oIdx],
+                         text: value,
+                         imageUrl: value.trim() ? undefined : updated[qIdx].options[oIdx].imageUrl,
+                       };
+                       setFormData({ ...formData, questions: updated });
+                     }}
+                     onOptionCorrectSelect={(oIdx) => {
+                       const updated = [...formData.questions];
+                       updated[qIdx].options = updated[qIdx].options.map((o, i) => ({ ...o, isCorrect: i === oIdx }));
+                       setFormData({ ...formData, questions: updated });
+                     }}
+                     onOptionImageUpload={(oIdx, event) =>{ 
+                      handleImageUpload(event, { qIdx, oIdx });
+                      setTimeout(() => {
+                      setFormData((prev) => {
+                        const updated = [...prev.questions];
+                        if (updated[qIdx]?.options?.[oIdx]) {
+                          updated[qIdx].options[oIdx].text = '';
+                        }
+                        return { ...prev, questions: updated };
+                      });
+                    }, 50);}
+                    }
+                     onOptionRemoveImage={(oIdx) => removeImage(qIdx, oIdx)}
+                     onOptionRemove={(oIdx) => removeOption(qIdx, oIdx)}
+                   />
+                 ))}
               </div>
             )}
           </div>

@@ -4,11 +4,11 @@ import { useEffect } from 'react';
 import { getExams, deleteExam, createExam, updateExam, getExamById } from '@/services/examService';
 import { createQuestion, updateQuestion } from '@/services/questionService';
 import { Exam } from '@/types/exam';
-import ExamCard from '@/components/exams/ExamCard';
+import ExamsActionBar from '@/components/exams/ExamsActionBar';
+import ExamsGrid from '@/components/exams/ExamsGrid';
 import AssignModal from '@/components/exams/AssignModal';
 import Message from '@/components/Message'; 
 import CreateExamModal from '@/components/exams/CreateExamModal';
-import { SearchBar } from '@/components/exams/SearchBar';
 import ViewExamModal from '@/components/exams/ViewExamModal';
 import DashboardPageHeader from '@/components/common/DashboardHeader';
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal';
@@ -41,27 +41,6 @@ export default function ExamsPage() {
     };
     loadExams();
   },[]);
-//   { 
-//     id: 1, 
-//     name: "Frontend Developer Test", 
-//     topics: "React, TypeScript", 
-//     durationMinutes: 60, 
-//     totalQuestions: 1,
-//     // Add the actual question data here
-//     questions: [
-//       { 
-//         text: "What is a Hook in React?", 
-//         topic: "React", 
-//         options: [
-//           { text: "A function", isCorrect: true },
-//           { text: "A CSS property", isCorrect: false }
-//         ] 
-//       }
-//     ] 
-//   },
-//   // ... do the same for other mock exams
-// ]);
-
 
   // --- NEW: Missing Handler Functions ---
 
@@ -159,10 +138,13 @@ export default function ExamsPage() {
     // --- Fixed Filter Logic ---
   const filteredExams = exams.filter((exam) => {
     const searchTerm = searchQuery.toLowerCase();
-    return (
-      exam.title.toLowerCase().includes(searchTerm) ||
-      (exam.topics ?? '').toLowerCase().includes(searchTerm)
+    const matchesTitle = exam.title.toLowerCase().includes(searchTerm);
+    const matchesTopics = (exam.topics ?? '').toLowerCase().includes(searchTerm);
+    const matchesQuestionTopics = exam.questions?.some((question) =>
+      (question.topicTitle ?? '').toLowerCase().includes(searchTerm)
     );
+
+    return matchesTitle || matchesTopics || matchesQuestionTopics;
   });
 
   const handleViewExam = async (exam: Exam) => {
@@ -228,31 +210,15 @@ export default function ExamsPage() {
       />
       
 
-      {/* Action Bar */}
-      <div className="mb-4 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div className="relative flex-1 max-w-md">
-          <SearchBar placeholder="Search exams..." value={searchQuery} onChange={setSearchQuery} />
-        </div>
-        {/* <Button 
-          text={<span className="flex items-center gap-2"><PlusIcon className="w-5 h-5 stroke-[2.5px]" /> Create Exam</span>}
-          onClick={() => setIsCreateOpen(true)}
-          className="btn-primary !w-auto px-8"
-        /> */}
-      </div>
+      <ExamsActionBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} onCreate={() => setIsCreateOpen(true)} />
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredExams.map((exam) => (
-          <ExamCard 
-            key={exam.id} 
-            exam={exam}
-            onAssign={(e) => setExamToAssign(e)}
-            onView={() => handleViewExam(exam)}
-            onEdit={(clickedExam) => handleEditExam(clickedExam)}
-            onDelete={(id) => setExamToDelete(exam)}
-          />
-        ))}
-      </div>
+      <ExamsGrid
+        exams={filteredExams}
+        onAssign={(e) => setExamToAssign(e)}
+        onView={(e) => handleViewExam(e)}
+        onEdit={(e) => handleEditExam(e)}
+        onDelete={(e) => setExamToDelete(e)}
+      />
 
       {/* Unified Create/Edit Modal */}
       {(isCreateOpen || examToEdit) && (

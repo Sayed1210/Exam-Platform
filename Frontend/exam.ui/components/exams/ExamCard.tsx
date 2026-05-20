@@ -25,11 +25,16 @@ export default function ExamCard({ exam,onAssign,onView,onEdit,onDelete}: ExamCa
       {/* Name & Topics - Using your custom text classes */}
       <div className="mb-4">
         <h3 className="text-subtitle mb-2">{exam.title}</h3>
-        <p className="text-muted mb-6 line-clamp-2">{exam.questions && exam.questions.length > 0
-      ? Array.from(new Set(exam.questions.map(q => q.topicTitle)))
-          .filter(Boolean) // This removes any null/undefined values
-          .join(', ')
-      : 'No topics assigned'}</p>
+        <p className="text-muted mb-6 line-clamp-2">
+          {(() => {
+            const topicTitles = exam.questions?.map((q) => q.topicTitle).filter(Boolean) ?? [];
+            const uniqueTopics = Array.from(new Set(topicTitles));
+            if (uniqueTopics.length > 0) {
+              return uniqueTopics.join(', ');
+            }
+            return exam.topics?.trim() || 'No topics assigned';
+          })()}
+        </p>
       </div>
 
       {/* Duration & Questions - Icons use your --muted color */}
