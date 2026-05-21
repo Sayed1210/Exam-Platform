@@ -1,4 +1,4 @@
-# 📝 HR Screening Online Exam Platform
+# HR Screening Online Exam Platform
 
 <p align="center">
   A full-stack online examination platform for HR technical screening and candidate evaluation.
