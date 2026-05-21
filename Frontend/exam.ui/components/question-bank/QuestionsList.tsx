@@ -71,10 +71,16 @@ export default function QuestionsList() {
   };
 
   const handleAddTopic = async (topicName: string) => {
+    try{
     if (editingTopic) {
       await updateTopic(editingTopic.id, topicName);
+      toast.success("Topic Edited Successfully.");
     } else {
       await createTopic(topicName);
+      toast.success("Topic Added Successfully.");
+    }
+    }catch(err){
+      toast.error("Try again Later");
     }
     const updated = await getTopics();
     setTopics(updated);
@@ -90,7 +96,12 @@ export default function QuestionsList() {
   const confirmDeleteTopic = async () => {
     if (!topicToDelete) return;
 
+    try{
     await deleteTopic(topicToDelete.id);
+    toast.success("Topic Deleted Successfully.");
+    }catch(err){
+      toast.error("Topic not deleted, Try again Later");
+    }
     const updated = await getTopics();
     setTopics(updated);
     setSelectedTopicId((prev) => prev.filter((id) => id !== topicToDelete.id));
@@ -159,12 +170,17 @@ const handleSaveQuestion = async (data: any) => {
     fetchQuestions(currentPage, search, selectedTopicId);
     closeQuestionModal();
   } catch (err: any) {
-    toast.error("Save question error:", err);
+    toast.error("Question not edited, Try again Later");
   }
 };
   const confirmDelete = async () => {
     if (!questionToDelete) return;
+    try{
     await deleteQuestion(questionToDelete);
+    toast.success("Question Deleted Successfully.");
+    }catch(err){
+      toast.error("Question not deleted, Try again Later");
+    }
     fetchQuestions(currentPage, search, selectedTopicId);
     setQuestionToDelete(null);
   };

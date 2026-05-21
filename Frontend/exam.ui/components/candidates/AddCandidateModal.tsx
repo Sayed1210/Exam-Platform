@@ -114,7 +114,7 @@ export default function AddCandidateModal({ onClose, onSubmit, //backendError,
 
           <input
             type="tel"
-            placeholder="+20 100 123 4567"
+            placeholder="0100 123 4567"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
             className="input"
