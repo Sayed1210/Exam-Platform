@@ -39,7 +39,7 @@ const examOptionSchema = z
 
 const examQuestionSchema = z
   .object({
-    text: z.string().trim().min(1, "Question text is required."),
+    text: z.string().trim().min(5, "Question statement must be at least 5 characters long."),
     topic: z.string().trim().min(1, "Question topic is required."),
     imageUrl: optionalImageUrlSchema,
     options: z
@@ -47,7 +47,9 @@ const examQuestionSchema = z
       .min(2, "Each question must have at least 2 answer options."),
   })
   .superRefine((question, ctx) => {
+    // Exactly one correct answer
     const correctOptions = question.options.filter((option) => option.isCorrect);
+
     if (correctOptions.length !== 1) {
       ctx.addIssue({
         code: "custom",
@@ -55,6 +57,31 @@ const examQuestionSchema = z
         path: ["options"],
       });
     }
+
+    // No duplicate text choices
+    const seen = new Map<string, number>();
+
+    question.options.forEach((option, index) => {
+      if (!option.text) return;
+
+      const normalized = option.text.trim().toLowerCase();
+
+      if (seen.has(normalized)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Choice text must be unique.",
+          path: ["options", index, "text"],
+        });
+
+        ctx.addIssue({
+          code: "custom",
+          message: "Choice text must be unique.",
+          path: ["options", seen.get(normalized)!, "text"],
+        });
+      } else {
+        seen.set(normalized, index);
+      }
+    });
   });
 
 export const createExamStepOneSchema = z.object({

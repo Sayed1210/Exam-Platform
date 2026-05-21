@@ -39,7 +39,7 @@ const questionChoiceRequestSchema = z.union([
 export const createQuestionRequestSchema = z
   .object({
     topicId: z.number().positive("Topic id is required."),
-    text: z.string().trim().min(1, "Question statement is required."),
+    text: z.string().trim().min(5, "Question statement must be at least 5 characters long."),
     imageUrl: optionalImageUrlSchema,
     choices: z
       .array(questionChoiceRequestSchema)
