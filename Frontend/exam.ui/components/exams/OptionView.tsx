@@ -1,6 +1,7 @@
 'use client';
 
 import type { Option } from '@/components/exams/types';
+import { getImageUrl } from '@/lib/api';
 
 interface OptionViewProps {
   option: Option;
@@ -27,7 +28,7 @@ export default function OptionView({ option, oIdx }: OptionViewProps) {
         {option.imageUrl && (
           <div className="rounded-2xl border border-slate-100 bg-white p-3 max-w-sm shadow-sm">
             <img
-              src={option.imageUrl}
+              src={getImageUrl(option.imageUrl)}
               alt={`Choice ${oIdx + 1}`}
               className="w-full max-h-40 rounded-xl object-contain"
             />

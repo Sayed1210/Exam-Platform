@@ -295,6 +295,7 @@ onSubmit({
             accept="image/*"
             className="hidden"
             onChange={async (event) => {
+              const input = event.currentTarget;
               const file = event.target.files?.[0];
               const input = event.currentTarget;
 
@@ -425,6 +426,7 @@ onSubmit({
                       disabled={hasText}
                       className="hidden"
                       onChange={async (event) => {
+                        const input = event.currentTarget;
                         const file = event.target.files?.[0];
                         const input = event.currentTarget;
                         if (!file) return;
