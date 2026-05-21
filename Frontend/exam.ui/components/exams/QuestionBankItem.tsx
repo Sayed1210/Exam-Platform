@@ -24,7 +24,7 @@ export default function QuestionBankItem({ question, selected, onToggle }: Quest
         <p className="text-sm font-bold text-slate-800 mb-1">{question.text}</p>
         <div className="flex gap-2">
           <span className="text-[10px] px-2 py-0.5 bg-slate-100 rounded-full font-bold text-slate-500 uppercase">{question.topic}</span>
-          <span className="text-[10px] text-slate-400 font-medium">{question.options.length} options</span>
+          {/* <span className="text-[10px] text-slate-400 font-medium">{question.options.length} options</span> */}
         </div>
       </div>
     </div>
