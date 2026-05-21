@@ -14,7 +14,7 @@ interface ModalProps {
 
 export default function ExamModal({ onClose, title, children, disableClose }: ModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       {/* Container matches your original 3xl rounded shadow style */}
       <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl flex flex-col max-h-[90vh]">
         

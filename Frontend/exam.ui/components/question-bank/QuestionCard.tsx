@@ -8,8 +8,8 @@ import { useState } from "react";
 
 export type QuestionCardProps = {
   question: APIQuestion;
-  onEdit: (question: APIQuestion) => void;
-  onDelete: (questionId: number) => void;
+  onEdit?: (question: APIQuestion) => void;
+  onDelete?: (questionId: number) => void;
 };
 
 export default function QuestionCard({ question, onEdit, onDelete }: QuestionCardProps) {
@@ -20,14 +20,20 @@ export default function QuestionCard({ question, onEdit, onDelete }: QuestionCar
       <div className="flex items-start justify-between gap-4">
         <QuestionTag title={question.topicTitle} />
 
-        <div className="flex items-center gap-3 text-gray-500">
-          <button type="button" onClick={() => onEdit(question)} aria-label="Edit question" className="btn-icon-secondary">
-            <PencilSquareIcon className="icon-mid"/>
-          </button>
-          <button type="button" onClick={() => onDelete(question.id)} aria-label="Delete question" className="btn-icon-danger">
-            <TrashIcon className="icon-mid"/>
-          </button>
-        </div>
+        {(onEdit || onDelete) && (
+          <div className="flex items-center gap-3 text-gray-500">
+            {onEdit && (
+              <button type="button" onClick={() => onEdit(question)} aria-label="Edit question" className="btn-icon-secondary">
+                <PencilSquareIcon className="icon-mid"/>
+              </button>
+            )}
+            {onDelete && (
+              <button type="button" onClick={() => onDelete(question.id)} aria-label="Delete question" className="btn-icon-danger">
+                <TrashIcon className="icon-mid"/>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <h3 className="mb-2 text-heading">{question.text}</h3>

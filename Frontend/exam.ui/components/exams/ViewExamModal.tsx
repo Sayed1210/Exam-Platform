@@ -1,26 +1,23 @@
 'use client';
 import Button from '../Button';
 import ExamModal from './ExamModal';
-import QuestionView from '@/components/exams/QuestionView';
+import QuestionCard from '@/components/question-bank/QuestionCard';
+import type { APIQuestion } from '@/types/question';
+import { ClockIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 
-interface Option {
-  text: string;
+interface RemoteChoice {
+  id?: number;
+  text?: string | null;
   isCorrect: boolean;
   imageUrl?: string | null;
 }
 
-interface Question {
-  text: string;
-  imageUrl?: string | null;
-  options: Option[];
-  topicTitle?: string;
-}
-
 interface RemoteQuestion {
   id: number;
+  topicId?: number;
   text: string;
   imageUrl?: string | null;
-  choices: Option[];
+  choices: RemoteChoice[];
   topicTitle?: string;
 }
 
@@ -38,21 +35,29 @@ interface ViewExamModalProps {
 }
 
 export default function ViewExamModal({ exam, isLoading, onClose, onEdit }: ViewExamModalProps) {
-  const questionsToDisplay: Question[] =
+  const questionsToDisplay: APIQuestion[] =
     exam.questions?.map((question) => ({
+      id: question.id,
+      topicId: question.topicId ?? 0,
       text: question.text,
-      options: question.choices ?? [],
       imageUrl: question.imageUrl,
-      topicTitle: question.topicTitle,
+      topicTitle: question.topicTitle ?? "",
+      choices: (question.choices ?? []).map((choice, index) => ({
+        id: choice.id ?? index,
+        text: choice.text ?? "",
+        imageUrl: choice.imageUrl ?? null,
+        isCorrect: choice.isCorrect,
+      })),
     })) ?? [];
 
   return (
     <ExamModal onClose={onClose} title={exam.title}>
       {/* Summary Header */}
-      <div className="px-8 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex gap-6 items-center text-slate-500">
-          <span className="text-xs font-bold">{exam.durationMins} mins</span>
-          <span className="text-xs font-bold">{exam.totalQuestions} Questions</span>
+      <div className="px-7 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
+        <div className="flex items-center gap-4 text-slate-500 text-sm">
+          <span className="flex items-center gap-1.5"><ClockIcon className="w-4 h-4" /> {exam.durationMins} min</span>
+          <span className="text-slate-300">|</span>
+          <span className="flex items-center gap-1.5"><QuestionMarkCircleIcon className="w-4 h-4" /> {exam.totalQuestions} questions</span>
         </div>
         <button 
           onClick={() => onEdit(exam)}
@@ -74,8 +79,8 @@ export default function ViewExamModal({ exam, isLoading, onClose, onEdit }: View
             [ No questions in this exam ]
           </div>
           ) : (
-          questionsToDisplay.map((q, idx) => (
-            <QuestionView key={idx} question={q} idx={idx} />
+          questionsToDisplay.map((question) => (
+            <QuestionCard key={question.id} question={question} />
           ))
         )}
       </div>
