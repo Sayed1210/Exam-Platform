@@ -37,6 +37,8 @@ public class CandidateExamDetailResponse
 public class CandidateAnswerDetail
 {
     public string QuestionText { get; set; } = string.Empty;
+    public string? QuestionImageUrl { get; set; }
     public string ChoiceText { get; set; } = string.Empty;
-   
+    public string? ChoiceImageUrl { get; set; }
+    public bool IsCorrect { get; set; }
 }

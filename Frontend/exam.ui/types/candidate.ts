@@ -1,6 +1,9 @@
 export interface CandidateAnswer {
  questionText: string;
+  questionImageUrl?: string;
   choiceText: string;
+  choiceImageUrl?: string;
+   isCorrect: boolean; 
 }
 
 export interface Candidate {

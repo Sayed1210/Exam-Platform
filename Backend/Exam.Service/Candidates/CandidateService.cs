@@ -176,7 +176,10 @@ public class CandidateService(
                         .Select(ca => new CandidateAnswerDetail
                         {
                             QuestionText = ca.Question?.Text ?? string.Empty,
-                            ChoiceText = ca.Choice?.Text ?? string.Empty
+                            QuestionImageUrl = ca.Question?.ImageUrl,
+                            ChoiceText = ca.Choice?.Text ?? string.Empty,
+                            ChoiceImageUrl = ca.Choice?.ImageUrl,
+                            IsCorrect = ca.Choice?.IsCorrect ?? false,
                         }).ToList() ?? []
                 }).ToList() ?? []
             };

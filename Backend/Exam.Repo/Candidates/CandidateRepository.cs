@@ -131,6 +131,7 @@ public class CandidateRepository(
     public async Task<Candidate?> GetWithExamsAndAnswersAsync(int candidateId)
     {
         return await _context.Candidates
+            .AsSplitQuery()
             .Include(c => c.CandidateExams)
                 .ThenInclude(ce => ce.Exam)
             .Include(c => c.CandidateAnswers)

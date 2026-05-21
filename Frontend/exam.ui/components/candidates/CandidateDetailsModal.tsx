@@ -3,6 +3,7 @@
 import { CandidateDetail } from "@/types/candidate";
 import ModalPortal from "@/components/common/ModalPortal";
 import ModalLayout from "../common/ModalLayout";
+import { getImageUrl } from "@/lib/api";
 
 const statusMap: Record<number, { label: string; bg: string; color: string }> = {
   0: { label: "Pending",     bg: "#eff6ff", color: "#1d4ed8" },
@@ -89,11 +90,45 @@ export default function CandidateDetailsModal({ candidate, onClose }: Props) {
                   </p>
                   <div className="flex flex-col gap-2.5">
                     {exam.answers.map((answer, answerIndex) => (
-                      <div key={answerIndex} className="border border-gray-200 rounded-lg px-4 py-3">
-                        <p className="text-sm font-medium text-gray-900 mb-1">
-                          Q{answerIndex + 1}: {answer.questionText}
-                        </p>
-                        <p className="text-sm text-blue-600">-&gt; {answer.choiceText}</p>
+                      <div 
+                        key={answerIndex} 
+                        className={`border rounded-lg px-4 py-3 ${
+                          answer.isCorrect 
+                            ? "border-green-200 bg-green-50" 
+                            : "border-red-200 bg-red-50"
+                        }`}
+                      >
+                        {/* Question Section */}
+                        <div className="mb-3">
+                          <p className="text-sm font-medium text-gray-900 mb-1">
+                            Q{answerIndex + 1}: {answer.questionText}
+                          </p>
+                          {answer.questionImageUrl && (
+                            <img 
+                              src={getImageUrl(answer.questionImageUrl)} 
+                              alt="Question" 
+                              className="max-w-full h-auto max-h-48 rounded mt-2"
+                            />
+                          )}
+                        </div>
+
+                        {/* Choice Section */}
+                        <div>
+                          <p className={`text-sm ${
+                            answer.isCorrect 
+                              ? "text-green-600" 
+                              : "text-red-600"
+                          }`}>
+                            -&gt; {answer.choiceText}
+                          </p>
+                          {answer.choiceImageUrl && (
+                            <img 
+                              src={getImageUrl(answer.choiceImageUrl)} 
+                              alt="Choice" 
+                              className="max-w-full h-auto max-h-48 rounded mt-2"
+                            />
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
