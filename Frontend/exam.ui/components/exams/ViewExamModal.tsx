@@ -70,8 +70,8 @@ export default function ViewExamModal({ exam, isLoading, onClose, onEdit }: View
             <p className="text-slate-400 text-sm italic font-medium">Fetching exam from database...</p>
           </div>
         ) : questionsToDisplay.length === 0 ? (
-          <div className="text-center py-20 text-slate-500 text-sm">
-            No questions in this exam.
+          <div className="text-center nav-section-label">
+            [ No questions in this exam ]
           </div>
           ) : (
           questionsToDisplay.map((q, idx) => (

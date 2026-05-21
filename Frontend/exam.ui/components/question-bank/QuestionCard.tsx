@@ -33,12 +33,14 @@ export default function QuestionCard({ question, onEdit, onDelete }: QuestionCar
       <h3 className="mb-2 text-heading">{question.text}</h3>
 
       {question.imageUrl && (
-        <img 
-          src={getImageUrl(question.imageUrl)} 
-          alt="Question image" 
-          className="mb-4 max-h-37 w-full object-contain rounded cursor-zoom-in transition hover:opacity-90" 
-          onClick={() => setPreviewImage(getImageUrl(question.imageUrl))}
-        />
+        <div className="mb-4 flex justify-center">
+          <img 
+            src={getImageUrl(question.imageUrl)} 
+            alt="Question image" 
+            className="h-30 w-50 object-cover rounded-lg cursor-zoom-in transition hover:opacity-90" 
+            onClick={() => setPreviewImage(getImageUrl(question.imageUrl))}
+          />
+        </div>
       )}
 
       <ul className="space-y-1">
@@ -63,7 +65,7 @@ export default function QuestionCard({ question, onEdit, onDelete }: QuestionCar
                 ? (<img 
                     src={getImageUrl(choice.imageUrl)} 
                     alt="Choice" 
-                    className="max-h-16 object-contain cursor-zoom-in transition hover:opacity-90" 
+                    className="h-18 w-24 object-cover rounded-lg cursor-zoom-in transition hover:opacity-90" 
                     onClick={() => setPreviewImage(getImageUrl(choice.imageUrl))}
                   />) 
                 : (<span>{choice.text}</span>)

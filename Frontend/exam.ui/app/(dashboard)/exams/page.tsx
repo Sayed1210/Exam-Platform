@@ -207,9 +207,6 @@ export default function ExamsPage() {
   return (
     <main>
       {/* Header */}
-      {/* <div className="flex items-center justify-between mb-8">
-        <h2 className="text-heading text-2xl font-bold">Exams</h2>
-      </div> */}
       <DashboardPageHeader
         title="Exams"
         buttonText="+ Create Exam"
