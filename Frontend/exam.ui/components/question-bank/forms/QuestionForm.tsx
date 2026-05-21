@@ -297,7 +297,6 @@ onSubmit({
             onChange={async (event) => {
               const input = event.currentTarget;
               const file = event.target.files?.[0];
-              const input = event.currentTarget;
 
               if (!file) return;
 
@@ -428,7 +427,6 @@ onSubmit({
                       onChange={async (event) => {
                         const input = event.currentTarget;
                         const file = event.target.files?.[0];
-                        const input = event.currentTarget;
                         if (!file) return;
 
                         try {
