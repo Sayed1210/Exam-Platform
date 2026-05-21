@@ -108,7 +108,7 @@ export default function ExamsPage() {
       setExams((prevExams) => prevExams.map((exam) => (exam.id === updated.id ? updated : exam)));
       toast.success("Exam updated successfully")
     } catch (error: any) {
-      toast.error(error?.message || "Failed to update exam.");
+      toast.error(error?.message || "Failed to update exam");
     } 
   };
   const confirmDelete = async() => {

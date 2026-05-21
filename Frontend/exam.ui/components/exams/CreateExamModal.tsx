@@ -14,6 +14,7 @@ import type { APIQuestion, APITopic } from '@/types/question';
 import type { QuestionForm, Option } from '@/components/exams/types';
 import QuestionBankItem from '@/components/exams/QuestionBankItem';
 import QuestionEditor from '@/components/exams/QuestionEditor';
+import { toast } from 'sonner';
 
 type CreateExamFormValues = {
   title: string;
@@ -54,6 +55,8 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
   const [topics, setTopics] = useState<APITopic[]>([]);
   const [isLoadingBank, setIsLoadingBank] = useState(true);
   const [bankError, setBankError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  
 
   const topicOptions = topics.map((topic) => topic.title);
 
@@ -168,6 +171,8 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
 
     if (!result.success) {
       setErrors(result.errors);
+      const firstError = Object.values(result.errors).find(Boolean);
+      toast.error(firstError);
       return;
     }
 
@@ -177,12 +182,15 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
 
   const handleSaveExam = () => {
     const result = FormValidation(createExamSchema, formData);
-
+    setLoading(true);
     if (!result.success) {
+      setLoading(false);
       setErrors(result.errors);
+      const firstError = Object.values(result.errors).find(Boolean);
+      toast.error(firstError);
       return;
     }
-
+    setLoading(false);
     setErrors({});
     onSave(formData);
   };
@@ -213,7 +221,8 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
         return { ...currentFormData, questions: updated };
       });
     } catch (error) {
-      console.error(error);
+      toast.error("Error uploading image");
+      // console.error(error);
     } finally {
       input.value = '';
     }
@@ -447,6 +456,8 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
             className="btn-primary" 
             onClick={() => step === 1 ? handleNextStep() : handleSaveExam()} 
             disabled={step === 1 && !formData.title}
+            loading={loading}
+            loadingText="Saving..."
           />
         </div>
       </div>

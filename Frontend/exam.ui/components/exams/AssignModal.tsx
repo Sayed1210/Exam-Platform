@@ -214,7 +214,7 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
           disabled={isSubmitting}
         />
         <Button 
-          text={"Assign"}
+          text={"Assign Exam"}
           className={`btn-primary px-8 ${(!isValid || isSubmitting) ? 'opacity-50' : ''}`}
           disabled={!isValid || isSubmitting}
           loading={isSubmitting}

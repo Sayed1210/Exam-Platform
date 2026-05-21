@@ -4,6 +4,7 @@ import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
 import PageLoader from "@/components/common/PageLoader";
+import { getImageUrl } from "@/lib/api";
 import { submitExam } from "@/services/exam-service";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -199,7 +200,8 @@ export default function ExamPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 h-screen p-8 flex flex-col overflow-hidden">
+      {/* overflow-hidden */}
+      <div className="flex-1 h-screen p-8 flex flex-col overflow-y-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -242,18 +244,35 @@ export default function ExamPage() {
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto pr-2 rounded-xl">
+        {/* overflow-y-auto */}
+        <div className="flex-1 pr-2 rounded-xl">
           {/* Question Card */}
           <div className="bg-white p-6 rounded-xl shadow-sm">
             <h2 className="text-lg font-semibold mb-4">
               Question {current + 1}: {question.text}
             </h2>
+            {question.imageUrl && (
+              <div className="mb-5 flex justify-center">
+                <img
+                  src={getImageUrl(question.imageUrl)}
+                  alt="Question"
+                  className="max-h-72 rounded-2xl object-contain border border-gray-200"
+                />
+              </div>
+            )}
 
-            <div className="space-y-3">
+            {/* <div className="space-y-3"> */}
+            <div
+              className={`gap-3 ${
+                question.choices.some((opt: any) => opt.imageUrl)
+                  ? "grid grid-cols-2"
+                  : "flex flex-col"
+              }`}
+            >
               {question.choices.map((opt: any) => (
                 <label
                   key={opt.id}
-                  className={`text-body flex items-center gap-3 border rounded-2xl p-3 cursor-pointer
+                  className={`text-body flex items-center gap-3 border rounded-2xl p-3 cursor-pointer transition hover:bg-blue-50
                     ${
                       answers[question.id] === opt.id
                         ? "border-blue-100 bg-blue-100"
@@ -272,7 +291,18 @@ export default function ExamPage() {
                       }))
                     }
                   />
-                  {opt.text}
+                  {/* {opt.text} */}
+                  <div className="flex-1 flex justify-start">
+                    {opt.imageUrl ? (
+                      <img
+                        src={getImageUrl(opt.imageUrl)}
+                        alt="Choice"
+                        className="rounded-xl object-contain border border-gray-200"
+                      />
+                    ) : (
+                      <span>{opt.text}</span>
+                    )}
+                  </div>
                 </label>
               ))}
             </div>

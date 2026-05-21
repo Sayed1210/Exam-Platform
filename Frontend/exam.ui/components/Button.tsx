@@ -17,6 +17,7 @@ export default function Button({
       className={` 
         disabled:opacity-70
         disabled:cursor-not-allowed 
+        flex items-center justify-center gap-2
         ${className}`
       }
       disabled={disabled}
