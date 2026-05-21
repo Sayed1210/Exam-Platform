@@ -64,9 +64,10 @@ const fetchCandidates = (page: number, searchVal: string, statusVal: string) => 
   }) => {
     // setEmailError("");
     try {
-      await addCandidate(data);
+      const res = await addCandidate(data);
       fetchCandidates(currentPage, search, statusFilter);
       setShowAddModal(false);
+       toast.success(res.message);
     } catch (err: any) {
       if (err?.status === 409) {
         toast.error(err.message);
@@ -77,8 +78,8 @@ const fetchCandidates = (page: number, searchVal: string, statusVal: string) => 
   };
 
   const handleDelete = async (id: string) => {
-    await deleteCandidate(Number(id));
-
+    const res =await deleteCandidate(Number(id));
+    toast.success(res.message);
     const isLastItemOnPage = candidates.length === 1;
 
     if (isLastItemOnPage && currentPage > 1) {
