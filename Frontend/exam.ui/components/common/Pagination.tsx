@@ -19,13 +19,13 @@ export default function Pagination({
   return (
     <div className="flex items-center justify-between px-5 py-4 border-t border-gray-100">
       <p className="text-gray">
-        Page {currentPage} of {totalPages}
+        Page {totalPages==0 ? 0 : currentPage} of {totalPages}
       </p>
 
       <div className="flex items-center gap-2">
         <button
           onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 1}
+          disabled={totalPages==0 || currentPage === 1}
           className="btn-nav"
         >
           <ChevronLeftIcon className="icon-small" />
@@ -34,7 +34,7 @@ export default function Pagination({
 
         <button
           onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
+          disabled={totalPages==0 || currentPage === totalPages}
           className="btn-nav"
         >
           Next

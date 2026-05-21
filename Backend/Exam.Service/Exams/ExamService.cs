@@ -92,6 +92,9 @@ namespace Exam.Service
             {
                 var exam = await _repo.GetByIdAsync(examId);
 
+                if(exam == null)
+                    return new ExamResponse();
+
                 var alreadyAssigned = exam.ExamQuestions?
                     .Select(eq => eq.QuestionId)
                     .ToHashSet() ?? [];
@@ -182,7 +185,7 @@ namespace Exam.Service
                         .Select(c => new ChoiceInExamResponse
                         {
                             Id = c.Id,
-                            Text = c.Text,
+                            Text = c.Text ?? "",
                             IsCorrect = c.IsCorrect,
                             ImageUrl = c.ImageUrl
                         }).ToList()

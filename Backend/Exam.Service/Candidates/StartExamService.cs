@@ -44,7 +44,7 @@ public class StartExamService(
                         Choices = eq.Question.Choices.Select(c => new ChoiceInExamResponse
                         {
                             Id = c.Id,
-                            Text = c.Text,
+                            Text = c.Text ?? "",
                             IsCorrect = c.IsCorrect,
                             ImageUrl = c.ImageUrl
                         }).ToList()

@@ -1,12 +1,14 @@
 'use client';
 import Button from '../Button';
-import TrashIcon from "../TrashIcon";
-import EditIcon from "../EditIcon";
+// import TrashIcon from "../TrashIcon";
+// import EditIcon from "../EditIcon";
 import { 
   ClockIcon, 
   ClipboardDocumentListIcon, 
   PaperAirplaneIcon, 
   EyeIcon,   
+  TrashIcon,
+  PencilSquareIcon
 } from '@heroicons/react/24/outline'; 
 import { Exam } from '@/types/exam';
 
@@ -71,17 +73,17 @@ export default function ExamCard({ exam, onAssign, onView, onEdit, onDelete }: E
 
           {/* Small icon buttons */}
           <Button 
-            text={<EyeIcon className="w-5 h-5" />} 
+            text={<EyeIcon className="icon-mid" />} 
             className="btn-icon-secondary" 
             onClick={() => onView(exam)}
           />
           <Button 
-            text={<EditIcon className="text-gray-400 transition group-hover:text-blue-500" />} 
+            text={<PencilSquareIcon className="icon-mid" />} 
             className="btn-icon-secondary" 
             onClick={() => onEdit(exam)}
           />
           <Button 
-            text={<TrashIcon className="text-gray-400 transition group-hover:text-red-500" />} 
+            text={<TrashIcon className="icon-mid" />} 
             className="btn-icon-danger" 
             onClick={() => onDelete(exam)}
           />
