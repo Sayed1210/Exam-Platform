@@ -3,6 +3,7 @@
 import { PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import type { ChangeEvent } from 'react';
 import type { Option } from '@/components/exams/types';
+import { getImageUrl } from '@/lib/api';
 
 interface OptionRowProps {
   qIdx: number;
@@ -48,7 +49,7 @@ export default function OptionRow({
         {option.imageUrl && (
           <div className="relative group w-fit">
             <img
-              src={option.imageUrl}
+              src={getImageUrl(option.imageUrl)}
               alt={`Option ${oIdx + 1}`}
               className="w-auto max-h-32 rounded-xl border border-slate-100 bg-white"
             />

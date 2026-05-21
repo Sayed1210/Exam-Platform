@@ -4,6 +4,7 @@ import { PlusIcon, PhotoIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/o
 import type { ChangeEvent } from 'react';
 import type { QuestionForm, Option } from '@/components/exams/types';
 import OptionRow from '@/components/exams/OptionRow';
+import { getImageUrl } from '@/lib/api';
 
 interface QuestionEditorProps {
   q: QuestionForm;
@@ -96,7 +97,7 @@ export default function QuestionEditor({
         {q.imageUrl && (
           <div className="relative group w-fit">
             <img
-              src={q.imageUrl}
+              src={getImageUrl(q.imageUrl)}
               alt="Question"
               className="w-auto max-h-40 rounded-xl border border-slate-100 bg-white"
             />

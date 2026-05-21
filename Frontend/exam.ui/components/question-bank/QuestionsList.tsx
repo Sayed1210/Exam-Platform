@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getQuestions, getTopics, deleteQuestion, createQuestion, updateQuestion, createTopic } from "@/services/questionService";
+import { getQuestions, getTopics, deleteQuestion, createQuestion, updateQuestion, createTopic, updateTopic, deleteTopic } from "@/services/questionService";
 import type { APIQuestion, APITopic } from "@/types/question";
 
 import QuestionCard from "./QuestionCard";
@@ -28,6 +28,8 @@ export default function QuestionsList() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [questionToDelete, setQuestionToDelete] = useState<number | null>(null);
   const [isTopicModalOpen, setIsTopicModalOpen] = useState(false);
+  const [editingTopic, setEditingTopic] = useState<APITopic | null>(null);
+  const [topicToDelete, setTopicToDelete] = useState<APITopic | null>(null);
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<APIQuestion | null>(null);
 
@@ -53,14 +55,49 @@ export default function QuestionsList() {
   }, [search, selectedTopicId]);
 
   // ── Topic handlers ─────────────────────────────────────────────
-  const openTopicModal = () => setIsTopicModalOpen(true);
-  const closeTopicModal = () => setIsTopicModalOpen(false);
+  const openTopicModal = () => {
+    setEditingTopic(null);
+    setIsTopicModalOpen(true);
+  };
+
+  const openEditTopicModal = (topic: APITopic) => {
+    setEditingTopic(topic);
+    setIsTopicModalOpen(true);
+  };
+
+  const closeTopicModal = () => {
+    setIsTopicModalOpen(false);
+    setEditingTopic(null);
+  };
 
   const handleAddTopic = async (topicName: string) => {
-    await createTopic(topicName);
+    if (editingTopic) {
+      await updateTopic(editingTopic.id, topicName);
+    } else {
+      await createTopic(topicName);
+    }
     const updated = await getTopics();
     setTopics(updated);
+    if (editingTopic) {
+      setSelectedTags((prev) =>
+        prev.map((tag) => (tag === editingTopic.title ? topicName : tag))
+      );
+    }
+    fetchQuestions(currentPage, search, selectedTopicId);
     closeTopicModal();
+  };
+
+  const confirmDeleteTopic = async () => {
+    if (!topicToDelete) return;
+
+    await deleteTopic(topicToDelete.id);
+    const updated = await getTopics();
+    setTopics(updated);
+    setSelectedTopicId((prev) => prev.filter((id) => id !== topicToDelete.id));
+    setSelectedTags((prev) => prev.filter((tag) => tag !== topicToDelete.title));
+    fetchQuestions(1, search, selectedTopicId.filter((id) => id !== topicToDelete.id));
+    setCurrentPage(1);
+    setTopicToDelete(null);
   };
 
 const toggleTag = (topicId: number) => {
@@ -154,12 +191,11 @@ const handleSaveQuestion = async (data: any) => {
         </div>
 
         <TopicFilters
-          topics={topics.map((t) => t.title)}
+          topics={topics}
           selectedTags={selectedTags}
-          onToggleTag={(title) => {
-            const topic = topics.find((t) => t.title === title);
-            if (topic) toggleTag(topic.id);
-  }}
+          onToggleTag={(topic) => toggleTag(topic.id)}
+          onEditTopic={openEditTopicModal}
+          onDeleteTopic={setTopicToDelete}
           onAddTopic={() => {openTopicModal()}}
         />
       </div>
@@ -202,13 +238,24 @@ const handleSaveQuestion = async (data: any) => {
         />
       )}
 
+      {topicToDelete && (
+        <ConfirmDeleteModal
+          onConfirm={confirmDeleteTopic}
+          onCancel={() => setTopicToDelete(null)}
+          title="Delete Topic"
+          text={`Are you sure you want to delete "${topicToDelete.title}"?`}
+          yesText="Delete"
+        />
+      )}
+
       {isTopicModalOpen && (
         <ModalLayout
-          title="Add Topic"
+          title={editingTopic ? "Edit Topic" : "Add Topic"}
         >
           <TopicForm 
             onSubmit={handleAddTopic}
             onCancel={closeTopicModal}
+            initialValue={editingTopic?.title}
           />
         </ModalLayout>
       )}
