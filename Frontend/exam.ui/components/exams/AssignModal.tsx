@@ -82,17 +82,32 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
   return (
     <ExamModal onClose={onClose} title="Assign to Candidate" disableClose={isSubmitting}>
       {/* Metrics Header */}
-      <div className="px-7 bg-slate-50/50 border-b border-slate-100 flex items-center gap-4 text-slate-500 text-sm shrink-0">
-        <span className="flex items-center gap-1.5"><ClockIcon className="w-4 h-4" /> {exam.durationMins} min</span>
-        <span className="text-slate-300">|</span>
-        <span className="flex items-center gap-1.5"><QuestionMarkCircleIcon className="w-4 h-4" /> {exam.totalQuestions} questions</span>
+      <div className="px-6 py-2 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between text-slate-500 text-sm shrink-0">
+  
+        {/* LEFT SIDE */}
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1.5">
+            <ClockIcon className="w-4 h-4" />
+            {exam.durationMins} min
+          </span>
+
+          <span className="text-slate-300">|</span>
+
+          <span className="flex items-center gap-1.5">
+            <QuestionMarkCircleIcon className="w-4 h-4" />
+            {exam.totalQuestions} questions
+          </span>
+        </div>
+
+        {/* RIGHT SIDE */}
+        <div className="bg-red-50 text-red-600 px-5 py-1.5 rounded-lg flex items-center gap-2 font-bold">
+          <ClipboardDocumentIcon className="w-5 h-5" /> {exam.title}
+        </div>
+
       </div>
 
       {/* Scrollable Body - pb-20 ensures content clears the sticky footer */}
-      <div className="p-7 space-y-6 overflow-y-auto custom-scrollbar pb-20">
-        <div className="bg-blue-50 text-blue-600 px-5 py-4 rounded-2xl flex items-center gap-3.5 font-bold">
-          <ClipboardDocumentIcon className="w-5 h-5" /> {exam.title}
-        </div>
+      <div className="p-4 space-y-4 overflow-y-auto custom-scrollbar h-[500px] max-h-[60vh]">
         <div className="mb-4">
           <SearchInput 
             placeholder="Search candidates by name or email..." 
@@ -138,7 +153,7 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
             )}
           </div>
           {(loadError || validationErrors.candidateIds) && (
-            <p className="text-red-500 text-xs mt-1">{loadError ?? validationErrors.candidateIds}</p>
+            <p className="text-error">{loadError ?? validationErrors.candidateIds}</p>
           )}
         </div>
 
@@ -170,23 +185,23 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
         </div>
 
         {validationErrors.deadline && (
-           <p className="text-red-500 text-xs italic font-medium">{validationErrors.deadline}</p>
+           <p className="text-error">{validationErrors.deadline}</p>
         )}
 
         {submissionError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-2xl text-sm">
+          <div className="text-error">
             {submissionError}
           </div>
         )}
 
-        <div className="bg-blue-50 border border-blue-100 text-blue-600 p-4 rounded-2xl flex items-start gap-3.5 text-xs font-medium">
+        <div className="bg-yellow-50 border border-yellow-100 text-yellow-600 p-4 rounded-2xl flex items-start gap-3.5 text-xs font-medium">
           <InformationCircleIcon className="w-5 h-5 shrink-0" />
           <p>A unique exam link will be emailed to all {selectedIds.length} chosen candidates.</p>
         </div>
       </div>
 
       {/* Fixed Footer */}
-      <div className="p-7 border-t border-slate-100 flex justify-end items-center gap-4 bg-white sticky bottom-0 z-10">
+      <div className="py-4 mx-4 border-t border-slate-100 flex justify-end items-center gap-4 bg-white sticky bottom-0 z-10">
         {!isValid && (
           <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mr-auto">
             Fill all fields
@@ -199,9 +214,11 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
           disabled={isSubmitting}
         />
         <Button 
-          text={isSubmitting ? 'Sending...' : 'Assign Exam'}
+          text={"Assign"}
           className={`btn-primary px-8 ${(!isValid || isSubmitting) ? 'opacity-50' : ''}`}
           disabled={!isValid || isSubmitting}
+          loading={isSubmitting}
+          loadingText={"Sending..."}
           onClick={async () => {
             if (!isValid || isSubmitting) return;
 

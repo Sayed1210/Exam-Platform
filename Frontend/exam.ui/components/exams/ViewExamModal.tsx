@@ -40,7 +40,7 @@ export default function ViewExamModal({ exam, isLoading, onClose, onEdit }: View
       id: question.id,
       topicId: question.topicId ?? 0,
       text: question.text,
-      imageUrl: question.imageUrl,
+      imageUrl: question.imageUrl ?? null,
       topicTitle: question.topicTitle ?? "",
       choices: (question.choices ?? []).map((choice, index) => ({
         id: choice.id ?? index,
@@ -53,7 +53,7 @@ export default function ViewExamModal({ exam, isLoading, onClose, onEdit }: View
   return (
     <ExamModal onClose={onClose} title={exam.title}>
       {/* Summary Header */}
-      <div className="px-7 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
+      <div className="px-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-4 text-slate-500 text-sm">
           <span className="flex items-center gap-1.5"><ClockIcon className="w-4 h-4" /> {exam.durationMins} min</span>
           <span className="text-slate-300">|</span>
@@ -61,7 +61,7 @@ export default function ViewExamModal({ exam, isLoading, onClose, onEdit }: View
         </div>
         <button 
           onClick={() => onEdit(exam)}
-          className="text-primary hover:underline text-xs font-bold"
+          className="btn-primary text-xs mb-2"
         >
           Edit Exam
         </button>
@@ -86,7 +86,7 @@ export default function ViewExamModal({ exam, isLoading, onClose, onEdit }: View
       </div>
 
       {/* Fixed Footer */}
-      <div className="p-6 border-t border-slate-100 flex justify-end bg-white sticky bottom-0 z-10 rounded-b-3xl">
+      <div className="pb-3 mr-6 pt-3 border-t border-slate-100 flex justify-end bg-white sticky bottom-0 z-10 rounded-b-3xl">
         <Button text="Close" onClick={onClose} className="btn-secondary !mt-0 px-8" />
       </div>
     </ExamModal>

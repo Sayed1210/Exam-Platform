@@ -270,7 +270,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
   return (
     <ExamModal onClose={onClose} title={initialData ? `Edit Exam: ${initialData.title}` : "Create Exam"}>
       {/* Stepper */}
-      <div className="px-12 py-6 flex items-center justify-center gap-4 sticky top-0 bg-white z-10">
+      <div className="px-12 pt-6 flex items-center justify-center gap-4 sticky top-0 bg-white z-10">
         <div className="flex items-center gap-2">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step >= 1 ? 'bg-primary text-white' : 'bg-slate-100 text-slate-400'}`}>
              {step > 1 ? <CheckIcon className="w-5 h-5" /> : '1'}
@@ -285,18 +285,18 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
       </div>
 
       {/* 🚀 Adjusted content wrapper layout classes */}
-      <div className={`p-8 overflow-hidden custom-scrollbar ${step === 1 ? 'pb-8' : ''}`}>
+      <div className={`px-8 py-4 overflow-y-auto custom-scrollbar h-[500px] max-h-[60vh] ${step === 1 ? 'pb-8' : ''}`}>
         {step === 1 ? (
           <div className="space-y-6">
             <div>
               <label className="block mb-2 font-medium text-label">Exam Title <span className="text-primary">*</span></label>
               <input type="text" className="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:border-primary shadow-sm" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} placeholder="e.g. React Developer Test"/>
-              {getError('title') && <p className="text-red-500 text-xs mt-1">{getError('title')}</p>}
+              {getError('title') && <p className="text-error">{getError('title')}</p>}
             </div>
             <div>
               <label className="block mb-2 font-medium text-label">Duration (minutes) <span className="text-primary">*</span></label>
               <input type="number" className="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:border-primary shadow-sm" value={formData.durationMins} onChange={(e) => setFormData({...formData, durationMins: parseInt(e.target.value) || 0})}/>
-              {getError('durationMins') && <p className="text-red-500 text-xs mt-1">{getError('durationMins')}</p>}
+              {getError('durationMins') && <p className="text-error">{getError('durationMins')}</p>}
             </div>
           </div>
         ) : (
@@ -430,20 +430,21 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
       </div>
 
       {/* Footer - Sticky at the bottom of the modal */}
-      <div className="p-6 border-t border-slate-100 flex justify-between bg-white sticky bottom-0 z-20 rounded-b-3xl">
-        <Button text="Cancel" onClick={onClose} className="btn-secondary !mt-0 px-6" />
+      {/* pb-3 mx-6 mt-3 pt-3 border-slate-100  bg-white sticky bottom-0 z-20 */}
+      <div className="flex justify-between mx-6 my-3">
+        <Button text="Cancel" onClick={onClose} className="btn-secondary" />
         <div className="flex gap-3">
           {step === 2 && (
             <button 
               onClick={() => setStep(1)} 
-              className="flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-white border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-all shadow-sm"
+              className="btn-nav"
             > 
-              <ArrowLeftIcon className="w-4 h-4 stroke-[2.5px]"/> Back 
+              <ArrowLeftIcon className="icon-small stroke-[2.5px]"/> Back 
             </button>
           )}
           <Button 
             text={step === 1 ? "Next Step" : "Save Exam"} 
-            className="btn-primary !mt-0 px-8" 
+            className="btn-primary" 
             onClick={() => step === 1 ? handleNextStep() : handleSaveExam()} 
             disabled={step === 1 && !formData.title}
           />

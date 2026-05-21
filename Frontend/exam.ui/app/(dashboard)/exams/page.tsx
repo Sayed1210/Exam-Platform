@@ -14,6 +14,7 @@ import DashboardPageHeader from '@/components/common/DashboardHeader';
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal';
 import { invitationService } from '@/services/invitationService';
 import SearchInput from '@/components/question-bank/SearchInput';
+import { toast } from 'sonner';
 // Interfaces remain the same
 
 export default function ExamsPage() {
@@ -25,7 +26,6 @@ export default function ExamsPage() {
   const [examToDelete, setExamToDelete] = useState<Exam | null>(null);
   const [fullExamData, setFullExamData] = useState<any | null>(null);
   const [isLoadingView, setIsLoadingView] = useState(false);
-  const [message, setMessage] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');  
 
@@ -35,7 +35,7 @@ export default function ExamsPage() {
         const data=await getExams();
         setExams(data);
       }catch(error){
-        setMessage({ message: 'Failed to sync with backend.', type: 'error' });
+        toast.error("Failed to sync with backend")
       }finally{
         setIsLoading(false);
       }
@@ -61,20 +61,12 @@ export default function ExamsPage() {
       };
 
       if (question.id && Number(question.id) > 0) {
-        if (!normalizedTopicId) {
-          throw new Error(`Missing topic id for existing question: ${question.text}`);
-        }
-
         await updateQuestion(Number(question.id), {
           topicId: normalizedTopicId,
           ...payload,
         });
         ids.push(Number(question.id));
         continue;
-      }
-
-      if (!normalizedTopicId) {
-        throw new Error(`Missing topic id for new question: ${question.text}`);
       }
 
       const createdQuestion = await createQuestion({
@@ -98,12 +90,10 @@ export default function ExamsPage() {
       });
 
       setExams((prev) => [...prev, created]);
-      setMessage({ message: 'Exam created successfully.', type: 'success' });
+      toast.success("Exam created successfully");
     } catch (error: any) {
-      setMessage({ message: error?.message || 'Failed to create exam.', type: 'error' });
-    } finally {
-      setTimeout(() => setMessage(null), 3000);
-    }
+      toast.error(error.message);
+    } 
   };
 
   const handleUpdateExam = async (id: number, updatedData: any) => {
@@ -116,12 +106,10 @@ export default function ExamsPage() {
       });
 
       setExams((prevExams) => prevExams.map((exam) => (exam.id === updated.id ? updated : exam)));
-      setMessage({ message: 'Exam updated successfully.', type: 'success' });
+      toast.success("Exam updated successfully")
     } catch (error: any) {
-      setMessage({ message: error?.message || 'Failed to update exam.', type: 'error' });
-    } finally {
-      setTimeout(() => setMessage(null), 3000);
-    }
+      toast.error(error?.message || "Failed to update exam.");
+    } 
   };
   const confirmDelete = async() => {
     if (!examToDelete) return;
@@ -129,15 +117,9 @@ export default function ExamsPage() {
     try {
       await deleteExam(examToDelete.id);
       setExams(prev => prev.filter(e => e.id !== examToDelete.id));
-      setMessage({ message: 'Exam deleted successfully', type: 'success' });
-      setTimeout(() => {
-      setMessage(null); // or setMessage({ message: '', type: '' }) depending on your state setup
-    }, 3000);
-    } catch (error) {
-      setMessage({ message: 'Failed to delete exam', type: 'error' });
-      setTimeout(() => {
-      setMessage(null);
-    }, 3000);
+      toast.success("Exam deleted successfully")
+    } catch (error: any) {
+      toast.error(error.message);
     }
     // Close the modal
     setExamToDelete(null); 
@@ -161,7 +143,7 @@ export default function ExamsPage() {
       setFullExamData(details);
       setExamToView(details);
     } catch (error) {
-      setMessage({ message: 'Unable to load exam details.', type: 'error' });
+      toast.error("Unable to load exam details");
     } finally {
       setIsLoadingView(false);
     }
@@ -172,8 +154,7 @@ export default function ExamsPage() {
       const details = await getExamById(exam.id);
       setExamToEdit(details);
     } catch (error) {
-      setMessage({ message: 'Unable to load exam for editing.', type: 'error' });
-      setTimeout(() => setMessage(null), 3000);
+      toast.error("Unable to load exam for editing");
     }
   };
 
@@ -191,17 +172,11 @@ export default function ExamsPage() {
     // Call POST /api/invitations/send via your apiFetch client
     await invitationService.sendExamInvitations(payload);
 
-    setMessage({ message: 'Invitations sent successfully!', type: 'success' });
+    toast.success("Invitations sent successfully");
     setExamToAssign(null);
   } catch (error: any) {
-    setMessage({ 
-      message: error?.message || 'Failed to dispatch examination links.', 
-      type: 'error' 
-    });
-    throw error;
-  } finally {
-    setTimeout(() => setMessage(null), 4000);
-  }
+    toast.error(error?.message || "Failed to dispatch examination links");
+  } 
 };
 
   return (
@@ -241,11 +216,10 @@ export default function ExamsPage() {
         await handleCreateExam(data);
       }
     } catch (error) {
-      setMessage({ message: 'Sync failed. Ensure the exam questions are valid.', type: 'error' });
+      toast.error("Sync failed. Ensure the exam questions are valid");
     } finally {
       setIsCreateOpen(false);
       setExamToEdit(null);
-      setTimeout(() => setMessage(null), 3000);
     }
   }}
         />
@@ -282,7 +256,6 @@ export default function ExamsPage() {
         />
       )}
 
-      {message && <Message message={message.message} type={message.type} onClose={() => setMessage(null)} />}
     </main>
   );
 }

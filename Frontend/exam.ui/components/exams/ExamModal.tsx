@@ -19,18 +19,11 @@ export default function ExamModal({ onClose, title, children, disableClose }: Mo
       <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl flex flex-col max-h-[90vh]">
         
         {/* Common Header */}
-        <div className="p-6 border-b border-slate-50 flex justify-between items-center">
+        <div className="pt-6 pl-6 border-b border-slate-50 flex justify-between items-center">
           <h2 className="text-xl font-bold text-slate-800">{title}</h2>
-          <button 
-            onClick={disableClose ? undefined : onClose} 
-            disabled={disableClose}
-            className={`text-slate-400 hover:text-slate-600 transition-colors ${disableClose ? 'cursor-not-allowed opacity-50' : ''}`}
-          >
-            <XMarkIcon className="w-6 h-6" />
-          </button>
         </div>
 
-          <div className="modal-body">
+          <div className="modal-body overflow-hidden">
             {children}
           </div>
         </div>
