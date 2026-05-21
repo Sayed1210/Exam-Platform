@@ -32,7 +32,7 @@ export const createQuestionResponseSchema = z
     imageUrl: z.string().trim().url("Question image URL must be valid.").nullable(),
     choices: z
       .array(questionChoiceResponseSchema)
-      .length(4, "A question must have exactly 4 choices."),
+      .min(2, "A question must have at least 2 choices."),
   })
   .superRefine((question, context) => {
     const correctChoices = question.choices.filter((choice) => choice.isCorrect);

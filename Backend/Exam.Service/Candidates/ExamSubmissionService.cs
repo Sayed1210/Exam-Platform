@@ -40,7 +40,16 @@ public class ExamSubmissionService(
             var questionIds = request.Answers.Select(a => a.QuestionId).ToList();
             var correctChoiceIds = await _answerRepo.GetCorrectChoiceIdsAsync(questionIds);
 
-            int score = request.Answers.Count(a => correctChoiceIds.Contains(a.ChoiceId));
+            int correctAnswers = request.Answers.Count(a => correctChoiceIds.Contains(a.ChoiceId));
+
+            // Get total questions in the exam
+            var totalExamQuestionIds = await _examRepo.GetExamQuestionIdsAsync(examId);
+            int totalQuestions = totalExamQuestionIds.Count;
+            Console.WriteLine("111111111111111111111111111111111111");
+            // Calculate score as percentage (out of 100)
+            float score = totalQuestions > 0
+                ? MathF.Round((float)correctAnswers / totalQuestions * 100, 2)
+                : 0;
 
             candidateExam.Score = score;
             candidateExam.Status = ExamStatus.DONE;

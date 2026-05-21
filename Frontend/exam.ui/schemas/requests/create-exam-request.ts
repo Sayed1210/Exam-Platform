@@ -5,12 +5,22 @@ const optionalImageUrlSchema = z.preprocess(
     typeof value === "string" && value.trim() === ""
       ? undefined
       : value,
-  z.string().trim().url("Image URL must be valid.").optional()
+  z.string()
+    .trim()
+    .startsWith("/", {
+      message: "Invalid image path.",
+    })
+    .optional()
+);
+
+const optionalTextSchema = z.preprocess(
+  (value) => value === null ? undefined : value,
+  z.string().trim().optional()
 );
 
 const examOptionSchema = z
   .object({
-    text: z.string().trim().optional(),
+    text: optionalTextSchema,
     imageUrl: optionalImageUrlSchema,
     isCorrect: z.boolean(),
   })

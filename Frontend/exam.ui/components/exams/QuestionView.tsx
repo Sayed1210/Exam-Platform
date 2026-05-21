@@ -2,6 +2,7 @@
 
 import TopicBadge from '@/components/exams/TopicBadge';
 import OptionView from '@/components/exams/OptionView';
+import { getImageUrl } from '@/lib/api';
 
 
 interface Option {
@@ -40,7 +41,7 @@ export default function QuestionView({ question, idx }: QuestionViewProps) {
         {question.imageUrl && (
           <div className="mt-2 rounded-[28px] border border-slate-200 bg-slate-50 p-4">
             <img
-              src={question.imageUrl}
+              src={getImageUrl(question.imageUrl)}
               alt={`Question ${idx + 1}`}
               className="w-full max-h-56 rounded-3xl object-contain"
             />

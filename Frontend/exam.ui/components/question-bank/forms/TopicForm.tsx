@@ -7,10 +7,11 @@ import { createTopicRequestSchema } from "@/schemas/requests/create-topic-reques
 export type TopicFormProps = {
   onSubmit: (topicName: string) => void;
   onCancel: () => void;
+  initialValue?: string;
 };
 
-export default function TopicForm({ onSubmit, onCancel }: TopicFormProps) {
-  const [topicName, setTopicName] = useState("");
+export default function TopicForm({ onSubmit, onCancel, initialValue = "" }: TopicFormProps) {
+  const [topicName, setTopicName] = useState(initialValue);
   const [topicNameError, setTopicNameError] = useState("");
 
   function handleSubmit(event:React.SyntheticEvent<HTMLFormElement>) {

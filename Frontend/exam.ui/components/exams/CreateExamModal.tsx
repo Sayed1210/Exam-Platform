@@ -9,7 +9,7 @@ import SearchInput from '../question-bank/SearchInput';
 import ExamModal from './ExamModal';
 import { createExamSchema, createExamStepOneSchema, CreateExamFormData } from '@/schemas/requests/create-exam-request';
 import { FormValidation } from '@/schemas/form-validation';
-import { getQuestions, getTopics } from '@/services/questionService';
+import { getQuestions, getTopics, uploadImage } from '@/services/questionService';
 import type { APIQuestion, APITopic } from '@/types/question';
 import type { QuestionForm, Option } from '@/components/exams/types';
 import QuestionBankItem from '@/components/exams/QuestionBankItem';
@@ -55,7 +55,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
   const [isLoadingBank, setIsLoadingBank] = useState(true);
   const [bankError, setBankError] = useState<string | null>(null);
 
-  const topicOptions = topics.length > 0 ? topics.map((topic) => topic.title) : ["React", "Node.js", "SQL", "Algorithms", "General"];
+  const topicOptions = topics.map((topic) => topic.title);
 
   const [formData, setFormData] = useState<CreateExamFormValues>({
     title: initialData?.title || '',
@@ -115,7 +115,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
             text: question.text,
             imageUrl: question.imageUrl || undefined,
             options: question.choices.map((choice) => ({
-              text: choice.text,
+              text: choice.text ?? '',
               imageUrl: choice.imageUrl || undefined,
               isCorrect: choice.isCorrect,
             })),
@@ -187,28 +187,36 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
     onSave(formData);
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, target: { qIdx: number, oIdx?: number }) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: { qIdx: number, oIdx?: number }) => {
+    const input = e.currentTarget;
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
-      const updated = [...formData.questions];
-      if (target.oIdx !== undefined) {
-        updated[target.qIdx].options[target.oIdx] = {
-          ...updated[target.qIdx].options[target.oIdx],
-          imageUrl: base64String,
-          
-        };
-      } else {
-        updated[target.qIdx] = {
-          ...updated[target.qIdx],
-          imageUrl: base64String,
-        };
-      }
-      setFormData({ ...formData, questions: updated });
-    };
+
+    try {
+      const response = await uploadImage(file);
+      setFormData((currentFormData) => {
+        const updated = [...currentFormData.questions];
+
+        if (target.oIdx !== undefined) {
+          updated[target.qIdx].options[target.oIdx] = {
+            ...updated[target.qIdx].options[target.oIdx],
+            text: '',
+            imageUrl: response.imageUrl,
+          };
+        } else {
+          updated[target.qIdx] = {
+            ...updated[target.qIdx],
+            imageUrl: response.imageUrl,
+          };
+        }
+
+        return { ...currentFormData, questions: updated };
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      input.value = '';
+    }
   };
 
   const removeImage = (qIdx: number, oIdx?: number) => {
@@ -310,7 +318,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
                   </div>
                   <select className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:border-primary text-sm text-slate-600 appearance-none cursor-pointer shadow-sm" value={selectedTopicFilter} onChange={(e) => setSelectedTopicFilter(e.target.value)}>
                     <option>All Topics</option>
-                    {(topics.length > 0 ? topics.map((topic) => topic.title) : ["React", "Node.js", "SQL", "Algorithms", "General"]).map((t) => (
+                    {topicOptions.map((t) => (
                       <option key={t} value={t}>{t}</option>
                     ))}
                   </select>
@@ -410,18 +418,7 @@ export default function CreateExamModal({ onClose, onSave, initialData }: Create
                        updated[qIdx].options = updated[qIdx].options.map((o, i) => ({ ...o, isCorrect: i === oIdx }));
                        setFormData({ ...formData, questions: updated });
                      }}
-                     onOptionImageUpload={(oIdx, event) =>{ 
-                      handleImageUpload(event, { qIdx, oIdx });
-                      setTimeout(() => {
-                      setFormData((prev) => {
-                        const updated = [...prev.questions];
-                        if (updated[qIdx]?.options?.[oIdx]) {
-                          updated[qIdx].options[oIdx].text = '';
-                        }
-                        return { ...prev, questions: updated };
-                      });
-                    }, 50);}
-                    }
+                     onOptionImageUpload={(oIdx, event) => handleImageUpload(event, { qIdx, oIdx })}
                      onOptionRemoveImage={(oIdx) => removeImage(qIdx, oIdx)}
                      onOptionRemove={(oIdx) => removeOption(qIdx, oIdx)}
                    />

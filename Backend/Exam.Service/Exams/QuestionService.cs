@@ -157,7 +157,7 @@ namespace Exam.Service
             ImageUrl = q.ImageUrl,
             Choices = q.Choices.Select(c => new ChoiceInQuestion
             {
-                Text = c.Text,
+                Text = c.Text ?? "",
                 IsCorrect = c.IsCorrect,
                 ImageUrl = c.ImageUrl
             }).ToList()

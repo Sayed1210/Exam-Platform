@@ -28,10 +28,10 @@ type CandidateSummary = {
   email: string;
 };
 
-type AssignExamFormValues = {
-  candidateIds: string[];
-  deadline: string;
-};
+// type AssignExamFormValues = {
+//   candidateIds: string[];
+//   deadline: string;
+// };
 
 export default function AssignModal({ exam, onClose, onConfirm }: AssignModalProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -82,7 +82,7 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
   return (
     <ExamModal onClose={onClose} title="Assign to Candidate" disableClose={isSubmitting}>
       {/* Metrics Header */}
-      <div className="px-7 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center gap-4 text-slate-500 text-sm shrink-0">
+      <div className="px-7 bg-slate-50/50 border-b border-slate-100 flex items-center gap-4 text-slate-500 text-sm shrink-0">
         <span className="flex items-center gap-1.5"><ClockIcon className="w-4 h-4" /> {exam.durationMins} min</span>
         <span className="text-slate-300">|</span>
         <span className="flex items-center gap-1.5"><QuestionMarkCircleIcon className="w-4 h-4" /> {exam.totalQuestions} questions</span>
