@@ -5,6 +5,8 @@ const BASE_URL = "/api/invitations";
 export const sendExamInvitations = (data: { 
   examId: number; 
   candidateIds: number[]; 
+  
+  startDate: string; // ISO UTC string passed from the form
   expiryDate: string; // ISO UTC string passed from the form
 }) =>
   apiFetch(`${BASE_URL}/send`, {

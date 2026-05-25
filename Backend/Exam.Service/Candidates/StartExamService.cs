@@ -21,7 +21,7 @@ public class StartExamService(
             if (candidateExam is null)
                 return (null, "Candidate is not assigned to this exam");
 
-            if (candidateExam.Status != ExamStatus.PENDING)
+            if (candidateExam.Status == ExamStatus.DONE || candidateExam.Status == ExamStatus.EXPIRED)
                 return (null, "Candidate cannot start this exam");
 
             var exam = await _examRepo.GetWithQuestionsAndChoicesAsync(examId);

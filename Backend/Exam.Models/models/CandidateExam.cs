@@ -25,7 +25,7 @@ public class CandidateExam
 
     [Required]
     public required String InvitationToken { get; set; }
-
+    public DateTime StartDate { get; set; }
     public DateTime ExpiryDate { get; set; }
 
     // Navigation

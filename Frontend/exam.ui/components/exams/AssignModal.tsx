@@ -18,7 +18,7 @@ import { assignExamSchema } from '@/schemas/requests/assign-exam-request';
 interface AssignModalProps {
   exam: Exam;
   onClose: () => void;
-  onConfirm: (payload: { examId: number; candidateIds: number[]; deadline: string }) => Promise<void>;
+  onConfirm: (payload: { examId: number; candidateIds: number[]; startDeadline: string; endDeadline: string }) => Promise<void>;
 }
 
 type CandidateSummary = {
@@ -36,7 +36,8 @@ type CandidateSummary = {
 export default function AssignModal({ exam, onClose, onConfirm }: AssignModalProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [deadlineDate, setDeadlineDate] = useState<string>('');
-  const [selectedHour, setSelectedHour] = useState<string>('12:00');
+  const [endSelectedHour, setEndSelectedHour] = useState<string>('13:00');
+  const [startSelectedHour, setStartSelectedHour] = useState<string>('12:00');
   const [searchQuery, setSearchQuery] = useState('');
   const [candidates, setCandidates] = useState<CandidateSummary[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -70,10 +71,12 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
     candidate.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const deadlineIso = `${deadlineDate}T${selectedHour}:00`;
+  const startDeadlineIso = `${deadlineDate}T${startSelectedHour}:00`;
+  const endDeadlineIso = `${deadlineDate}T${endSelectedHour}:00`;
   const validation = FormValidation(assignExamSchema, {
     candidateIds: selectedIds,
-    deadline: deadlineIso,
+    startDeadline: startDeadlineIso,
+    endDeadline: endDeadlineIso
   });
 
   const validationErrors = validation.success ? {} : validation.errors;
@@ -159,7 +162,7 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
 
         <div className="flex gap-4">
           <div className="flex-[2]">
-            <label className="block text-sm font-bold mb-2 text-label">Expiry Date</label>
+            <label className="block text-sm font-bold mb-2 text-label">Time Window</label>
             <input 
               type="date" 
               min={new Date().toISOString().split("T")[0]}
@@ -169,10 +172,24 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
             />
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-bold mb-2 text-label">Hour</label>
+            <label className="block text-sm font-bold mb-2 text-label">Start Time</label>
             <select 
-              value={selectedHour}
-              onChange={(e) => setSelectedHour(e.target.value)}
+              value={startSelectedHour}
+              onChange={(e) => setStartSelectedHour(e.target.value)}
+              className="w-full px-5 py-3 border border-slate-200 rounded-2xl outline-none text-sm bg-white cursor-pointer focus:border-primary transition-all"
+            >
+              {Array.from({ length: 24 }).map((_, i) => (
+                <option key={i} value={`${i < 10 ? '0'+i : i}:00`}>
+                  {i < 10 ? '0'+i : i}:00
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex-1">
+            <label className="block text-sm font-bold mb-2 text-label">End Time</label>
+            <select 
+              value={endSelectedHour}
+              onChange={(e) => setEndSelectedHour(e.target.value)}
               className="w-full px-5 py-3 border border-slate-200 rounded-2xl outline-none text-sm bg-white cursor-pointer focus:border-primary transition-all"
             >
               {Array.from({ length: 24 }).map((_, i) => (
@@ -184,8 +201,12 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
           </div>
         </div>
 
-        {validationErrors.deadline && (
-           <p className="text-error">{validationErrors.deadline}</p>
+        {validationErrors.startDeadline && (
+           <p className="text-error">{validationErrors.startDeadline}</p>
+        )}
+
+        {validationErrors.endDeadline && (
+           <p className="text-error">{validationErrors.endDeadline}</p>
         )}
 
         {submissionError && (
@@ -225,14 +246,16 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
             setSubmissionError(null);
             setIsSubmitting(true);
 
-            const localDateTimeString = `${deadlineDate}T${selectedHour}:00`;
+            const startDateTimeString = `${deadlineDate}T${startSelectedHour}:00`;
+            const endDateTimeString = `${deadlineDate}T${endSelectedHour}:00`;
             try {
               await onConfirm({
                 examId: exam.id,
                 candidateIds: selectedIds
                   .map((id) => Number(id))
                   .filter((id) => !Number.isNaN(id)),
-                deadline: localDateTimeString,
+                startDeadline: startDateTimeString,
+                endDeadline: endDateTimeString,
               });
             } catch (error: any) {
               setSubmissionError(error?.message || 'Failed to send invitations.');

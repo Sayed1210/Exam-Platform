@@ -6,12 +6,18 @@ public class InvitationValidator(ICandidateExamRepository repository) : IInvitat
 {
     public async Task<InvitationValidationResult> ValidateAsync(SendInvitationRequest request)
     {
-        var expiryUtc = DateTime.SpecifyKind(request.InvitationExpiryDate, DateTimeKind.Utc);
+
+        var startUtc = DateTime.SpecifyKind(request.StartDate, DateTimeKind.Utc);
+        var endUtc = DateTime.SpecifyKind(request.ExpiryDate, DateTimeKind.Utc);
 
         // 1. Validate Expiry Date isn't in the past
-        if (expiryUtc <= DateTime.UtcNow)
+        if (endUtc <= DateTime.UtcNow || endUtc <= startUtc)
         {
             return new InvitationValidationResult(false, "The expiration date must be a future date.");
+        }
+        if (startUtc <= DateTime.UtcNow)
+        {
+            return new InvitationValidationResult(false, "The start date must be a future date.");
         }
         // 2. Validate Exam Existence
         var examExists = await repository.ExamExistsAsync(request.ExamId);

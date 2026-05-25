@@ -243,6 +243,10 @@ Update your database connection string inside:
 ```txt
 appsettings.json
 ```
+Add migrations:
+```bash
+dotnet ef migrations add InitialCreate --project Path/To/DataLayer --startup-project Path/To/ApiLayer
+```
 
 Run migrations:
 

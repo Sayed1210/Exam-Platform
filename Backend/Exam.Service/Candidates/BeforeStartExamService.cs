@@ -32,12 +32,19 @@ public class BeforeStartExamService(
                 return (null, "Invalid exam link");
             }
 
-            if (candidateExam.Status != ExamStatus.PENDING)
+            if (candidateExam.Status == ExamStatus.DONE)
             {
                 _logger.LogWarning(
                     "GetExamInfo rejected — ExamId={ExamId} CandidateId={CandidateId} Status={Status}",
                     candidateExam.ExamId, candidateExam.CandidateId, candidateExam.Status);
                 return (null, "Exam already started or submitted");
+            }
+            if(candidateExam.Status == ExamStatus.EXPIRED)
+            {
+                _logger.LogWarning(
+                    "GetExamInfo rejected — ExamId={ExamId} CandidateId={CandidateId} Status={Status}",
+                    candidateExam.ExamId, candidateExam.CandidateId, candidateExam.Status);
+                return (null, "Exam link expired");
             }
 
             if (candidateExam.ExpiryDate < DateTime.UtcNow || candidateExam.Status == ExamStatus.EXPIRED)

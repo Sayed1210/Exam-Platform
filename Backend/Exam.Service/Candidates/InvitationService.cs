@@ -24,13 +24,14 @@ public class InvitationService(
         SendInvitationRequest request)
     {
         var nowUtc = DateTime.UtcNow;
-        var expiryUtc = GetUtcExpiryDate(request.InvitationExpiryDate);
+        var startUtc = GetUtcDate(request.StartDate);
+        var expiryUtc = GetUtcDate(request.ExpiryDate);
 
         using var transaction = await repository.BeginTransactionAsync();
 
         try
         {
-            await CreateInvitationsAsync(request, nowUtc, expiryUtc);
+            await CreateInvitationsAsync(request, nowUtc, startUtc, expiryUtc);
 
             await SaveAndCommitAsync(transaction);
 
@@ -57,6 +58,7 @@ public class InvitationService(
     private async Task CreateInvitationsAsync(
         SendInvitationRequest request,
         DateTime nowUtc,
+        DateTime startUtc,
         DateTime expiryUtc)
     {
         foreach (var candidateId in request.CandidateIds)
@@ -65,6 +67,7 @@ public class InvitationService(
                 candidateId,
                 request.ExamId,
                 nowUtc,
+                startUtc,
                 expiryUtc);
         }
     }
@@ -73,6 +76,7 @@ public class InvitationService(
         int candidateId,
         int examId,
         DateTime nowUtc,
+        DateTime startUtc,
         DateTime expiryUtc)
     {
         try
@@ -86,16 +90,19 @@ public class InvitationService(
                 examId,
                 token.Hash,
                 nowUtc,
+                startUtc,
                 expiryUtc);
 
             await repository.AddInvitationAsync(invitation);
 
-            var deadline = FormatCandidateDeadline(expiryUtc);
+            var start_deadline = FormatCandidateDeadline(startUtc);
+            var end_deadline = FormatCandidateDeadline(expiryUtc);
 
             await SendInvitationEmail(
                 candidate.Email,
                 token.Raw,
-                deadline);
+                start_deadline,
+                end_deadline);
         }
         catch (Exception ex)
         {
@@ -116,6 +123,7 @@ public class InvitationService(
         int examId,
         string tokenHash,
         DateTime nowUtc,
+        DateTime startUtc,
         DateTime expiryUtc)
     {
         return new CandidateExam
@@ -142,7 +150,7 @@ public class InvitationService(
         return new InvitationToken(rawToken, tokenHash);
     }
 
-    private static DateTime GetUtcExpiryDate(DateTime invitationExpiryDate)
+    private static DateTime GetUtcDate(DateTime invitationExpiryDate)
     {
         return DateTime.SpecifyKind(
             invitationExpiryDate,
@@ -199,7 +207,8 @@ public class InvitationService(
     private async Task SendInvitationEmail(
         string email,
         string token,
-        string deadlineStr)
+        string startDeadlineStr,
+        string endDeadlineStr)
     {
         try
         {
@@ -214,7 +223,8 @@ public class InvitationService(
             string body =
                 EmailTemplateBuilder.BuildExamInvitation(
                     invitationLink,
-                    deadlineStr);
+                    startDeadlineStr,
+                    endDeadlineStr);
 
             await emailService.SendEmailAsync(
                 email,

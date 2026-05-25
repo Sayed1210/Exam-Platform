@@ -4,13 +4,13 @@ using System.Net;
 
 public static class EmailTemplateBuilder
 {
-    public static string BuildExamInvitation(string invitationLink, string deadline)
+    public static string BuildExamInvitation(string invitationLink, string startDeadline, string endDeadline)
     {
         return Build(new EmailTemplateContent(
             Header: "Examination Invitation",
             Greeting: "Hello,",
             MessageHtml: "You have been invited to complete an assessment on the <b>Enozom</b> platform.",
-            NoticeTitle: $"DEADLINE: {WebUtility.HtmlEncode(deadline)}",
+            NoticeTitle: $"Time Window: {WebUtility.HtmlEncode(startDeadline)} - {WebUtility.HtmlEncode(endDeadline)}",
             NoticeText: "Please ensure you start the exam before this date, as your link will expire.",
             ActionUrl: invitationLink,
             ActionText: "Begin Examination"));
