@@ -24,11 +24,43 @@ public class StartExamService(
             if (candidateExam.Status == ExamStatus.DONE || candidateExam.Status == ExamStatus.EXPIRED)
                 return (null, "Candidate cannot start this exam");
 
+            
+            if(candidateExam.StartDate > DateTime.UtcNow)
+                return (null, "Exam has not started yet");
+            
+            if(candidateExam.ExpiryDate < DateTime.UtcNow)
+                return (null, "Exam has already ended");
+
             var exam = await _examRepo.GetWithQuestionsAndChoicesAsync(examId);
             if (exam is null)
                 return (null, "Exam not found");
 
-            candidateExam.JoinedAt = DateTime.UtcNow;
+            // candidateExam.JoinedAt = DateTime.UtcNow;
+            if (!candidateExam.JoinedAt.HasValue)
+            {
+                candidateExam.JoinedAt = DateTime.UtcNow;
+                candidateExam.Status = ExamStatus.IN_PROGRESS;
+
+                await _candidateExamRepo.SaveAsync(candidateExam);
+            }
+
+            var expiresAt =
+                candidateExam.JoinedAt.Value.AddMinutes(exam.DurationMins);
+
+            var remainingSeconds = Math.Max(
+                0,
+                (int)(expiresAt - DateTime.UtcNow).TotalSeconds
+            );
+
+            if (remainingSeconds <= 0)
+            {
+                candidateExam.Status = ExamStatus.EXPIRED;
+
+                await _candidateExamRepo.SaveAsync(candidateExam);
+
+                return (null, "Exam time expired");
+            }
+            // 
             candidateExam.Status = ExamStatus.IN_PROGRESS;
 
             await _candidateExamRepo.SaveAsync(candidateExam);
