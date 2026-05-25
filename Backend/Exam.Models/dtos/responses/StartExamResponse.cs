@@ -2,6 +2,7 @@ namespace Exam.Models;
 
 public class StartExamResponse
 {
+    public int RemainingSeconds { get; set; }
     public List<CandidateQuestionInExamResponse> Questions { get; set; } = [];
 }
 
