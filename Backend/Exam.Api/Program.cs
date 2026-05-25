@@ -68,6 +68,7 @@ app.MapExamManagementEndpoints();
 app.MapQuestionEndpoints();
 app.MapTopicEndpoints();
 app.MapAuthEndpoints();
+app.MapUserEndpoints();
 app.MapCandidateEndpoints();
 app.MapSubmitExamEndpoints();
 app.MapStartExamEndpoints();

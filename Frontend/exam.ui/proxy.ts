@@ -14,6 +14,7 @@ export const config = {
     matcher: [
         "/candidates/:path*",
         "/exams/:path*",
-        "/question-bank/:path*"
+        "/question-bank/:path*",
+        "/users/:path*"
     ],
 };

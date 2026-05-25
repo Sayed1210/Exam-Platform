@@ -39,6 +39,9 @@ export default function LoginPage() {
       return;
     }
 
+    localStorage.setItem("token", result.data.token);
+    localStorage.setItem("role", result.data.role);
+
     router.push("/candidates");
     toast.success("Welcome back!");
   };

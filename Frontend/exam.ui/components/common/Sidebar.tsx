@@ -4,7 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/services/auth-service";
-import { ArrowRightStartOnRectangleIcon, DocumentTextIcon, QuestionMarkCircleIcon, UserGroupIcon } from "@heroicons/react/24/outline";
+import { useEffect, useState } from "react";
+import { ArrowRightStartOnRectangleIcon, DocumentTextIcon, QuestionMarkCircleIcon, UserCircleIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 
 const navItems = [
   {
@@ -27,6 +28,22 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    setRole(localStorage.getItem("role"));
+  }, []);
+
+  const visibleNavItems = role === "Owner"
+    ? [
+        ...navItems,
+        {
+          label: "Users",
+          href: "/users",
+          icon: <UserCircleIcon className="w-[18px] h-[18px]" />,
+        },
+      ]
+    : navItems;
 
   const handleLogout = () => {
     logout();
@@ -59,7 +76,7 @@ export default function Sidebar() {
       <nav className="flex-1">
         <p className="nav-section-label px-2">MAIN</p>
         <ul className="flex flex-col gap-1">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
             return (
               <li key={item.href}>
