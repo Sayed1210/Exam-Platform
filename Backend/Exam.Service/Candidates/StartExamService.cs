@@ -68,17 +68,15 @@ public class StartExamService(
             return (
                 new StartExamResponse
                 {
-                    RemainingSeconds = remainingSeconds,
-                    Questions = exam.ExamQuestions.Select(eq => new QuestionInExamResponse
+                    Questions = exam.ExamQuestions.Select(eq => new CandidateQuestionInExamResponse
                     {
                         Id = eq.Question!.Id,
                         Text = eq.Question.Text,
                         ImageUrl = eq.Question.ImageUrl,
-                        Choices = eq.Question.Choices.Select(c => new ChoiceInExamResponse
+                        Choices = eq.Question.Choices.Select(c => new CandidateChoiceInExamResponse
                         {
                             Id = c.Id,
                             Text = c.Text ?? "",
-                            IsCorrect = c.IsCorrect,
                             ImageUrl = c.ImageUrl
                         }).ToList()
                     }).ToList()

@@ -19,5 +19,29 @@ public static class SubmitExamEndpoints
             ? Results.Ok(new { message = "Exam submitted successfully" })
             : Results.BadRequest(new { message = error });
         });
+
+        exams.MapPost("/{examId}/answers", async (
+            int examId,
+            SaveAnswerRequest request,
+            IExamSubmissionService service) =>
+        {
+            var (success, error) = await service.SaveAnswerAsync(examId, request);
+
+            return success
+            ? Results.Ok(new { message = "Answer saved successfully" })
+            : Results.BadRequest(new { message = error });
+        });
+
+        exams.MapGet("/{examId}/answers/{candidateId}", async (
+            int examId,
+            int candidateId,
+            IExamSubmissionService service) =>
+        {
+            var (success, error, answers) = await service.GetSavedAnswersAsync(examId, candidateId);
+
+            return success
+            ? Results.Ok(new { answers })
+            : Results.BadRequest(new { message = error });
+        });
     }
 }

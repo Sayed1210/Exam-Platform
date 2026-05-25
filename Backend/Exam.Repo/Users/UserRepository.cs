@@ -69,6 +69,22 @@ public class UserRepository : IUserRepository
         }
     }
 
+    public async Task<List<User>> GetSystemUsersAsync(CancellationToken cancellationToken)
+    {
+        return await _context.User
+            .AsNoTracking()
+            .OrderBy(user => user.Role == UserRole.Owner ? 0 : 1)
+            .ThenBy(user => user.FirstName)
+            .ThenBy(user => user.LastName)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task AddUserAsync(User user, CancellationToken cancellationToken)
+    {
+        await _context.User.AddAsync(user, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task UpdateUserPasswordAsync(
         User user,
         string passwordHash,

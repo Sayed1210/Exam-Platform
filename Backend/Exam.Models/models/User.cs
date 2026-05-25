@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
 
-public enum UserRole { Admin }
+public enum UserRole { Admin, Owner }
 
 [Index(nameof(Email), IsUnique = true)]
 public class User

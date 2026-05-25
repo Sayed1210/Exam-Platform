@@ -16,6 +16,10 @@ public class ExamSubmissionServiceTests
         _answerRepoMock = new Mock<ICandidateAnswerRepository>();
         _examRepoMock = new Mock<ICandidateExamRepository>();
 
+        _answerRepoMock
+            .Setup(r => r.ChoiceBelongsToQuestionAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(true);
+
         _service = new ExamSubmissionService(
             _answerRepoMock.Object,
             _examRepoMock.Object,
@@ -103,6 +107,7 @@ public class ExamSubmissionServiceTests
         Assert.False(result.Success);
         Assert.Equal("One or more questions do not belong to this exam", result.Error);
         _answerRepoMock.Verify(r => r.AddRangeAsync(It.IsAny<List<CandidateAnswer>>()), Times.Never);
+        _answerRepoMock.Verify(r => r.AddOrUpdateAsync(It.IsAny<CandidateAnswer>()), Times.Never);
         _examRepoMock.Verify(r => r.SaveAsync(It.IsAny<CandidateExam>()), Times.Never);
     }
 
@@ -138,10 +143,27 @@ public class ExamSubmissionServiceTests
             .Setup(r => r.GetCorrectChoiceIdsAsync(It.Is<List<int>>(ids => ids.SequenceEqual(new List<int> { 1 }))))
             .ReturnsAsync(new List<int> { 5 });
 
+        _answerRepoMock
+            .Setup(r => r.GetByCandidateExamAsync(1, 10))
+            .ReturnsAsync(new List<CandidateAnswer>
+            {
+                new CandidateAnswer
+                {
+                    CandidateId = 1,
+                    ExamId = 10,
+                    QuestionId = 1,
+                    ChoiceId = 5
+                }
+            });
+
         await _service.SubmitExam(10, request);
 
         _answerRepoMock.Verify(r =>
-            r.AddRangeAsync(It.IsAny<List<CandidateAnswer>>()),
+            r.AddOrUpdateAsync(It.Is<CandidateAnswer>(a =>
+                a.CandidateId == 1 &&
+                a.ExamId == 10 &&
+                a.QuestionId == 1 &&
+                a.ChoiceId == 5)),
             Times.Once);
     }
 
@@ -178,9 +200,29 @@ public class ExamSubmissionServiceTests
             .Setup(r => r.GetCorrectChoiceIdsAsync(It.Is<List<int>>(ids => ids.SequenceEqual(new List<int> { 1, 2 }))))
             .ReturnsAsync(new List<int> { 5, 9 });
 
+        _answerRepoMock
+            .Setup(r => r.GetByCandidateExamAsync(1, 10))
+            .ReturnsAsync(new List<CandidateAnswer>
+            {
+                new CandidateAnswer
+                {
+                    CandidateId = 1,
+                    ExamId = 10,
+                    QuestionId = 1,
+                    ChoiceId = 5
+                },
+                new CandidateAnswer
+                {
+                    CandidateId = 1,
+                    ExamId = 10,
+                    QuestionId = 2,
+                    ChoiceId = 8
+                }
+            });
+
         await _service.SubmitExam(10, request);
 
-        Assert.Equal(1, candidateExam.Score);
+        Assert.Equal(50, candidateExam.Score);
         Assert.Equal(ExamStatus.DONE, candidateExam.Status);
     }
 
@@ -215,6 +257,19 @@ public class ExamSubmissionServiceTests
         _answerRepoMock
             .Setup(r => r.GetCorrectChoiceIdsAsync(It.Is<List<int>>(ids => ids.SequenceEqual(new List<int> { 1 }))))
             .ReturnsAsync(new List<int> { 5 });
+
+        _answerRepoMock
+            .Setup(r => r.GetByCandidateExamAsync(1, 10))
+            .ReturnsAsync(new List<CandidateAnswer>
+            {
+                new CandidateAnswer
+                {
+                    CandidateId = 1,
+                    ExamId = 10,
+                    QuestionId = 1,
+                    ChoiceId = 5
+                }
+            });
 
         await _service.SubmitExam(10, request);
 

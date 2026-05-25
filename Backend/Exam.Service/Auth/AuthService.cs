@@ -67,7 +67,8 @@ public class AuthService : IAuthService
             Token = tokenResult.Token,
             ExpiresAt = tokenResult.ExpiresAt,
             FirstName = user.FirstName,
-            LastName = user.LastName
+            LastName = user.LastName,
+            Role = user.Role.ToString()
         };
     }
 
