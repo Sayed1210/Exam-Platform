@@ -132,6 +132,7 @@ public class InvitationService(
             ExamId = examId,
             InvitationToken = tokenHash,
             InvitedAt = nowUtc,
+            StartDate = startUtc,
             ExpiryDate = expiryUtc,
             Status = ExamStatus.PENDING
         };

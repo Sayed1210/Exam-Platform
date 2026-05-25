@@ -173,21 +173,35 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
           </div>
           <div className="flex-1">
             <label className="block text-sm font-bold mb-2 text-label">Start Time</label>
-            <select 
+            {/* <select 
               value={startSelectedHour}
               onChange={(e) => setStartSelectedHour(e.target.value)}
               className="w-full px-5 py-3 border border-slate-200 rounded-2xl outline-none text-sm bg-white cursor-pointer focus:border-primary transition-all"
             >
-              {Array.from({ length: 24 }).map((_, i) => (
-                <option key={i} value={`${i < 10 ? '0'+i : i}:00`}>
-                  {i < 10 ? '0'+i : i}:00
-                </option>
-              ))}
-            </select>
+              {Array.from({ length: 24 }).flatMap((_, hour) =>
+                ["00", "15", "30"].map((minute) => {
+                  const formattedHour = hour < 10 ? `0${hour}` : `${hour}`;
+                  const value = `${formattedHour}:${minute}`;
+
+                  return (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  );
+                })
+              )}
+            </select> */}
+            <input
+              type="time"
+              step="900" // 15 minutes
+              value={startSelectedHour}
+              onChange={(e) => setStartSelectedHour(e.target.value)}
+              className="w-full px-5 py-3 border border-slate-200 rounded-2xl outline-none text-sm bg-white focus:border-primary transition-all"
+            />
           </div>
           <div className="flex-1">
             <label className="block text-sm font-bold mb-2 text-label">End Time</label>
-            <select 
+            {/* <select 
               value={endSelectedHour}
               onChange={(e) => setEndSelectedHour(e.target.value)}
               className="w-full px-5 py-3 border border-slate-200 rounded-2xl outline-none text-sm bg-white cursor-pointer focus:border-primary transition-all"
@@ -197,7 +211,14 @@ export default function AssignModal({ exam, onClose, onConfirm }: AssignModalPro
                   {i < 10 ? '0'+i : i}:00
                 </option>
               ))}
-            </select>
+            </select> */}
+            <input
+              type="time"
+              step="900" // 15 minutes
+              value={endSelectedHour}
+              onChange={(e) => setEndSelectedHour(e.target.value)}
+              className="w-full px-5 py-3 border border-slate-200 rounded-2xl outline-none text-sm bg-white focus:border-primary transition-all"
+            />
           </div>
         </div>
 
