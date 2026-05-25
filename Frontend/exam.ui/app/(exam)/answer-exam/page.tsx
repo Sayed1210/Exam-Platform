@@ -5,7 +5,7 @@ import Modal from "@/components/Modal";
 import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
 import PageLoader from "@/components/common/PageLoader";
 import { getImageUrl } from "@/lib/api";
-import { submitExam } from "@/services/exam-service";
+import { getSavedAnswers, saveAnswer, submitExam } from "@/services/exam-service";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -112,6 +112,38 @@ export default function ExamPage() {
       setAnswers(JSON.parse(savedAnswers));
     }
   }, []);
+
+  useEffect(() => {
+    if (!exam) return;
+
+    const loadSavedAnswers = async () => {
+      const result = await getSavedAnswers(exam.examId, exam.candidateId);
+
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      const savedAnswers = result.answers.reduce(
+        (
+          acc: { [questionId: number]: number },
+          answer: { questionId: number; choiceId: number }
+        ) => {
+          acc[answer.questionId] = answer.choiceId;
+          return acc;
+        },
+        {}
+      );
+
+      setAnswers((prev) => ({
+        ...prev,
+        ...savedAnswers,
+      }));
+    };
+
+    loadSavedAnswers();
+  }, [exam]);
+
   // save answers
   useEffect(() => {
     localStorage.setItem(
@@ -284,12 +316,38 @@ export default function ExamPage() {
                     type="radio"
                     name={`q-${question.id}`}
                     checked={answers[question.id] === opt.id}
-                    onChange={() =>
+                    onChange={async () => {
+                      const previousChoiceId = answers[question.id];
+
                       setAnswers((prev) => ({
                         ...prev,
                         [question.id]: opt.id,
-                      }))
-                    }
+                      }));
+
+                      if (!exam) return;
+
+                      const result = await saveAnswer(
+                        exam.examId,
+                        exam.candidateId,
+                        question.id,
+                        opt.id
+                      );
+
+                      if (!result.success) {
+                        toast.error(result.message);
+                        setAnswers((prev) => {
+                          const next = { ...prev };
+
+                          if (previousChoiceId) {
+                            next[question.id] = previousChoiceId;
+                          } else {
+                            delete next[question.id];
+                          }
+
+                          return next;
+                        });
+                      }
+                    }}
                   />
                   {/* {opt.text} */}
                   <div className="flex-1 flex justify-start">
