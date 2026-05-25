@@ -117,6 +117,7 @@ export default function StartExamPage() {
     const fullExamData = {
       ...exam,
       questions: result.data.questions,
+      remainingSeconds: result.data.remainingSeconds,
     };
 
     sessionStorage.setItem("examData", JSON.stringify(fullExamData));
