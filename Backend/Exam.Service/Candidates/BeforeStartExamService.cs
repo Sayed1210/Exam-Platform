@@ -73,6 +73,8 @@ public class BeforeStartExamService(
                     Title = exam.Title,
                     DurationMins = exam.DurationMins,
                     TotalQuestions = exam.ExamQuestions.Count,
+                    StartDate = DateTime.SpecifyKind(candidateExam.StartDate, DateTimeKind.Utc),
+                    ExpiryDate = DateTime.SpecifyKind(candidateExam.ExpiryDate, DateTimeKind.Utc),
                     Status = candidateExam.Status.ToString()
                 },
                 null

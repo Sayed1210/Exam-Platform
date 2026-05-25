@@ -3,7 +3,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 export async function beforeStartExam(token: string) {
   try {
     const res = await fetch(
-      `${API_BASE_URL}/exams/before-start?token=${token}`
+      `${API_BASE_URL}/exams/before-start?token=${encodeURIComponent(token)}`
     );
 
     const text = await res.text();
