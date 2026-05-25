@@ -101,6 +101,31 @@ public class QuestionEndpointsTests
     }
 
     [Fact]
+    public async Task CreateQuestion_Should_Return_201_When_Choice_Has_Text_And_Image()
+    {
+        await using var factory = new ApiTestApplicationFactory();
+        using var client = ApiTestHelpers.CreateClient(factory);
+
+        var topicId = await SeedTopicAsync(factory);
+
+        var response = await client.PostAsJsonAsync("/api/questions/", new QuestionRequest
+        {
+            TopicId = topicId,
+            Text = "What is OOP?",
+            Choices =
+            [
+                new() { Text = "A", ImageUrl = "/uploads/a.png", IsCorrect = true },
+                new() { Text = "B", IsCorrect = false }
+            ]
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var result = await ApiTestHelpers.ReadJsonAsync<QuestionResponse>(response);
+        result!.Choices.Should().ContainSingle(choice => choice.Text == "A" && choice.ImageUrl == "/uploads/a.png");
+    }
+
+    [Fact]
     public async Task CreateQuestion_Should_Return_400_When_Topic_NotFound()
     {
         await using var factory = new ApiTestApplicationFactory();

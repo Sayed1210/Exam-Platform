@@ -1,23 +1,10 @@
 import { z } from "zod";
 
-const questionChoiceResponseSchema = z
-  .object({
-    text: z.string().trim().min(1, "Choice text is required.").nullable(),
-    isCorrect: z.boolean(),
-    imageUrl: z.string().trim().url("Choice image URL must be valid.").nullable(),
-  })
-  .superRefine((choice, context) => {
-    const hasText = Boolean(choice.text);
-    const hasImage = Boolean(choice.imageUrl);
-
-    if (hasText === hasImage) {
-      context.addIssue({
-        code: "custom",
-        message: "A choice must include exactly one of text or imageUrl.",
-        path: ["text"],
-      });
-    }
-  });
+const questionChoiceResponseSchema = z.object({
+  text: z.string().trim(),
+  isCorrect: z.boolean(),
+  imageUrl: z.string().trim().url("Choice image URL must be valid.").nullable(),
+});
 
 const questionResponseSchema = z
   .object({

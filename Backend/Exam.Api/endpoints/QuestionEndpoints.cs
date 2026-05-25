@@ -186,15 +186,14 @@ group.MapGet("/", async (
         var hasImage =
             !string.IsNullOrWhiteSpace(choice.ImageUrl);
 
-        // must have exactly one
-        if (hasText == hasImage)
+        if (!hasText && !hasImage)
         {
             return Results.ValidationProblem(
                 new Dictionary<string, string[]>
                 {
                     ["Choices"] =
                     [
-                        "Each choice must contain either text or image, but not both."
+                        "Each choice must contain at least text or image."
                     ]
                 });
         }

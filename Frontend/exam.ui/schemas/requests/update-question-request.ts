@@ -8,24 +8,25 @@ const optionalImageUrlSchema = z.preprocess(
   z.string().trim().url("Image URL must be valid.").optional()
 );
 
-const textChoiceRequestSchema = z.object({
-  id: z.string().optional(),
-  text: z.string().trim().min(1, "Choice text is required."),
-  imageUrl: z.undefined().optional(),
-  isCorrect: z.boolean(),
-});
+const questionChoiceRequestSchema = z
+  .object({
+    id: z.string().optional(),
+    text: z.string().trim().optional(),
+    imageUrl: optionalImageUrlSchema,
+    isCorrect: z.boolean(),
+  })
+  .superRefine((choice, context) => {
+    const hasText = typeof choice.text === "string" && choice.text.trim().length > 0;
+    const hasImage = Boolean(choice.imageUrl);
 
-const imageChoiceRequestSchema = z.object({
-  id: z.string().optional(),
-  text: z.undefined().optional(),
-  imageUrl: z.string().trim().url("Choice image URL must be valid."),
-  isCorrect: z.boolean(),
-});
-
-const questionChoiceRequestSchema = z.union([
-  textChoiceRequestSchema,
-  imageChoiceRequestSchema,
-]);
+    if (!hasText && !hasImage) {
+      context.addIssue({
+        code: "custom",
+        message: "Each choice must include at least text or imageUrl.",
+        path: ["text"],
+      });
+    }
+  });
 
 export const updateQuestionRequestSchema = z
   .object({
@@ -47,16 +48,17 @@ export const updateQuestionRequestSchema = z
         path: ["choices"],
       });
     }
-      // check for duplicate text choices
-  const texts = question.choices
-    .map((c) => ("text" in c ? c.text?.trim().toLowerCase() : null))
-    .filter(Boolean);
-  const hasDuplicates = new Set(texts).size !== texts.length;
-  if (hasDuplicates) {
-    context.addIssue({
-      code: "custom",
-      message: "Duplicate choice texts are not allowed.",
-      path: ["choices"],
-    });
-  }
+
+    const texts = question.choices
+      .map((choice) => choice.text?.trim().toLowerCase())
+      .filter((text): text is string => Boolean(text));
+    const hasDuplicates = new Set(texts).size !== texts.length;
+
+    if (hasDuplicates) {
+      context.addIssue({
+        code: "custom",
+        message: "Duplicate choice texts are not allowed.",
+        path: ["choices"],
+      });
+    }
   });

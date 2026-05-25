@@ -25,14 +25,14 @@ const examOptionSchema = z
     isCorrect: z.boolean(),
   })
   .superRefine((option, ctx) => {
-    const hasText = typeof option.text === 'string' && option.text.trim().length > 0;
+    const hasText = typeof option.text === "string" && option.text.trim().length > 0;
     const hasImage = Boolean(option.imageUrl);
 
-    if (hasText === hasImage) {
+    if (!hasText && !hasImage) {
       ctx.addIssue({
-        code: 'custom',
-        message: 'A choice must include exactly one of text or imageUrl.',
-        path: ['text'],
+        code: "custom",
+        message: "Each choice must include at least text or imageUrl.",
+        path: ["text"],
       });
     }
   });
@@ -47,7 +47,6 @@ const examQuestionSchema = z
       .min(2, "Each question must have at least 2 answer options."),
   })
   .superRefine((question, ctx) => {
-    // Exactly one correct answer
     const correctOptions = question.options.filter((option) => option.isCorrect);
 
     if (correctOptions.length !== 1) {
@@ -58,7 +57,6 @@ const examQuestionSchema = z
       });
     }
 
-    // No duplicate text choices
     const seen = new Map<string, number>();
 
     question.options.forEach((option, index) => {
