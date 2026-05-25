@@ -4,17 +4,28 @@ import { useMemo, useState } from "react";
 import { FormValidation } from "@/schemas/form-validation";
 import { createQuestionRequestSchema } from "@/schemas/requests/create-question-request";
 import { updateQuestionRequestSchema } from "@/schemas/requests/update-question-request";
-import type { QuestionChoice, Question, APIQuestion } from "@/types/question";
+import type { APIQuestion } from "@/types/question";
 import type { APITopic } from "@/types/question";
-import {uploadImage} from "@/services/questionService";
+import { uploadImage } from "@/services/questionService";
 import { getImageUrl } from "@/lib/api";
 import { PhotoIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
+type QuestionFormSubmitData = {
+  topicId: number;
+  text: string;
+  imageUrl: string | null;
+  choices: Array<{
+    text: string | null;
+    imageUrl: string | null;
+    isCorrect: boolean;
+  }>;
+};
+
 type QuestionFormProps = {
-  topics: APITopic[];  
+  topics: APITopic[];
   question?: APIQuestion | null;
   onCancel: () => void;
- onSubmit: (data: any) => void; 
+  onSubmit: (data: QuestionFormSubmitData) => void;
 };
 
 type ChoiceDraft = {
@@ -167,33 +178,13 @@ const [topicId, setTopicId] = useState<number>(
     event: React.SyntheticEvent<HTMLFormElement>
   ) {
     event.preventDefault();
-     console.log("handleSubmit called, topicId:", topicId, "text:", text);
-  console.log("choices:", JSON.stringify(choices));
 
     const questionPayload = {
-      topicId: topicId,
+      topicId,
       text,
       imageUrl,
       choices: choices.map((choice, index) => {
-        const trimmedText = choice.text.trim();
-        const trimmedImageUrl = choice.imageUrl.trim();
         const choiceId = question?.choices[index]?.id;
-
-        if (trimmedText && !trimmedImageUrl) {
-          return {
-            ...(choiceId ? { id: choiceId } : {}),
-            text: choice.text,
-            isCorrect: index === correctChoiceIndex,
-          };
-        }
-
-        if (!trimmedText && trimmedImageUrl) {
-          return {
-            ...(choiceId ? { id: choiceId } : {}),
-            imageUrl: choice.imageUrl,
-            isCorrect: index === correctChoiceIndex,
-          };
-        }
 
         return {
           ...(choiceId ? { id: choiceId } : {}),
@@ -210,27 +201,26 @@ const [topicId, setTopicId] = useState<number>(
           ...questionPayload,
         })
       : FormValidation(createQuestionRequestSchema, questionPayload);
-      console.log("Validation result:", result);
 
     if (!result.success) {
-        console.log("Validation errors:", result.errors);
       setErrors({
         text: result.errors.text,
         choicesMessage: result.errors.choices,
       });
       return;
     }
-onSubmit({
-  topicId: result.data.topicId,
-  text: result.data.text,
-  imageUrl: result.data.imageUrl ?? null,
-  choices: result.data.choices.map((choice) => ({
-    text: choice.text ?? null,
-    imageUrl: choice.imageUrl ?? null,
-    isCorrect: choice.isCorrect,
-  })),
-} as any);
-  }
+
+    onSubmit({
+      topicId: result.data.topicId,
+      text: result.data.text,
+      imageUrl: result.data.imageUrl ?? null,
+      choices: result.data.choices.map((choice) => ({
+        text: choice.text ?? null,
+        imageUrl: choice.imageUrl ?? null,
+        isCorrect: choice.isCorrect,
+      })),
+    });
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -372,10 +362,6 @@ onSubmit({
 
           {choices.map((choice, index) => {
             const optionLabel = getOptionLabel(index);
-            const hasText = Boolean(choice.text.trim());
-            const hasImage = Boolean(
-              choice.imageUrl.trim()
-            );
             const canRemoveChoice =
               choices.length > minimumChoices;
 
@@ -405,7 +391,6 @@ onSubmit({
                 <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
                   <input
                     value={choice.text}
-                    disabled={hasImage}
                     onChange={(event) =>
                       updateChoice(
                         index,
@@ -422,7 +407,6 @@ onSubmit({
                       type="file"
                       id={`choice-image-${index}`}
                       accept="image/*"
-                      disabled={hasText}
                       className="hidden"
                       onChange={async (event) => {
                         const input = event.currentTarget;
@@ -447,14 +431,11 @@ onSubmit({
 
                     <label
                       htmlFor={`choice-image-${index}`}
-                      className={`
-                        rounded-lg border border-slate-100 bg-white
+                      className="
+                        cursor-pointer rounded-lg border border-slate-100 bg-white
                         p-1.5 text-slate-400 transition
                         hover:text-slate-600
-                        ${hasText
-                          ? "cursor-not-allowed opacity-50"
-                          : "cursor-pointer"}
-                      `}
+                      "
                       aria-label={`Upload image for option ${optionLabel}`}
                       title={`Upload image for option ${optionLabel}`}
                     >

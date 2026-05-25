@@ -43,7 +43,7 @@ export default function QuestionCard({ question, onEdit, onDelete }: QuestionCar
           <img 
             src={getImageUrl(question.imageUrl)} 
             alt="Question image" 
-            className="h-30 w-50 object-cover rounded-lg cursor-zoom-in transition hover:opacity-90" 
+            className="h-30 w-50 object-contain rounded-lg cursor-zoom-in transition hover:opacity-90" 
             onClick={() => setPreviewImage(getImageUrl(question.imageUrl))}
           />
         </div>
@@ -53,29 +53,32 @@ export default function QuestionCard({ question, onEdit, onDelete }: QuestionCar
         {question.choices.map((choice, i) => (
           <li
             key={i}
-            className={`flex items-center gap-2 ${
-              choice.isCorrect 
-                ? "text-body text-emerald-600 rounded-xl border py-1.5 px-1 border-emerald-200 bg-emerald-50" 
+            className={`flex items-start gap-2 ${
+              choice.isCorrect
+                ? "text-body rounded-xl border border-emerald-200 bg-emerald-50 px-1 py-1.5"
                 : "text-muted px-1"
             }`}
           >
             <span
-              className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border ${
-                choice.isCorrect 
-                  ? "border-emerald-500 bg-emerald-500" 
+              className={`mt-1 h-4 w-4 shrink-0 rounded-full border ${
+                choice.isCorrect
+                  ? "border-emerald-500 bg-emerald-500"
                   : "border-gray-400 bg-white"
               }`}
             />
             <span className="min-w-0 flex-1">
-              {choice.imageUrl 
-                ? (<img 
-                    src={getImageUrl(choice.imageUrl)} 
-                    alt="Choice" 
-                    className="h-18 w-24 object-cover rounded-lg cursor-zoom-in transition hover:opacity-90" 
-                    onClick={() => setPreviewImage(getImageUrl(choice.imageUrl))}
-                  />) 
-                : (<span>{choice.text}</span>)
-              }
+              {choice.text ? (
+                <span className="block break-words">{choice.text}</span>
+              ) : null}
+
+              {choice.imageUrl ? (
+                <img
+                  src={getImageUrl(choice.imageUrl)}
+                  alt="Choice"
+                  className="mt-2 h-18 w-24 cursor-zoom-in rounded-lg object-cover transition hover:opacity-90"
+                  onClick={() => setPreviewImage(getImageUrl(choice.imageUrl))}
+                />
+              ) : null}
             </span>
           </li>
         ))}
