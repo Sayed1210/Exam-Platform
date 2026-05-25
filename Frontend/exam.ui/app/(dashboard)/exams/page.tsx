@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import { getExams, deleteExam, createExam, updateExam, getExamById } from '@/services/examService';
 import { createQuestion, updateQuestion } from '@/services/questionService';
 import { Exam } from '@/types/exam';
-import ExamsActionBar from '@/components/exams/ExamsActionBar';
 import ExamsGrid from '@/components/exams/ExamsGrid';
 import AssignModal from '@/components/exams/AssignModal';
 import Message from '@/components/Message'; 

@@ -245,7 +245,7 @@ appsettings.json
 ```
 Add migrations:
 ```bash
-dotnet ef migrations add InitialCreate --project Path/To/DataLayer --startup-project Path/To/ApiLayer
+dotnet ef migrations add InitialCreate --project ../Exam.Data --startup-project Exam.Api
 ```
 
 Run migrations:
