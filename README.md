@@ -13,7 +13,7 @@
 
 ## Demo Link
 
-🎥 [View Demo on Google Drive](https://drive.google.com) — Screen recording of the full application flow.
+🎥 [View Demo on Google Drive](https://drive.google.com/drive/folders/1ziMk2c6dJ1VY61nYRHYsqSJwdAGY-ujY) — Screen recording of the full application flow.
 
 ---
 
